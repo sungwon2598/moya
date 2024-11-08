@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './header/Header';
+import {ModalRoot} from "../component/Modal/ModalRoot.tsx";
 // import Footer from './footer/Footer';
 
 const RootLayout: React.FC = () => {
@@ -10,6 +11,7 @@ const RootLayout: React.FC = () => {
             <main className="flex-1">
                 <Outlet />
             </main>
+            <ModalRoot />
             {/*<Footer />*/}
         </div>
     );
