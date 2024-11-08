@@ -1,5 +1,5 @@
 import React from 'react'
-import Header from '@src/layout/header/Header'
+import Header from '../..//layout/header/Header'
 import MainContent from './MainContent.tsx'
 
 const Main: React.FC = () => {
