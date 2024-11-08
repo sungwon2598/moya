@@ -1,11 +1,12 @@
+import { Routes, Route } from 'react-router-dom'
+import Main from './pages/main/Main'
+
 function App() {
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold text-center py-8">
-        Hello React + TypeScript + Tailwind CSS + Vite
-      </h1>
-    </div>
-  )
+    return (
+        <Routes>
+            <Route path="/" element={<Main />} />
+        </Routes>
+    )
 }
 
 export default App
