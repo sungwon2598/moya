@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Users, Wrench } from 'lucide-react';  // Tool -> Wrench로 변경
+import { MapPin, Users, Wrench } from 'lucide-react';
 
 const MainContent: React.FC = () => {
     const actionButtons = [
