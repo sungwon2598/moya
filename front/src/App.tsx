@@ -1,12 +1,14 @@
-import { Routes, Route } from 'react-router-dom'
-import Main from './pages/main/Main'
+import React from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { router } from './routes';
 
-function App() {
+const App: React.FC = () => {
     return (
-        <Routes>
-            <Route path="/" element={<Main />} />
-        </Routes>
-    )
-}
+        <AuthProvider>
+            <RouterProvider router={router} />
+        </AuthProvider>
+    );
+};
 
-export default App
+export default App;
