@@ -2,8 +2,8 @@ package com.study.moya.member.domain;
 
 import com.study.moya.BaseEntity;
 import com.study.moya.member.constants.MemberConstants;
-import com.study.moya.member.exception.MemberBlockedException;
-import com.study.moya.member.exception.MemberWithdrawnException;
+import com.study.moya.member.constants.MemberErrorCode;
+import com.study.moya.member.exception.MemberException;
 import com.study.moya.member.util.StringCryptoConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -29,7 +29,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
-import org.springframework.beans.factory.annotation.Value;
 
 @Entity
 @Table(name = "members",
@@ -48,6 +47,9 @@ public class Member extends BaseEntity {
     @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, length = 100)
     private String email;
+
+    @Column(nullable = true, length = 100)
+    private String password;
 
     @Column(nullable = false, length = 30)
     private String nickname;
@@ -91,9 +93,10 @@ public class Member extends BaseEntity {
     }
 
     @Builder
-    public Member(String email, String nickname, String providerId, String profileImageUrl,
+    public Member(String email, String password, String nickname, String providerId, String profileImageUrl,
                   Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.email = email;
+        this.password = password;
         this.nickname = nickname;
         this.providerId = providerId;
         this.profileImageUrl = profileImageUrl;
@@ -146,12 +149,17 @@ public class Member extends BaseEntity {
         extendPersonalInfoPeriod();
     }
 
+    public void updatePassword(String newPassword) {
+        validateModifiable();
+        this.password = newPassword;
+    }
+
     public void updateMarketingConsent(Boolean agreed) {
         validateModifiable();
         this.privacyConsent.updateMarketingConsent(agreed);
     }
 
-    public void updateLoginInfo() throws MemberWithdrawnException, MemberBlockedException {
+    public void updateLoginInfo() {
         validateLoginable();
         this.lastLoginAt = LocalDateTime.now();
         if (this.status == MemberStatus.DORMANT) {
@@ -182,24 +190,28 @@ public class Member extends BaseEntity {
     private void clearPersonalInfo() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         this.email = "DELETED_" + timestamp;
+        this.password = "DELETED_" + timestamp;
         this.nickname = "DELETED_" + timestamp;
         this.profileImageUrl = null;
         this.providerId = "DELETED_" + timestamp;
         this.privacyConsent = null;
     }
 
-    private void validateLoginable() throws MemberBlockedException, MemberWithdrawnException {
+    private void validateLoginable() {
         if (this.status == MemberStatus.BLOCKED) {
-            throw new MemberBlockedException("차단된 회원입니다.");
+            throw new MemberException(MemberErrorCode.MEMBER_BLOCKED);
         }
         if (this.status == MemberStatus.WITHDRAWN) {
-            throw new MemberWithdrawnException("탈퇴한 회원입니다.");
+            throw new MemberException(MemberErrorCode.MEMBER_WITHDRAWN);
         }
     }
 
     private void validateModifiable() {
         if (!isModifiable()) {
-            throw new IllegalStateException("수정할 수 없는 상태입니다. 현재 상태: " + this.status);
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_MODIFIABLE,
+                    MemberErrorCode.MEMBER_NOT_MODIFIABLE.getMessage(status.getStateMessage())
+            );
         }
     }
 }
