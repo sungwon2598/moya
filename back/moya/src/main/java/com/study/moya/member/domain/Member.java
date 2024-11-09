@@ -1,6 +1,7 @@
 package com.study.moya.member.domain;
 
 import com.study.moya.BaseEntity;
+import com.study.moya.member.constants.MemberConstants;
 import com.study.moya.member.exception.MemberBlockedException;
 import com.study.moya.member.exception.MemberWithdrawnException;
 import com.study.moya.member.util.StringCryptoConverter;
@@ -39,13 +40,6 @@ import org.springframework.beans.factory.annotation.Value;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
-
-    @Value("${app.member.personal-info.retention-years}")
-    private int personalInfoRetentionYears;
-
-    @Value("${app.member.dormant.months}")
-    private int dormantMonths;
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -111,7 +105,7 @@ public class Member extends BaseEntity {
     }
 
     private LocalDateTime calculateExpiryDate() {
-        return LocalDateTime.now().plusYears(personalInfoRetentionYears);
+        return LocalDateTime.now().plusYears(MemberConstants.PERSONAL_INFO_RETENTION_YEARS);
     }
 
 //    public void createPointAccount() {
@@ -121,7 +115,7 @@ public class Member extends BaseEntity {
 //    }
 
     public boolean shouldBeDormant() {
-        return lastLoginAt.plusMonths(dormantMonths).isBefore(LocalDateTime.now());
+        return lastLoginAt.plusMonths(MemberConstants.DORMANT_MONTHS).isBefore(LocalDateTime.now());
     }
 
     public boolean shouldBeDeleted() {
