@@ -1,7 +1,7 @@
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
 import { router } from './routes';
+import { AuthProvider } from './context/AuthContext';
 import {ModalProvider} from "./context/ModalContext.tsx";
 
 const App: React.FC = () => {
