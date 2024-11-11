@@ -3,15 +3,38 @@ import { X } from 'lucide-react';
 import { useModal } from '../../hooks/useModal';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleLoginButton } from './GoogleLoginButton';
-
+import { AdditionalInfoModal } from "./AdditionalInfoModal";
 
 export const SignupModal: React.FC = () => {
-    const { hideModal } = useModal();
+    const { showModal, hideModal } = useModal();
     const { isLoading, error } = useAuth();
 
-    // 로그인 성공 핸들러 - 실제 사용되는 로직 추가
+    // 로그인 성공 핸들러
     const handleGoogleLoginSuccess = () => {
         hideModal();
+    };
+
+    // 추가 정보 입력 폼 테스트용 핸들러
+    const handleFormTest = () => {
+        // 테스트용 더미 데이터
+        const mockGoogleAuthState = {
+            name: "Test User",
+            email: "test@example.com",
+            token: "mock-google-token-12345"
+        };
+
+        showModal(
+            <AdditionalInfoModal
+                initialNickname={mockGoogleAuthState.name}
+                email={mockGoogleAuthState.email}
+                googleToken={mockGoogleAuthState.token}
+            />,
+            {
+                title: '추가 정보 입력',
+                size: 'md',
+                showCloseButton: true
+            }
+        );
     };
 
     return (
@@ -46,6 +69,16 @@ export const SignupModal: React.FC = () => {
                     isLoading={isLoading}
                     onGoogleLoginSuccess={handleGoogleLoginSuccess}
                 />
+
+                {/* 테스트 버튼 추가 - 개발 환경에서만 표시 */}
+                {process.env.NODE_ENV === 'development' && (
+                    <button
+                        onClick={handleFormTest}
+                        className="mt-4 w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                    >
+                        추가 정보 입력 폼 테스트
+                    </button>
+                )}
             </div>
         </div>
     );
