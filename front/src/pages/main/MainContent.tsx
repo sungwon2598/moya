@@ -2,6 +2,8 @@ import React from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import {SignupModal} from "../../component/signup/SignupModal";
+import { useModal } from "../../hooks/useModal";
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -13,6 +15,11 @@ const hexToRgba = (hex: string, alpha: number): string => {
 const MainContent: React.FC = () => {
     const { isLoggedIn } = useAuth();
     const navigate = useNavigate();
+    const { showModal } = useModal(); // 수정된 부분
+
+    const handleSignupClick = () => {
+        showModal(<SignupModal />);
+    };
 
     const actionButtons = [
         {
@@ -88,11 +95,11 @@ const MainContent: React.FC = () => {
                 </div>
             )}
 
-            {/* 비로그인 시 회원가입 버튼 */}
+            {/* 비로그인 시 회원가입/로그인 버튼 */}
             {!isLoggedIn && (
                 <div className="w-full max-w-4xl flex flex-col items-center gap-4 mb-12">
                     <button
-                        onClick={() => navigate('/register')}
+                        onClick={handleSignupClick}
                         className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center group shadow-lg"
                     >
                         회원가입
