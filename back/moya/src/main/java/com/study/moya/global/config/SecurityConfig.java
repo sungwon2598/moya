@@ -68,13 +68,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
-                        .deleteCookies("refresh_token")
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                )
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration),
                                 jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)

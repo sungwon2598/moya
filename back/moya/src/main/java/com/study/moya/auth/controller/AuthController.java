@@ -17,9 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(name = "인증", description = "사용자 인증 및 등록을 위한 API")
 public class AuthController {
 
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     private final AuthService authService;
     private final MemberService memberService;
     private final MemberRepository memberRepository;
@@ -41,13 +44,17 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         memberService.registerNewUser(signUpRequest);
-        return ResponseEntity.ok("회원가입이 성공적으로 이루어졌습니다");
+        return addSecurityHeaders(ResponseEntity
+                .ok()
+                .body("회원가입이 성공적으로 이루어졌습니다"));
     }
 
     @GetMapping("/user")
     public ResponseEntity<UserInfoResponse> getUserInfo(Authentication authentication) {
         UserInfoResponse userInfoResponse = authService.getUserInfo(authentication);
-        return ResponseEntity.ok(userInfoResponse);
+        return addSecurityHeaders(ResponseEntity
+                .ok()
+                .body(userInfoResponse));
     }
 
     @PostMapping("/login")
@@ -58,15 +65,15 @@ public class AuthController {
             TokenInfo tokenInfo = authService.authenticateUser(loginRequest);
             log.info("토큰 생성 완료");
 
-            // Access Token은 응답 본문에 포함
             Map<String, String> tokenResponse = new HashMap<>();
             tokenResponse.put("accessToken", tokenInfo.getAccessToken());
 
-            // Refresh Token은 쿠키에 설정
             addRefreshTokenCookie(response, tokenInfo.getRefreshToken());
             log.info("토큰 쿠키 설정 완료");
 
-            return ResponseEntity.ok(tokenResponse);
+            return addSecurityHeaders(ResponseEntity
+                    .ok()
+                    .body(tokenResponse));
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생: {}", e.getMessage(), e);
             throw e;
@@ -74,54 +81,123 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken,
-                                          HttpServletResponse response) {
+    public ResponseEntity<?> refreshToken(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        // 쿠키 디버깅을 위한 로깅 추가
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            log.debug("요청에 포함된 쿠키 목록:");
+            for (Cookie cookie : cookies) {
+                log.debug("쿠키 이름: {}, 값: {}, 도메인: {}, 경로: {}",
+                        cookie.getName(),
+                        cookie.getValue(),
+                        cookie.getDomain(),
+                        cookie.getPath());
+            }
+        } else {
+            log.debug("요청에 쿠키가 없습니다.");
+        }
+
+        // refreshToken 파라미터 확인
+        log.debug("@CookieValue로 받은 리프레시 토큰: {}",
+                refreshToken != null ? "존재함(" + refreshToken.substring(0, 10) + "...)" : "null");
+
         if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("리프레시 토큰이 없습니다.");
+            return addSecurityHeaders(ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("리프레시 토큰이 없습니다."));
         }
 
         try {
             TokenInfo tokenInfo = authService.refreshToken(refreshToken);
+            log.debug("토큰 갱신 성공");
 
-            // 새로운 Access Token을 응답 본문에 포함
             Map<String, String> tokenResponse = new HashMap<>();
             tokenResponse.put("accessToken", tokenInfo.getAccessToken());
 
-            // 새로운 Refresh Token을 쿠키에 설정
             addRefreshTokenCookie(response, tokenInfo.getRefreshToken());
+            log.debug("새로운 리프레시 토큰을 쿠키에 설정");
 
-            return ResponseEntity.ok(tokenResponse);
+            return addSecurityHeaders(ResponseEntity
+                    .ok()
+                    .body(tokenResponse));
         } catch (InvalidRefreshTokenException e) {
-            // Refresh Token이 유효하지 않은 경우 쿠키 삭제
+            log.error("리프레시 토큰 갱신 실패: {}", e.getMessage());
             deleteRefreshTokenCookie(response);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getMessage());
+            return addSecurityHeaders(ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage()));
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        //deleteRefreshTokenCookie(response);
+    public ResponseEntity<?> logout(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        if (refreshToken != null) {
+            try {
+                // 서버에서 리프레시 토큰 무효화
+                authService.invalidateRefreshToken(refreshToken);
+                log.info("리프레시 토큰 무효화 성공");
+            } catch (Exception e) {
+                log.warn("리프레시 토큰 무효화 중 오류 발생: {}", e.getMessage());
+            }
+        }
+
+        // 쿠키 삭제
+        deleteRefreshTokenCookie(response);
+        log.info("리프레시 토큰 쿠키 삭제 완료");
+
+        // 시큐리티 컨텍스트 클리어
+        SecurityContextHolder.clearContext();
+        log.info("시큐리티 컨텍스트 클리어 완료");
+
         log.info("로그아웃 성공");
-        return ResponseEntity.ok().body("로그아웃되었습니다");
+        return addSecurityHeaders(ResponseEntity
+                .ok()
+                .body("로그아웃되었습니다"));
     }
 
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setSecure(true); // HTTPS 환경에서만 사용
+        cookie.setSecure(true);
         cookie.setMaxAge(604800); // 7일
+        cookie.setAttribute("SameSite", "Strict");
         response.addCookie(cookie);
+        log.debug("리프레시 토큰 쿠키 설정 완료 - 경로: {}, Secure: {}, HttpOnly: {}",
+                cookie.getPath(),
+                cookie.getSecure(),
+                cookie.isHttpOnly());
     }
 
     private void deleteRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("refresh_token", null);
+        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, null);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setMaxAge(0);
+        cookie.setAttribute("SameSite", "Strict");
         response.addCookie(cookie);
+    }
+
+    private <T> ResponseEntity<T> addSecurityHeaders(ResponseEntity<T> responseEntity) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
+        headers.add(HttpHeaders.PRAGMA, "no-cache");
+        headers.add("X-Content-Type-Options", "nosniff");
+        headers.add("X-Frame-Options", "DENY");
+        headers.add("X-XSS-Protection", "1; mode=block");
+
+        return ResponseEntity
+                .status(responseEntity.getStatusCode())
+                .headers(headers)
+                .body(responseEntity.getBody());
     }
 }

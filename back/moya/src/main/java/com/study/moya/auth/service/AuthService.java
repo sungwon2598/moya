@@ -4,6 +4,7 @@ import com.study.moya.auth.dto.UserInfoResponse;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.auth.dto.LoginRequest;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
+import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationManager authenticationManager;
     private final MemberRepository memberRepository;
     private final JwtTokenProvider tokenProvider;
@@ -55,5 +57,11 @@ public class AuthService {
                 member.getEmail(),
                 member.getRoles()
         );
+    }
+
+    public void invalidateRefreshToken(String refreshToken) {
+        // 리프레시 토큰을 DB에서 찾아서 삭제
+        refreshTokenRepository.deleteByToken(refreshToken);
+        log.info("리프레시 토큰 삭제 완료");
     }
 }

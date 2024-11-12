@@ -27,56 +27,61 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // /refresh 엔드포인트는 필터에서 처리하지 않음
+        if (request.getRequestURI().equals("/api/auth/refresh")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         log.debug("JwtAuthorizationFilter를 통해 요청 처리 중: {}", request.getRequestURI());
 
-        // 액세스 토큰 처리
         String accessToken = resolveAccessToken(request);
         log.debug("추출된 액세스 토큰: {}", accessToken != null ? "존재함" : "존재하지 않음");
 
-        if (StringUtils.hasText(accessToken) && jwtTokenProvider.validateToken(accessToken)) {
-            Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
-            if (auth != null && auth.getPrincipal() != null) {
-                SecurityContextHolder.getContext().setAuthentication(auth);
-                log.info("'{}' 사용자에 대한 인증 정보를 보안 컨텍스트에 설정했습니다. URI: {}",
-                        auth.getName(), request.getRequestURI());
-            } else {
-                log.warn("인증 정보 설정에 실패했습니다. 인증 객체 또는 주체가 null입니다.");
-            }
-        } else {
-            // 액세스 토큰이 유효하지 않은 경우, 리프레시 토큰 확인
-            String refreshToken = resolveRefreshToken(request);
-            if (StringUtils.hasText(refreshToken) && shouldAttemptRefresh(request)) {
-                try {
-                    TokenInfo newTokens = jwtTokenProvider.refreshAccessToken(refreshToken);
-                    response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + newTokens.getAccessToken());
-
-                    // 새로운 리프레시 토큰을 쿠키에 설정
-                    addRefreshTokenCookie(response, newTokens.getRefreshToken());
-
-                    // 새로운 액세스 토큰으로 인증 설정
-                    Authentication auth = jwtTokenProvider.getAuthentication(newTokens.getAccessToken());
+        if (StringUtils.hasText(accessToken)) {
+            if (jwtTokenProvider.validateToken(accessToken)) {
+                Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                if (auth != null && auth.getPrincipal() != null) {
                     SecurityContextHolder.getContext().setAuthentication(auth);
-
-                    log.info("토큰이 성공적으로 갱신되었습니다. 사용자: {}", auth.getName());
-                } catch (Exception e) {
-                    log.warn("토큰 갱신 실패: {}", e.getMessage());
+                    log.info("'{}' 사용자에 대한 인증 정보를 보안 컨텍스트에 설정했습니다. URI: {}",
+                            auth.getName(), request.getRequestURI());
+                } else {
+                    log.warn("인증 정보 설정에 실패했습니다. 인증 객체 또는 주체가 null입니다.");
                 }
             } else {
-                log.debug("유효한 JWT 토큰을 찾을 수 없습니다. URI: {}", request.getRequestURI());
+                log.debug("만료되었거나 유효하지 않은 액세스 토큰입니다.");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             }
         }
 
         filterChain.doFilter(request, response);
-        log.debug("JwtAuthorizationFilter를 통한 요청 처리 완료: {}", request.getRequestURI());
+    }
+
+    private boolean isTokenRefreshEndpoint(HttpServletRequest request) {
+        return request.getRequestURI().equals("/api/auth/refresh");
+    }
+
+    private void handleTokenRefreshEndpoint(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = resolveRefreshToken(request);
+        if (StringUtils.hasText(refreshToken)) {
+            try {
+                TokenInfo newTokens = jwtTokenProvider.refreshAccessToken(refreshToken);
+                response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + newTokens.getAccessToken());
+                addRefreshTokenCookie(response, newTokens.getRefreshToken());
+                log.info("토큰이 성공적으로 갱신되었습니다.");
+            } catch (Exception e) {
+                log.warn("토큰 갱신 실패: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            }
+        }
     }
 
     private String resolveAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            log.debug("Authorization 헤더에서 액세스 토큰을 찾았습니다");
             return bearerToken.substring(BEARER_PREFIX.length());
         }
-        log.debug("Authorization 헤더에서 액세스 토큰을 찾을 수 없습니다");
         return null;
     }
 
@@ -85,12 +90,10 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
-                    log.debug("쿠키에서 리프레시 토큰을 찾았습니다");
                     return cookie.getValue();
                 }
             }
         }
-        log.debug("쿠키에서 리프레시 토큰을 찾을 수 없습니다");
         return null;
     }
 
