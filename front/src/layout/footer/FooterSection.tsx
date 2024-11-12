@@ -1,26 +1,17 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
-import type { FooterLinkProps, SocialLinkProps } from '../../types/Footer';
 
-export const FooterLink: React.FC<FooterLinkProps> = ({ href, children }) => (
-    <div className="block">
-        <Link
-            to={href}
-            className="text-sm text-gray-600 hover:text-moya-primary transition-colors duration-200"
-        >
+interface FooterSectionProps {
+    title: string;
+    children: React.ReactNode;
+}
+
+const FooterSection: React.FC<FooterSectionProps> = ({ title, children }) => {
+    return (
+        <div className="space-y-4">
+            <h3 className="text-lg font-bold text-moya-primary">{title}</h3>
             {children}
-        </Link>
-    </div>
-);
+        </div>
+    );
+};
 
-export const SocialLink: React.FC<SocialLinkProps> = ({ href, icon: Icon, label }) => (
-    <a
-        href={href}
-        className="text-gray-400 hover:text-moya-primary transition-colors duration-200"
-        aria-label={label}
-    >
-        <span className="sr-only">{label}</span>
-        <Icon className="h-6 w-6" />
-    </a>
-);
+export default FooterSection;
