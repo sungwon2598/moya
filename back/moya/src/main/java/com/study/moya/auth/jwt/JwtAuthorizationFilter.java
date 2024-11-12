@@ -58,25 +58,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isTokenRefreshEndpoint(HttpServletRequest request) {
-        return request.getRequestURI().equals("/api/auth/refresh");
-    }
-
-    private void handleTokenRefreshEndpoint(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = resolveRefreshToken(request);
-        if (StringUtils.hasText(refreshToken)) {
-            try {
-                TokenInfo newTokens = jwtTokenProvider.refreshAccessToken(refreshToken);
-                response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + newTokens.getAccessToken());
-                addRefreshTokenCookie(response, newTokens.getRefreshToken());
-                log.info("토큰이 성공적으로 갱신되었습니다.");
-            } catch (Exception e) {
-                log.warn("토큰 갱신 실패: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            }
-        }
-    }
-
     private String resolveAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
@@ -97,21 +78,4 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private boolean shouldAttemptRefresh(HttpServletRequest request) {
-        // 토큰 갱신을 시도하지 않을 경로들
-        String path = request.getRequestURI();
-        return !path.equals("/api/auth/refresh") &&
-                !path.equals("/api/auth/login") &&
-                !path.equals("/api/auth/logout") &&
-                !path.equals("/api/auth/signup");
-    }
-
-    private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true); // HTTPS 환경에서만 사용
-        cookie.setPath("/");
-        cookie.setMaxAge(604800); // 7일
-        response.addCookie(cookie);
-    }
 }
