@@ -4,7 +4,7 @@ import React from 'react';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { FooterLink, SocialLink } from './FooterComponents';
 import FooterSection from './FooterSection';
-import { companyInfo, footerSections, socialLinks } from './footerData';
+import { companyInfo, footerSections, socialLinks } from '../../data/footerData';
 import {QuickLink} from "../../types/footer";
 
 const iconMap = {

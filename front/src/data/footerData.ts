@@ -1,4 +1,4 @@
-import type { CompanyInfo, FooterSection } from '../../types/footer';
+import type { CompanyInfo, FooterSection } from '@types/footer';
 
 export const companyInfo: CompanyInfo = {
     name: 'MOYA',
