@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './header/Header';
 import {ModalRoot} from "../component/Modal/ModalRoot.tsx";
-// import Footer from './footer/Footer';
+import Footer from './footer/Footer.tsx';
 
 const RootLayout: React.FC = () => {
     return (
@@ -12,7 +12,7 @@ const RootLayout: React.FC = () => {
                 <Outlet />
             </main>
             <ModalRoot />
-            {/*<Footer />*/}
+            <Footer />
         </div>
     );
 };
