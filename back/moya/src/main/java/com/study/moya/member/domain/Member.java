@@ -1,5 +1,10 @@
 package com.study.moya.member.domain;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.stream.Collectors;
 import com.study.moya.BaseEntity;
 import com.study.moya.member.constants.MemberConstants;
 import com.study.moya.member.constants.MemberErrorCode;
@@ -29,6 +34,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "members",
@@ -38,13 +46,13 @@ import org.hibernate.annotations.BatchSize;
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member extends BaseEntity {
+public class Member extends BaseEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Convert(converter = StringCryptoConverter.class)
+//    @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, length = 100)
     private String email;
 
@@ -57,7 +65,7 @@ public class Member extends BaseEntity {
     @Column(length = 200)
     private String profileImageUrl;
 
-    @Convert(converter = StringCryptoConverter.class)
+//    @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, updatable = false)
     private String providerId;
 
@@ -213,5 +221,42 @@ public class Member extends BaseEntity {
                     MemberErrorCode.MEMBER_NOT_MODIFIABLE.getMessage(status.getStateMessage())
             );
         }
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return !shouldBeDeleted();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return this.status != MemberStatus.BLOCKED;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.status == MemberStatus.ACTIVE;
     }
 }
