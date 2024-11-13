@@ -12,7 +12,8 @@ public enum MemberErrorCode {
     MEMBER_NOT_MODIFIABLE("회원 정보를 수정할 수 없습니다. %s"),
     MEMBER_BLOCKED("차단된 회원입니다."),
     MEMBER_WITHDRAWN("탈퇴한 회원입니다."),
-    DUPLICATE_NICKNAME("이미 사용 중인 닉네임입니다.");
+    DUPLICATE_NICKNAME("이미 사용 중인 닉네임입니다."),
+    MEMBER_NOT_LOGINABLE("로그인 할 수 없는 사용자입니다.");
 
     private final String messageTemplate;
 
