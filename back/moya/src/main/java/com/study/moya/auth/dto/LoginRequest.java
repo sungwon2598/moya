@@ -14,9 +14,7 @@ public record LoginRequest(
         @Schema(description = "비밀번호", example = "strongPassword123!")
         @NotBlank(message = ErrorMessages.PASSWORD_REQUIRED)
         String password
-)
-
-{
+) {
 
     public static final class ErrorMessages {
         public static final String EMAIL_REQUIRED = "이메일은 필수입니다";
