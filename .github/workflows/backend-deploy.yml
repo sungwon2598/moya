@@ -36,7 +36,7 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
-            cd /home/ubuntu/moya/backend  # backend 디렉토리로 경로 수정
+            cd /home/ubuntu/moya/back/moya
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
