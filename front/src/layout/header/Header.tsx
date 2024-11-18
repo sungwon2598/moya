@@ -15,8 +15,8 @@ const Header: React.FC = () => {
 
     const roadmapItems = [
         { label: '전체 로드맵', href: '/roadmaps' },
-        { label: '프론트엔드', href: '/roadmaps/frontend' },
-        { label: '백엔드', href: '/roadmaps/backend' },
+        { label: '로드맵 생성', href: '/roadmaps/frontend' },
+        { label: '생성된 로드맵', href: '/roadmaps/backend' },
     ];
 
     const studyItems = [
@@ -49,58 +49,65 @@ const Header: React.FC = () => {
                 <nav className="flex items-center justify-between h-16 px-4">
                     <div className="flex items-center space-x-8">
                         <button onClick={toggleMobileMenu} className="md:hidden">
-                            <Menu className="w-6 h-6 text-moya-primary" />
+                            <Menu className="w-6 h-6 text-moya-primary"/>
                         </button>
                         <Link to="/" className="flex items-center space-x-3">
                             <span className="text-xl font-bold text-moya-primary">MOYA</span>
                         </Link>
                         <div className="hidden md:flex items-center space-x-6">
-                            <div
-                                onMouseEnter={() => setActiveDropdown('roadmap')}
-                                onMouseLeave={() => setActiveDropdown(null)}
-                            >
-                                <NavItem icon={Home} label="로드맵" />
-                                <NavDropdown
-                                    type="roadmap"
-                                    items={roadmapItems}
-                                    isOpen={activeDropdown === 'roadmap'}
-                                    onClose={() => setActiveDropdown(null)}
-                                />
+                            {/* 수정된 네비게이션 항목 컨테이너 */}
+                            <div className="relative">
+                                <div
+                                    onMouseEnter={() => setActiveDropdown('roadmap')}
+                                    onMouseLeave={() => setActiveDropdown(null)}
+                                >
+                                    <NavItem icon={Home} label="로드맵"/>
+                                    <NavDropdown
+                                        type="roadmap"
+                                        items={roadmapItems}
+                                        isOpen={activeDropdown === 'roadmap'}
+                                        onClose={() => setActiveDropdown(null)}
+                                    />
+                                </div>
                             </div>
-                            <div
-                                onMouseEnter={() => setActiveDropdown('study')}
-                                onMouseLeave={() => setActiveDropdown(null)}
-                            >
-                                <NavItem icon={Book} label="스터디" />
-                                <NavDropdown
-                                    type="study"
-                                    items={studyItems}
-                                    isOpen={activeDropdown === 'study'}
-                                    onClose={() => setActiveDropdown(null)}
-                                />
+                            <div className="relative">
+                                <div
+                                    onMouseEnter={() => setActiveDropdown('study')}
+                                    onMouseLeave={() => setActiveDropdown(null)}
+                                >
+                                    <NavItem icon={Book} label="스터디"/>
+                                    <NavDropdown
+                                        type="study"
+                                        items={studyItems}
+                                        isOpen={activeDropdown === 'study'}
+                                        onClose={() => setActiveDropdown(null)}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <div
-                            onMouseEnter={() => setActiveDropdown('user')}
-                            onMouseLeave={() => setActiveDropdown(null)}
-                            className="relative"
-                        >
-                            <button className="flex items-center space-x-1 text-gray-600 hover:text-moya-primary transition-colors duration-200">
-                                <User className="w-5 h-5" />
-                                <span className="text-sm font-medium">
-                  {isLoggedIn ? user?.nickname : '게스트'}
-                </span>
-                                <ChevronDown className="w-4 h-4" />
-                            </button>
-                            <NavDropdown
-                                type="user"
-                                items={userItems}
-                                isOpen={activeDropdown === 'user'}
-                                onClose={() => setActiveDropdown(null)}
-                            />
+                        <div className="relative">
+                            <div
+                                onMouseEnter={() => setActiveDropdown('user')}
+                                onMouseLeave={() => setActiveDropdown(null)}
+                            >
+                                <button
+                                    className="flex items-center space-x-1 text-gray-600 hover:text-moya-primary transition-colors duration-200">
+                                    <User className="w-5 h-5"/>
+                                    <span className="text-sm font-medium">
+                    {isLoggedIn ? user?.nickname : '게스트'}
+                  </span>
+                                    <ChevronDown className="w-4 h-4"/>
+                                </button>
+                                <NavDropdown
+                                    type="user"
+                                    items={userItems}
+                                    isOpen={activeDropdown === 'user'}
+                                    onClose={() => setActiveDropdown(null)}
+                                />
+                            </div>
                         </div>
                         {!isLoggedIn && (
                             <button
