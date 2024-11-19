@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**", "/css/**", "/js/**", "/*.ico", "/dashboard",
+                        .requestMatchers("/**","/api/auth/**", "/css/**", "/js/**", "/*.ico", "/dashboard",
                                 "/webjars/**", "/swagger-ui.html", "/swagger-ui/**", "/actuator/**",
                                 "/mermaid/**", "/api/mermaid/**",
                                 "/api-docs/**", "/v3/api-docs/**", "/result", "/",
