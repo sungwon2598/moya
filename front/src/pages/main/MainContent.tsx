@@ -1,9 +1,7 @@
 import React from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import {SignupModal} from "../../component/signup/SignupModal";
-import { useModal } from "../../hooks/useModal";
+import { GoogleLoginButton } from '../../component/Signup/GoogleLoginButton';
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -14,12 +12,6 @@ const hexToRgba = (hex: string, alpha: number): string => {
 
 const MainContent: React.FC = () => {
     const { isLoggedIn } = useAuth();
-    const navigate = useNavigate();
-    const { showModal } = useModal(); // 수정된 부분
-
-    const handleSignupClick = () => {
-        showModal(<SignupModal />);
-    };
 
     const actionButtons = [
         {
@@ -95,37 +87,31 @@ const MainContent: React.FC = () => {
                 </div>
             )}
 
-            {/* 비로그인 시 회원가입/로그인 버튼 */}
+            {/* 비로그인 시 구글 로그인 버튼 */}
             {!isLoggedIn && (
-                <div className="w-full max-w-4xl flex flex-col items-center gap-4 mb-12">
-                    <button
-                        onClick={handleSignupClick}
-                        className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center group shadow-lg"
-                    >
-                        회원가입
-                        <svg
-                            className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </button>
-                    <span className="text-gray-500">
-                        이미 계정이 있으신가요?{' '}
-                        <button
-                            onClick={() => navigate('/login')}
-                            className="text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                            로그인
-                        </button>
-                    </span>
+                <div className="w-full max-w-md flex flex-col items-center gap-6 mb-12">
+                    <div className="text-center mb-2">
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                            MOYA 시작하기
+                        </h2>
+                        <p className="text-gray-600">
+                            Google 계정으로 간편하게 시작해보세요
+                        </p>
+                    </div>
+                    <div className="w-full max-w-sm">
+                        <GoogleLoginButton isLoading={false} />
+                    </div>
+                    <p className="text-sm text-gray-500">
+                        계속 진행하면 MOYA의{' '}
+                        <a href="/terms" className="text-blue-600 hover:underline">
+                            이용약관
+                        </a>
+                        {' '}및{' '}
+                        <a href="/privacy" className="text-blue-600 hover:underline">
+                            개인정보처리방침
+                        </a>
+                        에 동의하는 것으로 간주됩니다.
+                    </p>
                 </div>
             )}
         </main>
