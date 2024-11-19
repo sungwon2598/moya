@@ -6,6 +6,8 @@ import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import java.util.List;
+import java.util.Locale;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -114,7 +116,8 @@ public class SecurityConfig {
                 List.of(
                         "https://moyastudy.com",
                         "http://localhost:3000",
-                        "http://localhost:3090"
+                        "http://localhost:3090",
+                        "https://api.moyastudy.com"
                 )
         );
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

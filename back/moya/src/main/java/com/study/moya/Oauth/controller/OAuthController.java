@@ -36,7 +36,7 @@ public class OAuthController {
 
     @GetMapping("/login/{provider}")
     public void socialLogin(@PathVariable String provider, HttpServletResponse response) throws IOException {
-        String redirectUrl = "https://moyastudy.com/oauth2/authorization/" + provider;  // 인증 엔드포인트 URI로 수정
+        String redirectUrl = "https://api.moyastudy.com/oauth2/authorization/" + provider;  // 인증 엔드포인트 URI로 수정
         response.sendRedirect(redirectUrl);
     }
 
