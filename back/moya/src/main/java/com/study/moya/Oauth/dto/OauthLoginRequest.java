@@ -1,12 +1,22 @@
 package com.study.moya.Oauth.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Getter
-@AllArgsConstructor
+@NoArgsConstructor
 public class OauthLoginRequest {
+    @NotNull
     private String authCode;
+
+    @NotNull
     private OAuthProvider provider;
+
+    @Builder
+
+    public OauthLoginRequest(String authCode, OAuthProvider provider) {
+        this.authCode = authCode;
+        this.provider = provider;
+    }
 }
+

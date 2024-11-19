@@ -86,10 +86,10 @@ public class SecurityConfig {
 
                 .oauth2Login(oauth2 ->
                         oauth2.authorizationEndpoint(endpoint ->
-                                endpoint.baseUri("/api/auth/oauth2/authorize")
-                        )
+                                        endpoint.baseUri("/oauth2/authorization")  // 기본 인증 엔드포인트 URI
+                                )
                                 .redirectionEndpoint(endpoint ->
-                                        endpoint.baseUri("/api/auth/oauth2/callback/*")
+                                        endpoint.baseUri("/login/oauth2/code/*")  // 리다이렉션 URI를 Google 콘솔에 등록된 것과 일치하게 수정
                                 )
                                 .userInfoEndpoint(userInfo ->
                                         userInfo.userService(customOAuth2UserService)

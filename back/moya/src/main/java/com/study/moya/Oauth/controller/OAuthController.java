@@ -7,12 +7,15 @@ import com.study.moya.Oauth.service.OauthService;
 import com.study.moya.auth.dto.UserInfoResponse;
 import com.study.moya.global.config.security.SecurityHeadersConfig;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth/oauth")
@@ -30,11 +33,14 @@ public class OAuthController {
                 .ok()
                 .body(userInfoResponse));
     }
+
+    @GetMapping("/login/{provider}")
+    public void socialLogin(@PathVariable String provider, HttpServletResponse response) throws IOException {
+        String redirectUrl = "http://localhost:8080/oauth2/authorization/" + provider;  // 인증 엔드포인트 URI로 수정
+        response.sendRedirect(redirectUrl);
+    }
+
+
 }
 
-@PostMapping("/login")
-public ResponseEntity<?> oauthLogin(@RequestBody OauthLoginRequest request){
-    try{
-        OauthLoginResponse response = oauthService.
 
-}
