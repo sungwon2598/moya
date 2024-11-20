@@ -40,7 +40,7 @@ public class ChatRoomDTO {
     }
 
 //    // 엔티티를 DTO로 변환하는 정적 메서드
-//    public static ChatRoomDTO fromModel(ChatRoom chatRoom) {
+//    public static ChatRoomDTO fromModel(Index chatRoom) {
 //        return ChatRoomDTO.builder()
 //                .roomId(chatRoom.getRoomId())
 //                .roomName(chatRoom.getRoomName())
