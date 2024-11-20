@@ -30,8 +30,14 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'front/package-lock.json'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm install
+
+      - name: Install Rollup
+        run: npm install @rollup/rollup-linux-x64-gnu
 
       - name: Set Environment Variables
         run: |
@@ -40,7 +46,7 @@ jobs:
           echo "VITE_MODE=production" >> $GITHUB_ENV
           echo "VITE_TEST_DATA=${{ secrets.VITE_TEST_DATA }}" >> $GITHUB_ENV
 
-      - name: Type check # 이 부분 수정
+      - name: Type check
         run: npm run type-check
 
       - name: Build
