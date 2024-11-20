@@ -1,10 +1,10 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-export default defineConfig(({  mode }) => {
-  // 현재 작업 디렉토리의 env 파일들을 불러옴
-  const env = loadEnv(mode, process.cwd(), '');
+export default defineConfig(({ mode }): UserConfig => {
+  // env 타입 명시적 정의
+  const env = loadEnv(mode, path.resolve(process.cwd()), '') as Record<string, string>;
 
   return {
     plugins: [react()],
@@ -20,7 +20,55 @@ export default defineConfig(({  mode }) => {
       }
     },
     define: {
-      'process.env': env
+      // env 객체를 JSON으로 문자열화하여 전달
+      'process.env': JSON.stringify(env)
+    },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom']
+          },
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: (assetInfo) => {
+            if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
+
+            const info = assetInfo.name.split('.');
+            const extType = info[info.length - 1];
+
+            if (/\.(png|jpe?g|gif|svg|webp|ico)$/.test(assetInfo.name)) {
+              return `assets/images/[name]-[hash].${extType}`;
+            }
+            if (/\.css$/.test(assetInfo.name)) {
+              return `assets/css/[name]-[hash].${extType}`;
+            }
+            if (/\.(woff2?|eot|ttf|otf)$/.test(assetInfo.name)) {
+              return `assets/fonts/[name]-[hash].${extType}`;
+            }
+            return `assets/[name]-[hash].${extType}`;
+          }
+        },
+        input: {
+          main: path.resolve(__dirname, 'index.html')
+        }
+      },
+      chunkSizeWarningLimit: 1000
+    },
+    server: {
+      port: 3000,
+      open: true,
+      cors: true
+    },
+    preview: {
+      port: 3000,
+      open: true
+    },
+    css: {
+      devSourcemap: true
     }
   };
 });

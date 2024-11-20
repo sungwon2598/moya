@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: front  # front 디렉토리를 working directory로 설정
+        working-directory: front
 
     steps:
       - uses: actions/checkout@v3
@@ -30,34 +30,43 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'front/package-lock.json'
 
-      - name: Install dependencies
-        run: npm install
+      # 클린 설치
+      - name: Clean Install Dependencies
+        run: |
+          rm -rf node_modules package-lock.json dist
+          npm install
+          npm install -D @rollup/rollup-linux-x64-gnu
 
       - name: Type check
         run: npm run type-check
 
+      # Build with explicit output directory
       - name: Build
-        run: npm run build:prod
+        run: |
+          npm run build:prod
         env:
           VITE_APP_TITLE: ${{ secrets.VITE_APP_TITLE }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_MODE: 'production'
           VITE_TEST_DATA: ${{ secrets.VITE_TEST_DATA }}
 
-      # AWS CLI를 사용한 배포 방식으로 변경
+      # S3 배포 - 명확한 경로 지정
       - name: Deploy to S3
-        working-directory: front  # 명시적으로 working directory 지정
         run: |
-          aws s3 sync ./dist s3://${{ secrets.FE_AWS_S3_BUCKET }} \
+          aws s3 sync dist/ s3://${{ secrets.FE_AWS_S3_BUCKET }} \
             --delete \
             --cache-control "max-age=31536000,public" \
-            --exclude "*" \
-            --include "dist/*"
+            --exclude "node_modules/**" \
+            --exclude ".git/**" \
+            --exclude ".github/**" \
+            --exclude "src/**" \
+            --exclude "*.map"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.FE_AWS_REGION }}
 
+      # CloudFront 캐시 무효화
       - name: Invalidate CloudFront Cache
         if: success() && github.ref == 'refs/heads/main'
         run: |
