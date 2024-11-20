@@ -66,11 +66,3 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.FE_AWS_REGION }}
-
-      - name: Invalidate CloudFront Cache
-        if: success()
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.FE_AWS_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-        env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
-            AWS_REGION: ${{ secrets.FE_AWS_REGION }}
