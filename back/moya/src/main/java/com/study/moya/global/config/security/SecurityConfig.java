@@ -117,7 +117,8 @@ public class SecurityConfig {
                         "https://moyastudy.com",
                         "http://localhost:5173",
                         "http://localhost:4173",
-                        "https://api.moyastudy.com"
+                        "https://api.moyastudy.com",
+                        "http://localhost:3000"
                 )
         );
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
