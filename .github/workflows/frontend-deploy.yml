@@ -1,12 +1,8 @@
 name: CI/CD
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'front/**'
   pull_request:
+    types: [closed]
     branches:
       - main
     paths:
@@ -14,6 +10,8 @@ on:
 
 jobs:
   cicd:
+    # PR이 병합되었을 때만 실행
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     defaults:
@@ -70,7 +68,7 @@ jobs:
           AWS_REGION: ${{ secrets.FE_AWS_REGION }}
 
       - name: Invalidate CloudFront Cache
-        if: success() && github.ref == 'refs/heads/main'
+        if: success()  # github.ref 체크 제거 (PR 병합 시에만 실행되므로 불필요)
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.FE_AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
