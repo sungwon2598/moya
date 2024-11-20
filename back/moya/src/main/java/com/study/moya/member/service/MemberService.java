@@ -5,6 +5,7 @@ import com.study.moya.auth.exception.EmailAlreadyExistsException;
 import com.study.moya.auth.exception.UserNotFoundException;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.swing.text.html.Option;
+import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -110,4 +115,58 @@ public class MemberService implements UserDetailsService {
             throw e;
         }
     }
+
+    //사용자의 구글 로그인의 완료 여부에 따른 Logic
+    public boolean createOrUpdateOAuthMember(
+            String email,
+            String providerId,
+            String accessToken,
+            String refreshToken,
+            Instant tokenExpirationTime,
+            String profileImageUrl) {
+
+        Optional<Member> existingMember = memberRepository.findByEmail(email);
+
+        if (existingMember.isPresent()) {
+            Member member = existingMember.get();
+            member.updateTokenInfo(
+                    accessToken,
+                    refreshToken,
+                    tokenExpirationTime
+            );
+            return false;
+        } else {
+            Member newMember = Member.builder()
+                    .email(email)
+                    .providerId(providerId)
+                    .profileImageUrl(profileImageUrl)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .tokenExpirationTime(tokenExpirationTime)
+                    .password(null)                    // 나중에 설정
+                    .nickname(null)                    // 나중에 설정
+                    .termsAgreed(false)               // 나중에 설정
+                    .privacyPolicyAgreed(false)       // 나중에 설정
+                    .marketingAgreed(false)           // 나중에 설정
+                    .build();
+
+            memberRepository.save(newMember);
+            return true;
+        }
+    }
+
+    //구글 로그인 완료시
+    public void completeSignUp(
+            String email,
+            String nickname,
+            Boolean termsAgreed,
+            Boolean privacyPolicyAgreed,
+            Boolean marketingAgreed) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
+
+        member.completeSignUp(nickname, termsAgreed, privacyPolicyAgreed, marketingAgreed);
+    }
+
 }
