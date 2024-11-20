@@ -40,8 +40,8 @@ jobs:
           echo "VITE_MODE=production" >> $GITHUB_ENV
           echo "VITE_TEST_DATA=${{ secrets.VITE_TEST_DATA }}" >> $GITHUB_ENV
 
-      - name: Type check
-        run: npm run tsc
+      - name: Type check # 이 부분 수정
+        run: npm run type-check
 
       - name: Build
         run: npm run build:prod
