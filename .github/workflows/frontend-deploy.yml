@@ -62,10 +62,10 @@ jobs:
         with:
           args: --delete --cache-control max-age=31536000,public
         env:
-          FE_AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          FE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          FE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          FE_AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.FE_AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.FE_AWS_REGION }}
           FE_SOURCE_DIR: 'front/dist'
 
       - name: Invalidate CloudFront Cache
