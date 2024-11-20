@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'front/**'  # front 디렉토리로 경로 수정
+      - 'front/**'
   pull_request:
     branches:
       - main
     paths:
-      - 'front/**'  # front 디렉토리로 경로 수정
+      - 'front/**'
 
 jobs:
   cicd:
@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: front  # 작업 디렉토리를 front로 수정
+        working-directory: front
 
     steps:
       - uses: actions/checkout@v3
@@ -28,10 +28,12 @@ jobs:
         with:
           node-version: 20.10.0
           cache: 'npm'
-          cache-dependency-path: 'front/package-lock.json'  # 캐시 경로 수정
+          cache-dependency-path: 'front/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm install      # npm ci 대신 npm install 사용
+          npm ls lucide-react  # lucide-react 패키지 버전 확인
 
       - name: Set Environment Variables
         run: |
@@ -49,4 +51,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          SOURCE_DIR: 'front/dist'  # 빌드 결과물 경로 수정
+          SOURCE_DIR: 'front/dist'
