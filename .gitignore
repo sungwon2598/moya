@@ -1,0 +1,10 @@
+# YML 파일 무시
+*.yml
+*.yaml
+node_modules/
+dist/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

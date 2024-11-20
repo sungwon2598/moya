@@ -6,6 +6,7 @@ import com.study.moya.auth.dto.UserInfoResponse;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
 import com.study.moya.auth.service.AuthService;
+import com.study.moya.global.config.security.SecurityHeadersConfig;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.member.service.MemberService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,11 +41,12 @@ public class AuthController {
     private final AuthService authService;
     private final MemberService memberService;
     private final MemberRepository memberRepository;
+    private final SecurityHeadersConfig securityHeadersConfig;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         memberService.registerNewUser(signUpRequest);
-        return addSecurityHeaders(ResponseEntity
+        return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                 .ok()
                 .body("회원가입이 성공적으로 이루어졌습니다"));
     }
@@ -52,7 +54,7 @@ public class AuthController {
     @GetMapping("/user")
     public ResponseEntity<UserInfoResponse> getUserInfo(Authentication authentication) {
         UserInfoResponse userInfoResponse = authService.getUserInfo(authentication);
-        return addSecurityHeaders(ResponseEntity
+        return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                 .ok()
                 .body(userInfoResponse));
     }
@@ -71,7 +73,7 @@ public class AuthController {
             addRefreshTokenCookie(response, tokenInfo.getRefreshToken());
             log.info("토큰 쿠키 설정 완료");
 
-            return addSecurityHeaders(ResponseEntity
+            return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .ok()
                     .body(tokenResponse));
         } catch (Exception e) {
@@ -106,7 +108,7 @@ public class AuthController {
                 refreshToken != null ? "존재함(" + refreshToken.substring(0, 10) + "...)" : "null");
 
         if (refreshToken == null) {
-            return addSecurityHeaders(ResponseEntity
+            return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("리프레시 토큰이 없습니다."));
         }
@@ -121,13 +123,13 @@ public class AuthController {
             addRefreshTokenCookie(response, tokenInfo.getRefreshToken());
             log.debug("새로운 리프레시 토큰을 쿠키에 설정");
 
-            return addSecurityHeaders(ResponseEntity
+            return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .ok()
                     .body(tokenResponse));
         } catch (InvalidRefreshTokenException e) {
             log.error("리프레시 토큰 갱신 실패: {}", e.getMessage());
             deleteRefreshTokenCookie(response);
-            return addSecurityHeaders(ResponseEntity
+            return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(e.getMessage()));
         }
@@ -158,7 +160,7 @@ public class AuthController {
         log.info("시큐리티 컨텍스트 클리어 완료");
 
         log.info("로그아웃 성공");
-        return addSecurityHeaders(ResponseEntity
+        return (ResponseEntity
                 .ok()
                 .body("로그아웃되었습니다"));
     }
@@ -187,17 +189,4 @@ public class AuthController {
         response.addCookie(cookie);
     }
 
-    private <T> ResponseEntity<T> addSecurityHeaders(ResponseEntity<T> responseEntity) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
-        headers.add(HttpHeaders.PRAGMA, "no-cache");
-        headers.add("X-Content-Type-Options", "nosniff");
-        headers.add("X-Frame-Options", "DENY");
-        headers.add("X-XSS-Protection", "1; mode=block");
-
-        return ResponseEntity
-                .status(responseEntity.getStatusCode())
-                .headers(headers)
-                .body(responseEntity.getBody());
-    }
 }
