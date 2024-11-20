@@ -1,6 +1,6 @@
 import React from 'react';
-import { useModal } from '../../hooks/useModal';
-import { api } from '../../config/apiConfig';
+// import { useModal } from '../../hooks/useModal';
+// import { api } from '../../config/apiConfig';
 
 interface GoogleLoginButtonProps {
     isLoading: boolean;
@@ -9,22 +9,13 @@ interface GoogleLoginButtonProps {
 
 export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
                                                                         isLoading,
-                                                                        onSuccess
+
                                                                     }) => {
-    const { showModal } = useModal();
 
-    const handleGoogleLogin = async () => {
-        try {
-            // 1. 백엔드에서 Google OAuth URL 얻기
-            const response = await api.get('/api/auth/google/url');
-            const { url } = response.data;
-
-            // 2. Google 로그인 페이지로 리다이렉트
-            window.location.href = url;
-        } catch (error) {
-            console.error('Failed to get Google OAuth URL:', error);
-        }
+    const handleGoogleLogin = () : void => {
+        window.location.href = 'https://api.moyastudy.com/oauth2/authorization/google';
     };
+
 
     return (
         <button
