@@ -1,0 +1,49 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'front/**'  # frontend 디렉토리 내의 모든 파일 변경 시
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'front/**'  # frontend 디렉토리 내의 모든 파일 변경 시
+
+jobs:
+  cicd:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend  # 작업 디렉토리를 frontend로 설정
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.10.0
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json  # 캐시 경로 지정
+
+      - run: npm ci
+
+      - name: Set Environment Variables
+        run: |
+          echo "VITE_TEST_DATA=${{ secrets.VITE_TEST_DATA }}" >> $GITHUB_ENV
+
+      - run: npm run build
+
+      - name: deploy to s3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SOURCE_DIR: frontend/dist  # 프론트엔드 빌드 디렉토리 지정
