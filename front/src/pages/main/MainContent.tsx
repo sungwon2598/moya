@@ -20,7 +20,8 @@ const MainContent: React.FC = () => {
             description: '나만의 학습 경로를 만들어보세요',
             icon: MapPin,
             bgColor: 'bg-blue-100',
-            iconColor: 'text-blue-600'
+            iconColor: 'text-blue-600',
+            onClick: () => navigate('/roadmap-preview')
         },
         {
             title: '스터디 찾기',
@@ -39,7 +40,7 @@ const MainContent: React.FC = () => {
     ];
 
     return (
-        <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <main className="bg-gray-50 flex flex-col items-center justify-center px-4">
             {/* 메인 포스터 섹션 */}
             <div className="w-full max-w-5xl mb-16">
                 <div className="relative aspect-video bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -72,6 +73,7 @@ const MainContent: React.FC = () => {
                     {actionButtons.map((button, index) => (
                         <button
                             key={index}
+                            onClick={button.onClick}  // 두 번째 추가할 부분
                             className="group relative p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-left"
                         >
                             <div className={`${button.bgColor} w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
