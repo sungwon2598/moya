@@ -30,19 +30,18 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'front/package-lock.json'
 
-      # 클린 설치
       - name: Clean Install Dependencies
         run: |
-          rm -rf node_modules package-lock.json dist
+          rm -rf node_modules package-lock.json
           npm install
           npm install -D @rollup/rollup-linux-x64-gnu
 
       - name: Type check
         run: npm run type-check
 
-      # Build with explicit output directory
       - name: Build
         run: |
+          rm -rf dist
           npm run build:prod
         env:
           VITE_APP_TITLE: ${{ secrets.VITE_APP_TITLE }}
@@ -50,23 +49,26 @@ jobs:
           VITE_MODE: 'production'
           VITE_TEST_DATA: ${{ secrets.VITE_TEST_DATA }}
 
-      # S3 배포 - 명확한 경로 지정
-      - name: Deploy to S3
+      # 기존 파일 모두 삭제
+      - name: Clean S3 bucket
         run: |
-          aws s3 sync dist/ s3://${{ secrets.FE_AWS_S3_BUCKET }} \
-            --delete \
-            --cache-control "max-age=31536000,public" \
-            --exclude "node_modules/**" \
-            --exclude ".git/**" \
-            --exclude ".github/**" \
-            --exclude "src/**" \
-            --exclude "*.map"
+          aws s3 rm s3://${{ secrets.FE_AWS_S3_BUCKET }} --recursive
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.FE_AWS_REGION }}
 
-      # CloudFront 캐시 무효화
+      # dist 폴더의 내용만 업로드
+      - name: Deploy to S3
+        run: |
+          aws s3 sync dist/ s3://${{ secrets.FE_AWS_S3_BUCKET }} \
+            --delete \
+            --cache-control "max-age=31536000,public"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.FE_AWS_REGION }}
+
       - name: Invalidate CloudFront Cache
         if: success() && github.ref == 'refs/heads/main'
         run: |
