@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: front
+        working-directory: front  # front 디렉토리를 working directory로 설정
 
     steps:
       - uses: actions/checkout@v3
@@ -30,21 +30,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'front/package-lock.json'
 
-      - name: Clean install dependencies
-        run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-          npm install
-
-      - name: Install Rollup
-        run: npm install @rollup/rollup-linux-x64-gnu
-
-      - name: Set Environment Variables
-        run: |
-          echo "VITE_APP_TITLE=${{ secrets.VITE_APP_TITLE }}" >> $GITHUB_ENV
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
-          echo "VITE_MODE=production" >> $GITHUB_ENV
-          echo "VITE_TEST_DATA=${{ secrets.VITE_TEST_DATA }}" >> $GITHUB_ENV
+      - name: Install dependencies
+        run: npm install
 
       - name: Type check
         run: npm run type-check
@@ -57,27 +44,27 @@ jobs:
           VITE_MODE: 'production'
           VITE_TEST_DATA: ${{ secrets.VITE_TEST_DATA }}
 
+      # AWS CLI를 사용한 배포 방식으로 변경
       - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --delete --cache-control max-age=31536000,public
+        working-directory: front  # 명시적으로 working directory 지정
+        run: |
+          aws s3 sync ./dist s3://${{ secrets.FE_AWS_S3_BUCKET }} \
+            --delete \
+            --cache-control "max-age=31536000,public" \
+            --exclude "*" \
+            --include "dist/*"
         env:
-          AWS_S3_BUCKET: ${{ secrets.FE_AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.FE_AWS_REGION }}
-          FE_SOURCE_DIR: 'front/dist'
 
       - name: Invalidate CloudFront Cache
-        run: |
-          aws s3 sync dist/ s3://${{ secrets.FE_AWS_S3_BUCKET }} \
-            --delete \
-            --cache-control "max-age=31536000,public" \
-            --exclude "node_modules/*" \
-            --exclude ".git/*" \
-            --exclude ".github/*"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
         if: success() && github.ref == 'refs/heads/main'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.FE_AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.FE_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.FE_AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.FE_AWS_REGION }}
