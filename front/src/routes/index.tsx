@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from '../layout/RootLayout';
 import Main from '../pages/main/Main';
 import RoadmapPreview from "../pages/RoadmapPreview";
-import LearningRoad from "../pages/learningRoad/LearningRoad";
+// import LearningRoad from "../pages/learningRoad/LearningRoad";
 
 export const router = createBrowserRouter([
     {
@@ -14,7 +14,7 @@ export const router = createBrowserRouter([
                 element: <Main />,
             },
             {
-                path: 'register',
+                // path: 'register',
                 // element: <Register />,
             },
             // {
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: 'preview',
-                element: <LearningRoad />
+                // element: <LearningRoad />
             }
         ],
     },
