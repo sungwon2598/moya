@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: front  # front 디렉토리에서 작업
+        working-directory: front
 
     steps:
       - uses: actions/checkout@v3
@@ -30,23 +30,45 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'front/package-lock.json'
 
-      # npm install로 변경
       - name: Install dependencies
         run: npm install
 
       - name: Set Environment Variables
         run: |
+          echo "VITE_APP_TITLE=${{ secrets.VITE_APP_TITLE }}" >> $GITHUB_ENV
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
+          echo "VITE_MODE=production" >> $GITHUB_ENV
           echo "VITE_TEST_DATA=${{ secrets.VITE_TEST_DATA }}" >> $GITHUB_ENV
 
-      - run: npm run build
+      - name: Type check
+        run: npm run tsc
+
+      - name: Build
+        run: npm run build:prod
+        env:
+          VITE_APP_TITLE: ${{ secrets.VITE_APP_TITLE }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_MODE: 'production'
+          VITE_TEST_DATA: ${{ secrets.VITE_TEST_DATA }}
 
       - name: Deploy to S3
         uses: jakejarvis/s3-sync-action@master
         with:
-          args: --delete
+          args: --delete --cache-control max-age=31536000,public
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           SOURCE_DIR: 'front/dist'
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        if: success() && github.ref == 'refs/heads/main'
