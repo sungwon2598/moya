@@ -17,8 +17,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -90,25 +92,42 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(baseException, details));
     }
 
-//    /**
-//     * PathVariable 및 RequestParam 타입 불일치 예외 처리
-//     */
-//    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-//    protected ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
-//            MethodArgumentTypeMismatchException e, HttpServletRequest request) {
-//        Map<String, Object> details = new HashMap<>();
-//        details.put("errors", List.of(Map.of(
-//                "field", e.getName(),
-//                "value", e.getValue() != null ? e.getValue().toString() : "",
-//                "reason", "타입이 일치하지 않습니다"
-//        )));
-//
-//        BaseException baseException = BaseException.of(CommonErrorCode.INVALID_TYPE_VALUE);
-//
-//        log.error(ERROR_LOG_FORMAT, baseException.getStatus(), request.getRequestURI(), e.getMessage());
-//        return ResponseEntity.status(baseException.getStatus())
-//                .body(ApiResponse.error(baseException, details));
-//    }
+    /**
+     * PathVariable 및 RequestParam 타입 불일치 예외 처리
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    protected ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("errors", List.of(Map.of(
+                "field", e.getName(),
+                "value", e.getValue() != null ? e.getValue().toString() : "",
+                "reason", "타입이 일치하지 않습니다"
+        )));
+
+        BaseException baseException = BaseException.of(CommonErrorCode.INVALID_TYPE_VALUE);
+
+        log.error(ERROR_LOG_FORMAT, baseException.getStatus(), request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(baseException.getStatus())
+                .body(ApiResponse.error(baseException, details));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    protected ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameterException(
+            MissingServletRequestParameterException e, HttpServletRequest request) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("errors", List.of(Map.of(
+                "field", e.getParameterName(),
+                "value", "",
+                "reason", "필수 파라미터가 누락되었습니다"
+        )));
+
+        BaseException baseException = BaseException.of(CommonErrorCode.INVALID_INPUT_VALUE);
+
+        log.error(ERROR_LOG_FORMAT, baseException.getStatus(), request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(baseException.getStatus())
+                .body(ApiResponse.error(baseException, details));
+    }
 
     /**
      * 예상하지 못한 예외 처리

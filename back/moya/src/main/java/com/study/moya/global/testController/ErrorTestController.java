@@ -37,21 +37,21 @@ public class ErrorTestController {
         throw AuthException.of(AuthErrorCode.UNAUTHORIZED);
     }
 
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @GetMapping("/auth-access-denied")
-//    public ApiResponse<Void> accessDeniedException() {
-//        return ApiResponse.of(null);
-//    }
-//
-//    @GetMapping("/type-mismatch")
-//    public ApiResponse<Void> typeMismatch(@RequestParam Long id) {
-//        return ApiResponse.of(null);
-//    }
-//
-//    @PostMapping("/validation")
-//    public ApiResponse<Void> validation(@Valid @RequestBody TestRequest request) {
-//        return ApiResponse.of(null);
-//    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/auth-access-denied")
+    public ApiResponse<Void> accessDeniedException() {
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/type-mismatch")
+    public ApiResponse<Void> typeMismatch(@RequestParam Long id) {
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/validation")
+    public ApiResponse<Void> validation(@Valid @RequestBody TestRequest request) {
+        return ApiResponse.success();
+    }
 
     @Getter
     @RequiredArgsConstructor

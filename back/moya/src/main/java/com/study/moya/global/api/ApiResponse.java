@@ -21,6 +21,12 @@ public class ApiResponse<T> {
         this.error = error;
     }
 
+    public static ApiResponse<Void> success() {
+        return new ApiResponse<>(null,
+                new Meta(HttpStatus.OK.value(), null),
+                null);
+    }
+
     public static <T> ApiResponse<T> of(T data) {
         return new ApiResponse<>(data,
                 new Meta(HttpStatus.OK.value(), null),
