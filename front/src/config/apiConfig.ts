@@ -3,8 +3,8 @@ import axios, { AxiosError } from 'axios';
 import { ChatRoomInfo, CreateRoomRequest } from '@/types/chat';
 
 // API 기본 URL 설정
-export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-export const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws-stomp';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.moyastudy.com';
+export const WS_URL = import.meta.env.VITE_WS_URL || 'wss://api.moyastudy.com/ws-stomp';
 
 // axios 인스턴스 생성
 export const axiosInstance = axios.create({

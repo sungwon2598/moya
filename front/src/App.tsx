@@ -18,9 +18,10 @@ const App: React.FC = () => {
                     <Routes>
                         <Route path="/" element={<RootLayout />}>
                             <Route index element={<Main />} />
-                            <Route path="roadmap-preview" element={<RoadmapPreview />} />
-                            <Route path="preview">
+                            <Route path="roadmap">
+                            <Route path="preview" element={<RoadmapPreview />}>
                                 {/* <Route index element={<LearningRoad />} /> */}
+                            </Route>
                             </Route>
                             {/* 향후 추가될 라우트들 */}
                             {/* <Route path="register" element={<Register />} /> */}
