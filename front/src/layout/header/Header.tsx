@@ -1,9 +1,38 @@
 import React from 'react';
-import { Menu, Home, Book, User, ChevronDown } from 'lucide-react';
+import { Menu, Home, Book, User, ChevronDown, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NavItem from './NavItem';
+import { useAuth } from '../../context/AuthContext';
+
+// 네비게이션 아이템 설정
+const navigationItems = [
+    {
+        label: '로드맵',
+        path: '/roadmap/preview',
+        type: 'A' as const,
+        icon: Home
+    },
+    {
+        label: '스터디',
+        path: '/study',
+        type: 'A' as const,
+        icon: Book
+    }
+];
+
+// 인증이 필요한 네비게이션 아이템
+const authNavigationItems = [
+    {
+        label: '채팅',
+        path: '/chat',
+        type: 'A' as const,
+        icon: MessageCircle
+    }
+];
 
 const Header: React.FC = () => {
+    const { isLoggedIn } = useAuth();
+
     return (
         <header className="bg-white border-b border-moya-primary/10 fixed w-full top-0 z-50">
             <div className="container mx-auto">
@@ -13,9 +42,21 @@ const Header: React.FC = () => {
                             <Menu className="w-6 h-6 text-moya-primary" />
                             <span className="text-xl font-bold text-moya-primary">MOYA</span>
                         </Link>
-                        <div className="hidden md:flex items-center space-x-6">
-                            <NavItem type="A" label="로드맵" icon={Home} />
-                            <NavItem type="B" label="스터디" icon={Book} />
+                        <div className="hidden md:flex items-center">
+                            {/* 기본 네비게이션 아이템 */}
+                            {navigationItems.map((item) => (
+                                <NavItem
+                                    key={item.path}
+                                    {...item}
+                                />
+                            ))}
+                            {/* 인증이 필요한 네비게이션 아이템 */}
+                            {isLoggedIn && authNavigationItems.map((item) => (
+                                <NavItem
+                                    key={item.path}
+                                    {...item}
+                                />
+                            ))}
                         </div>
                     </div>
                     <div className="flex items-center space-x-4">
