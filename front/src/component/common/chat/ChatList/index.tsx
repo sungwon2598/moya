@@ -1,4 +1,3 @@
-// src/component/common/chat/ChatList/index.tsx
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Loader } from 'lucide-react';
 import { Button } from '../Button';
@@ -18,6 +17,16 @@ export const ChatList: React.FC<ChatListProps> = ({ onRoomSelect }) => {
     const [isCreatingRoom, setIsCreatingRoom] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // roomName이 JSON 문자열인 경우 파싱하여 실제 이름을 추출하는 함수
+    const parseRoomName = (roomName: string): string => {
+        try {
+            const parsed = JSON.parse(roomName);
+            return parsed.roomName || roomName;
+        } catch {
+            return roomName;
+        }
+    };
 
     const fetchRooms = async () => {
         try {
@@ -45,9 +54,8 @@ export const ChatList: React.FC<ChatListProps> = ({ onRoomSelect }) => {
                 roomName: newRoomName,
             };
 
-            // newRoom을 사용하거나 제거
             await CHAT_API.createRoom(createRoomRequest);
-            await fetchRooms();  // 방 목록 새로고침
+            await fetchRooms();
             setNewRoomName('');
             setIsCreatingRoom(false);
             setError(null);
@@ -134,7 +142,7 @@ export const ChatList: React.FC<ChatListProps> = ({ onRoomSelect }) => {
                             <div className="space-y-1">
                                 <h3 className="font-bold text-xl text-gray-900 group-hover:text-blue-600
                                              transition-colors duration-200">
-                                    {room.roomName}
+                                    {parseRoomName(room.roomName)}
                                 </h3>
                                 <div className="flex items-center text-gray-500 space-x-2">
                                     <Users size={16} />
