@@ -84,6 +84,9 @@ jobs:
             # git 설정 및 pull
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
+
+            # gradlew 파일에 실행 권한 부여 (이 부분 추가)
+            chmod +x gradlew
             
             # 애플리케이션 설정 파일 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
