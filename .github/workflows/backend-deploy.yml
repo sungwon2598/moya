@@ -9,10 +9,38 @@ on:
     types: [opened, closed]
     paths:
       - 'back/**'
-
 jobs:
+  Check_Path:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Check for backend changes
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin main
+            CHANGED_FILES=$(git diff --name-only origin/main..HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD^1 HEAD)
+          fi
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          if echo "$CHANGED_FILES" | grep -q "^back/"; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
   Deploy:
-    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    needs: Check_Path
+    if: |
+      needs.Check_Path.outputs.should_deploy == 'true' && 
+      (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -66,6 +94,8 @@ jobs:
             nohup java -Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ubuntu/heapdump.hprof -jar build/libs/*SNAPSHOT.jar > ./output.log 2>&1 &
 
   Notify:
+    needs: [Check_Path, Deploy]
+    if: always() && needs.Check_Path.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack
