@@ -9,8 +9,11 @@ on:
     types: [opened, closed]
     paths:
       - 'back/**'
+
 jobs:
   Deploy:
+    # main 브랜치에 push되거나 PR이 머지될 때만 실행
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -33,7 +36,6 @@ jobs:
           script_stop: true
           script: |
             cd /home/ubuntu/moya/back/moya
-            # gradle-wrapper.properties 파일 업데이트
             cat > gradle/wrapper/gradle-wrapper.properties << 'EOL'
             distributionBase=GRADLE_USER_HOME
             distributionPath=wrapper/dists
@@ -43,7 +45,6 @@ jobs:
             zipStoreBase=GRADLE_USER_HOME
             zipStorePath=wrapper/dists
             EOL
-            # test 디렉토리 삭제
             rm -rf src/test
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
@@ -51,6 +52,10 @@ jobs:
             ./gradlew clean build
             sudo fuser -k -n tcp 8080 || true
             nohup java -Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ubuntu/heapdump.hprof -jar build/libs/*SNAPSHOT.jar > ./output.log 2>&1 &
+
+  Notify:
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
