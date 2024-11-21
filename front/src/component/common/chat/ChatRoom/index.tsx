@@ -150,27 +150,46 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50">
-            {error && <ErrorMessage message={error} />}
+        <div className="min-h-screen bg-gray-100 py-8">
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+                {/* 에러 메시지 */}
+                {error && (
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-full max-w-md">
+                        <ErrorMessage message={error}/>
+                    </div>
+                )}
 
-            <ChatHeader
-                roomName={roomInfo.roomName}
-                userCount={roomInfo.userCount}
-                isConnected={isConnected}
-                onExit={handleExit}
-                isExiting={isExiting}
-            />
+                {/* 채팅방 컨테이너 */}
+                <div className="flex flex-col h-[calc(100vh-4rem)]">
+                    {/* 헤더 */}
+                    <div className="bg-white border-b border-gray-200">
+                        <ChatHeader
+                            roomName={roomInfo.roomName}
+                            userCount={roomInfo.userCount}
+                            isConnected={isConnected}
+                            onExit={handleExit}
+                            isExiting={isExiting}
+                        />
+                    </div>
 
-            <MessageList
-                messages={messages}
-                currentUser={username}
-                messagesEndRef={messagesEndRef}
-            />
+                    {/* 메시지 목록 */}
+                    <div className="flex-1 overflow-y-auto bg-gray-50">
+                        <MessageList
+                            messages={messages}
+                            currentUser={username}
+                            messagesEndRef={messagesEndRef}
+                        />
+                    </div>
 
-            <ChatInput
-                onSendMessage={handleSendMessage}
-                isConnected={isConnected}
-            />
+                    {/* 입력창 */}
+                    <div className="bg-white border-t border-gray-200">
+                        <ChatInput
+                            onSendMessage={handleSendMessage}
+                            isConnected={isConnected}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

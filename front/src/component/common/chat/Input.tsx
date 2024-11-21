@@ -4,16 +4,18 @@ import { cn } from '@/utils/cn';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
+    wrapperClassName?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
                                                 label,
                                                 error,
                                                 className,
+                                                wrapperClassName,
                                                 ...props
                                             }) => {
     return (
-        <div className="space-y-1">
+        <div className={cn("w-full", wrapperClassName)}>
             {label && (
                 <label className="block text-sm font-medium text-gray-700">
                     {label}
