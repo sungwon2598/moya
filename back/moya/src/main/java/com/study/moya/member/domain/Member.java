@@ -3,6 +3,8 @@ package com.study.moya.member.domain;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.Instant;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import com.study.moya.BaseEntity;
@@ -65,6 +67,18 @@ public class Member extends BaseEntity implements UserDetails {
     @Column(length = 200)
     private String profileImageUrl;
 
+
+    //-------------------redis에 저장 예정-------------------
+    @Column(length = 1000)
+    private String accessToken;
+
+    @Column(length = 1000)
+    private String refreshToken;
+
+    @Column
+    private Instant tokenExpirationTime;
+    //-----------------------------------------------------
+
 //    @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, updatable = false)
     private String providerId;
@@ -101,19 +115,42 @@ public class Member extends BaseEntity implements UserDetails {
     }
 
     @Builder
-    public Member(String email, String password, String nickname, String providerId, String profileImageUrl,
+    public Member(String email, String password, String nickname, String providerId, String profileImageUrl, String accessToken, String refreshToken, Instant tokenExpirationTime,
                   Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.providerId = providerId;
         this.profileImageUrl = profileImageUrl;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenExpirationTime = tokenExpirationTime;
         this.status = MemberStatus.ACTIVE;
         this.roles.add(Role.USER);
         this.lastLoginAt = LocalDateTime.now();
         this.personalInfoExpiryDate = calculateExpiryDate();
         this.privacyConsent = new PrivacyConsent(termsAgreed, privacyPolicyAgreed, marketingAgreed);
     }
+
+    @Builder(builderMethodName =  "updateBuilder")
+    public Member(Member existingMember, String accessToken, String refreshToken, Instant tokenExpirationTime) {
+        this.email = existingMember.getEmail();
+        this.password = existingMember.getPassword();
+        this.nickname = existingMember.getNickname();
+        this.profileImageUrl = existingMember.getProfileImageUrl();
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenExpirationTime = tokenExpirationTime;
+        this.providerId = getProviderId();
+        this.roles = getRoles();
+        this.status = getStatus();
+        this.privacyConsent = existingMember.getPrivacyConsent();
+        //localDateTime, personalInfoExpiryDate 설정해야함
+    }
+
+
+
+
 
     private LocalDateTime calculateExpiryDate() {
         return LocalDateTime.now().plusYears(MemberConstants.PERSONAL_INFO_RETENTION_YEARS);
@@ -259,4 +296,23 @@ public class Member extends BaseEntity implements UserDetails {
     public boolean isEnabled() {
         return this.status == MemberStatus.ACTIVE;
     }
+
+    public void updateTokenInfo(String accessToken, String refreshToken, Instant tokenExpirationTime) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenExpirationTime = tokenExpirationTime;
+        this.updateLastModifiedAt();
+    }
+
+
+    //닉네임 설정 및 약관 동의
+    public void completeSignUp(
+            String nickname,
+            Boolean termsAgreed,
+            Boolean privacyPolicyAgreed,
+            Boolean marketingAgreed) {
+        this.nickname = nickname;
+        this.privacyConsent = new PrivacyConsent(termsAgreed, privacyPolicyAgreed, marketingAgreed);
+    }
+
 }

@@ -10,7 +10,37 @@ on:
     paths:
       - 'back/**'
 jobs:
+  Check_Path:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Check for backend changes
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin main
+            CHANGED_FILES=$(git diff --name-only origin/main..HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD^1 HEAD)
+          fi
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          if echo "$CHANGED_FILES" | grep -q "^back/"; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
   Deploy:
+    needs: Check_Path
+    if: |
+      needs.Check_Path.outputs.should_deploy == 'true' && 
+      (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -33,7 +63,11 @@ jobs:
           script_stop: true
           script: |
             cd /home/ubuntu/moya/back/moya
-            # gradle-wrapper.properties 파일 업데이트
+            # 로컬 변경사항 초기화
+            git reset --hard
+            git clean -fd
+            
+            # gradle wrapper 설정
             cat > gradle/wrapper/gradle-wrapper.properties << 'EOL'
             distributionBase=GRADLE_USER_HOME
             distributionPath=wrapper/dists
@@ -43,14 +77,30 @@ jobs:
             zipStoreBase=GRADLE_USER_HOME
             zipStorePath=wrapper/dists
             EOL
+            
             # test 디렉토리 삭제
             rm -rf src/test
+            
+            # git 설정 및 pull
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
+
+            # gradlew 파일에 실행 권한 부여 (이 부분 추가)
+            chmod +x gradlew
+            
+            # 애플리케이션 설정 파일 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
+            
+            # 빌드 및 실행
             ./gradlew clean build
             sudo fuser -k -n tcp 8080 || true
             nohup java -Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ubuntu/heapdump.hprof -jar build/libs/*SNAPSHOT.jar > ./output.log 2>&1 &
+
+  Notify:
+    needs: [Check_Path, Deploy]
+    if: always() && needs.Check_Path.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
