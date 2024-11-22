@@ -1,7 +1,6 @@
 import React from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { GoogleLoginButton } from '../../component/Signup/GoogleLoginButton';
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -20,7 +19,6 @@ const MainContent: React.FC = () => {
             icon: MapPin,
             bgColor: 'bg-blue-100',
             iconColor: 'text-blue-600',
-            onClick: () => navigate('/roadmap-preview')
         },
         {
             title: '스터디 찾기',
@@ -72,7 +70,6 @@ const MainContent: React.FC = () => {
                     {actionButtons.map((button, index) => (
                         <button
                             key={index}
-                            onClick={button.onClick}  // 두 번째 추가할 부분
                             className="group relative p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-left"
                         >
                             <div className={`${button.bgColor} w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
@@ -100,9 +97,7 @@ const MainContent: React.FC = () => {
                             Google 계정으로 간편하게 시작해보세요
                         </p>
                     </div>
-                    <div className="w-full max-w-sm">
-                        <GoogleLoginButton isLoading={false} />
-                    </div>
+
                     <p className="text-sm text-gray-500">
                         계속 진행하면 MOYA의{' '}
                         <a href="/terms" className="text-blue-600 hover:underline">
