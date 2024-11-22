@@ -24,7 +24,6 @@ public class FileUploadController {
 
     private final FileService fileService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final ChatService chatService;
 
     @PostMapping("/{roomId}/upload")
     public ResponseEntity<FileUploadResponse> uploadFile (
