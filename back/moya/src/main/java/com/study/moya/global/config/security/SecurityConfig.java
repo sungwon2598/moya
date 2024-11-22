@@ -72,20 +72,20 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/api/auth/login")
-                        .loginProcessingUrl("/api/auth/login")
-                        .successHandler((request, response, authentication) -> {
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter().write("{\"success\": true}");
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter().write("{\"success\": false, \"message\": \"" + exception.getMessage() + "\"}");
-                        }))
-
+//                .formLogin(form -> form
+//                        .loginPage("/api/auth/login")
+//                        .loginProcessingUrl("/api/auth/login")
+//                        .successHandler((request, response, authentication) -> {
+//                            response.setContentType("application/json");
+//                            response.setCharacterEncoding("UTF-8");
+//                            response.getWriter().write("{\"success\": true}");
+//                        })
+//                        .failureHandler((request, response, exception) -> {
+//                            response.setContentType("application/json");
+//                            response.setCharacterEncoding("UTF-8");
+//                            response.getWriter().write("{\"success\": false, \"message\": \"" + exception.getMessage() + "\"}");
+//                        }))
+                .formLogin(AbstractHttpConfigurer::disable)
                 .oauth2Login(oauth2 ->
                         oauth2.authorizationEndpoint(endpoint ->
                                         endpoint.baseUri("/oauth2/authorization")  // 기본 인증 엔드포인트 URI
@@ -118,7 +118,9 @@ public class SecurityConfig {
                         "http://localhost:5173",
                         "http://localhost:4173",
                         "https://api.moyastudy.com",
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "http://localhost:8000",
+                        "http://localhost:8080"
                 )
         );
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
