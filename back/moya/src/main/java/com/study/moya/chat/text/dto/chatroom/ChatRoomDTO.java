@@ -14,8 +14,8 @@ public class ChatRoomDTO implements Serializable {
 
     private String roomId;
     private String roomName;
+    private String creator;
     private long userCount;
-    private ChatRoomType type;
     private Map<String, String> userList;
 
     public ChatRoomDTO() {
@@ -24,10 +24,9 @@ public class ChatRoomDTO implements Serializable {
         this.userCount = 0;
     }
 
-    public ChatRoomDTO(String roomName, ChatRoomType type) {
+    public ChatRoomDTO(String roomName) {
         this();
         this.roomName = roomName;
-        this.type = type;
     }
 
     public void addUser(String userId, String userName) {

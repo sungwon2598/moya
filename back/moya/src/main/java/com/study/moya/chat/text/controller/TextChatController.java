@@ -5,6 +5,7 @@ import com.study.moya.chat.text.dto.chat.MessageType;
 import com.study.moya.chat.text.dto.chatroom.ChatRoomDTO;
 import com.study.moya.chat.text.service.ChatService;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,10 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-
-import java.time.LocalDateTime;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,11 +62,10 @@ public class TextChatController {
         log.debug("채팅방 삭제 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
 
         try {
-//            ChatRoomDTO room = chatService.findRoomById(roomId);
-//            // 방장 확인 로직 추가 (ChatRoomDTO에 creator 필드 필요)
-//            if (!userEmail.equals(room.getCreator())) {
-//                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-//            }
+            ChatRoomDTO room = chatService.findRoomById(roomId);
+            if (!userEmail.equals(room.getCreator())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
 
             chatService.deleteRoom(roomId);
             return ResponseEntity.ok().build();
@@ -96,7 +93,7 @@ public class TextChatController {
         ChatDTO chatMessage = new ChatDTO(
                 MessageType.CHAT,
                 chatDTO.roomId(),
-                userEmail,  // sender를 이메일로 설정
+                userEmail,
                 chatDTO.message(),
                 LocalDateTime.now()
         );
@@ -108,7 +105,7 @@ public class TextChatController {
         ChatDTO leaveMessage = new ChatDTO(
                 MessageType.LEAVE,
                 chatDTO.roomId(),
-                userEmail,  // sender를 이메일로 설정
+                userEmail,
                 userEmail + "님이 나갔습니다.",
                 LocalDateTime.now()
         );
