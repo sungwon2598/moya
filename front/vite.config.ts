@@ -59,9 +59,13 @@ export default defineConfig(({ mode }): UserConfig => {
       chunkSizeWarningLimit: 1000
     },
     server: {
+      host: true,
       port: 3000,
       open: true,
-      cors: true
+      cors: true,
+      hmr: {
+        overlay: true
+      }
     },
     preview: {
       port: 3000,
@@ -71,4 +75,7 @@ export default defineConfig(({ mode }): UserConfig => {
       devSourcemap: true
     }
   };
+  build: {
+    sourcemap: true
+  }
 });

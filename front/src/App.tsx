@@ -12,8 +12,9 @@ import ChatRoom from './pages/chat/ChatRoom';
 
 const App: React.FC = () => {
     return (
+        <ModalProvider>
         <AuthProvider>
-            <ModalProvider>
+
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<RootLayout />}>
@@ -38,8 +39,9 @@ const App: React.FC = () => {
                         </Route>
                     </Routes>
                 </BrowserRouter>
-            </ModalProvider>
         </AuthProvider>
+        </ModalProvider>
+
     );
 };
 
