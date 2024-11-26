@@ -2,12 +2,10 @@ package com.study.moya.global.config.security;
 
 import com.study.moya.Oauth.handler.OAuth2AuthenticationSuccessHandler;
 import com.study.moya.Oauth.service.CustomOAuth2UserService;
+import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
-import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import java.util.List;
-import java.util.Locale;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -72,11 +70,24 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-
+                .formLogin(form -> form
+                        .loginPage("/api/auth/login")
+                        .loginProcessingUrl("/api/auth/login")
+                        .successHandler((request, response, authentication) -> {
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write("{\"success\": true}");
+                        })
+                        .failureHandler((request, response, exception) -> {
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter()
+                                    .write("{\"success\": false, \"message\": \"" + exception.getMessage() + "\"}");
+                        }))
 
                 .oauth2Login(oauth2 ->
                         oauth2.authorizationEndpoint(endpoint ->
-                                        endpoint.baseUri("/oauth2/authorization")// 기본 인증 엔드포인트 UR
+                                        endpoint.baseUri("/oauth2/authorization")  // 기본 인증 엔드포인트 URI
                                 )
                                 .redirectionEndpoint(endpoint ->
                                         endpoint.baseUri("/login/oauth2/code/*")  // 리다이렉션 URI를 Google 콘솔에 등록된 것과 일치하게 수정
@@ -86,8 +97,6 @@ public class SecurityConfig {
                                 )
                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
-                .formLogin(formLogin -> formLogin.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
 
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration),
                                 jwtTokenProvider),
@@ -104,11 +113,14 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(
                 List.of(
+                        "https://www.moyastudy.com",
                         "https://moyastudy.com",
                         "http://localhost:5173",
                         "http://localhost:4173",
                         "https://api.moyastudy.com",
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "http://localhost:8000",
+                        "http://localhost:8080"
                 )
         );
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
