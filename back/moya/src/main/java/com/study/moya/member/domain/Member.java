@@ -61,7 +61,7 @@ public class Member extends BaseEntity implements UserDetails {
     @Column(nullable = true, length = 100)
     private String password;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, unique = true, length = 30)
     private String nickname;
 
     @Column(length = 200)
@@ -116,7 +116,7 @@ public class Member extends BaseEntity implements UserDetails {
 
     @Builder
     public Member(String email, String password, String nickname, String providerId, String profileImageUrl, String accessToken, String refreshToken, Instant tokenExpirationTime,
-                  Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
+                  Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed, Set<Role> roles, MemberStatus status) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
@@ -125,8 +125,8 @@ public class Member extends BaseEntity implements UserDetails {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.tokenExpirationTime = tokenExpirationTime;
-        this.status = MemberStatus.ACTIVE;
-        this.roles.add(Role.USER);
+        this.status = status;
+        this.roles = roles;
         this.lastLoginAt = LocalDateTime.now();
         this.personalInfoExpiryDate = calculateExpiryDate();
         this.privacyConsent = new PrivacyConsent(termsAgreed, privacyPolicyAgreed, marketingAgreed);
@@ -147,9 +147,6 @@ public class Member extends BaseEntity implements UserDetails {
         this.privacyConsent = existingMember.getPrivacyConsent();
         //localDateTime, personalInfoExpiryDate 설정해야함
     }
-
-
-
 
 
     private LocalDateTime calculateExpiryDate() {
@@ -269,7 +266,7 @@ public class Member extends BaseEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return this.password;
+        return null;
     }
 
     @Override
@@ -302,17 +299,6 @@ public class Member extends BaseEntity implements UserDetails {
         this.refreshToken = refreshToken;
         this.tokenExpirationTime = tokenExpirationTime;
         this.updateLastModifiedAt();
-    }
-
-
-    //닉네임 설정 및 약관 동의
-    public void completeSignUp(
-            String nickname,
-            Boolean termsAgreed,
-            Boolean privacyPolicyAgreed,
-            Boolean marketingAgreed) {
-        this.nickname = nickname;
-        this.privacyConsent = new PrivacyConsent(termsAgreed, privacyPolicyAgreed, marketingAgreed);
     }
 
 }
