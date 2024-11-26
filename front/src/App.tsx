@@ -8,7 +8,8 @@ import RoadmapPreview from './pages/RoadmapPreview';
 // import LearningRoad from './pages/learningRoad/LearningRoad';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
-
+import OAuthCallback from './pages/auth/OAuthCallback';
+import SignUpForm from './component/signup/SignUpForm';
 
 const App: React.FC = () => {
     return (
@@ -29,6 +30,10 @@ const App: React.FC = () => {
                             {/* <Route path="login" element={<Login />} /> */}
 
                             {/* 채팅 관련 라우트 */}
+
+                            <Route path="/oauth/callback/google" element={<OAuthCallback />} />
+                            <Route path="/signup" element={<SignUpForm />} />
+
                             <Route path="chat">
                                 <Route index element={<ChatList />} />
                                 <Route path=":roomId" element={<ChatRoom />} />

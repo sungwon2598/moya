@@ -2,7 +2,7 @@ import React from 'react';
 
 export const GoogleLoginButton: React.FC = () => {
     const handleGoogleLogin = () => {
-        window.location.href = 'https://api.moyastudy.com/api/auth/oauth/signup/complete';
+        window.location.href = 'https://api.moyastudy.com/api/auth/oauth/login/google';
     };
 
     return (
