@@ -72,22 +72,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .tokenExpirationTime(accessToken.getExpiresAt())
                 .build();
 
-        // OauthService를 통해 로그인 처리
         OauthLoginResponse loginResponse = oauthService.processOAuthLogin(userInfo);
 
-        if (loginResponse.isNewUser()) {
-            log.info("신규 회원 가입 페이지로 리다이렉트");
-            getRedirectStrategy().sendRedirect(request, response, "/signup.html?token=" + loginResponse.getAccessToken());
-        } else {
-            log.info("기존 회원 메인 페이지로 리다이렉트");
+        // JWT 쿠키 설정
+        addTokenCookie(response, loginResponse.getAccessToken());
 
-            // JWT 쿠키 설정
-            addTokenCookie(response, loginResponse.getAccessToken());
-
-            // 프론트엔드 리다이렉트
-            String redirectUri = buildRedirectUri(loginResponse);
-            getRedirectStrategy().sendRedirect(request, response, redirectUri);
-        }
+        //API 응답 설정
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), loginResponse);
     }
 
     private void addTokenCookie(HttpServletResponse response, String token) {
