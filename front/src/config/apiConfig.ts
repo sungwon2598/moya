@@ -1,15 +1,16 @@
-// src/config/apiConfig.ts
 import axios, { AxiosError } from 'axios';
 import { ChatRoomInfo, CreateRoomRequest } from '@/types/chat';
 
-// API 기본 URL 설정
 export const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.moyastudy.com';
 export const WS_URL = import.meta.env.VITE_WS_URL || 'wss://api.moyastudy.com/ws-stomp';
 
 // Types
 export interface SignUpFormData {
     nickname: string;
-    introduction: string;
+    token: string;
+    tokenExpirationTime: string;
+    termsAgreed: boolean;
+    privacyPolicyAgreed: boolean;
     marketingAgreed: boolean;
 }
 
@@ -88,7 +89,7 @@ export const API_ENDPOINTS = {
     AUTH: {
         GOOGLE_LOGIN: '/api/auth/oauth/login/google',
         GOOGLE_CALLBACK: '/api/auth/oauth/callback/google',
-        SIGNUP_COMPLETE: '/api/auth/signup/complete',
+        SIGNUP_COMPLETE: '/api/auth/oauth/signup/complete',
         CHECK_NICKNAME: (nickname: string) => `/api/auth/check-nickname/${nickname}`,
         LOGOUT: '/api/auth/logout',
         REFRESH: '/api/auth/refresh',
@@ -135,16 +136,11 @@ export const CHAT_API = {
 
 // 인증 관련 API
 export const AUTH_API = {
-    signUpComplete: async (tempToken: string, formData: SignUpFormData): Promise<AuthResponse> => {
+    signUpComplete: async (formData: SignUpFormData): Promise<AuthResponse> => {
         try {
             const response = await axiosInstance.post<never, AuthResponse>(
                 API_ENDPOINTS.AUTH.SIGNUP_COMPLETE,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${tempToken}`
-                    }
-                }
+                formData
             );
             if (response.token) {
                 localStorage.setItem('token', response.token);
@@ -192,7 +188,6 @@ export const AUTH_API = {
     },
 } as const;
 
-// 에러 처리 유틸리티
 export const handleApiError = (error: any) => {
     if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;

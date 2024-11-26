@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { AUTH_API, SignUpFormData } from '../../config/apiConfig';
+import { useAuth } from '@/context/AuthContext';
+import { AUTH_API, SignUpFormData } from '@/config/apiConfig';
 import Alert from './Alert';
 
 interface SignUpFormProps {
-    tempToken: string;
+    token: string;
+    tokenExpirationTime: string;
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ token, tokenExpirationTime }) => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [formData, setFormData] = useState<SignUpFormData>({
         nickname: '',
-        introduction: '',
+        token,
+        tokenExpirationTime,
+        termsAgreed: false,
+        privacyPolicyAgreed: false,
         marketingAgreed: false
     });
+
     const [error, setError] = useState<string | null>(null);
     const [isChecking, setIsChecking] = useState(false);
     const [isNicknameValid, setIsNicknameValid] = useState(false);
@@ -46,8 +51,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
             return;
         }
 
+        if (!formData.termsAgreed || !formData.privacyPolicyAgreed) {
+            setError('필수 약관에 동의해주세요.');
+            return;
+        }
+
         try {
-            const response = await AUTH_API.signUpComplete(tempToken, formData);
+            const response = await AUTH_API.signUpComplete(formData);
             login(response);
             navigate('/');
         } catch (error) {
@@ -60,6 +70,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
             {error && <Alert variant="error">{error}</Alert>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+                {/* 닉네임 입력 필드 */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         닉네임 *
@@ -86,31 +97,48 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        자기소개
-                    </label>
-                    <textarea
-                        value={formData.introduction}
-                        onChange={(e) => setFormData({ ...formData, introduction: e.target.value })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moya-primary"
-                        placeholder="자기소개를 입력하세요"
-                        rows={4}
-                        maxLength={500}
-                    />
-                </div>
+                {/* 약관 동의 체크박스들 */}
+                <div className="space-y-2">
+                    <div className="flex items-start">
+                        <input
+                            type="checkbox"
+                            id="termsAgreed"
+                            checked={formData.termsAgreed}
+                            onChange={(e) => setFormData({ ...formData, termsAgreed: e.target.checked })}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-moya-primary focus:ring-moya-primary"
+                            required
+                        />
+                        <label htmlFor="termsAgreed" className="ml-2 text-sm text-gray-600">
+                            이용약관에 동의합니다. (필수)
+                        </label>
+                    </div>
 
-                <div className="flex items-start">
-                    <input
-                        type="checkbox"
-                        id="marketing"
-                        checked={formData.marketingAgreed}
-                        onChange={(e) => setFormData({ ...formData, marketingAgreed: e.target.checked })}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-moya-primary focus:ring-moya-primary"
-                    />
-                    <label htmlFor="marketing" className="ml-2 text-sm text-gray-600">
-                        마케팅 정보 수신에 동의합니다. (선택)
-                    </label>
+                    <div className="flex items-start">
+                        <input
+                            type="checkbox"
+                            id="privacyPolicyAgreed"
+                            checked={formData.privacyPolicyAgreed}
+                            onChange={(e) => setFormData({ ...formData, privacyPolicyAgreed: e.target.checked })}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-moya-primary focus:ring-moya-primary"
+                            required
+                        />
+                        <label htmlFor="privacyPolicyAgreed" className="ml-2 text-sm text-gray-600">
+                            개인정보 처리방침에 동의합니다. (필수)
+                        </label>
+                    </div>
+
+                    <div className="flex items-start">
+                        <input
+                            type="checkbox"
+                            id="marketingAgreed"
+                            checked={formData.marketingAgreed}
+                            onChange={(e) => setFormData({ ...formData, marketingAgreed: e.target.checked })}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-moya-primary focus:ring-moya-primary"
+                        />
+                        <label htmlFor="marketingAgreed" className="ml-2 text-sm text-gray-600">
+                            마케팅 정보 수신에 동의합니다. (선택)
+                        </label>
+                    </div>
                 </div>
 
                 <button
