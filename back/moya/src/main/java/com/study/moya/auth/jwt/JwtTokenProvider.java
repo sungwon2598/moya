@@ -1,6 +1,7 @@
 package com.study.moya.auth.jwt;
 
 
+import com.study.moya.Oauth.exception.InvalidTokenException;
 import com.study.moya.auth.domain.RefreshToken;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.exception.TokenProcessingException;
@@ -157,6 +158,30 @@ public class JwtTokenProvider {
         return new TokenInfo(newAccessToken, newRefreshToken);
     }
 
+    public String createTokenForOAuth(String email) {
+        log.info("Creating OAuth temporary token for email: {}", email);
+
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + 1800000);// 임시 토큰의 유효기간은 30분
+
+        try {
+            String token = Jwts.builder()
+                    .subject(email)
+                    .claim("type", "OAUTH_SIGNUP")
+                    .issuedAt(now)
+                    .expiration(validity)
+                    .signWith(key, Jwts.SIG.HS256)
+                    .compact();
+
+            log.info("Successfully created OAuth temporary token for email: {}", email);
+            return token;
+
+        } catch (Exception e) {
+            log.error("Error creating OAuth token for email: {}", email, e);
+            throw new TokenProcessingException("OAuth 토큰 생성 중 오류가 발생했습니다.", e);
+        }
+    }
+
     public Authentication getAuthentication(String token) {
         log.debug("토큰으로부터 인증 정보 추출 중");
         Claims claims = Jwts.parser()
@@ -186,6 +211,52 @@ public class JwtTokenProvider {
             return false;
         }
     }
+
+    /**
+     * OAuth 임시 토큰에서 이메일 추출
+     */
+    public String getEmailFromOAuthToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            // 토큰 타입 확인
+            String tokenType = claims.get("type", String.class);
+            if (!"OAUTH_SIGNUP".equals(tokenType)) {
+                throw new InvalidTokenException("유효하지 않은 OAuth 토큰입니다.");
+            }
+
+            return claims.getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid OAuth token: {}", e.getMessage());
+            throw new InvalidTokenException("유효하지 않은 OAuth 토큰입니다.", e);
+        }
+    }
+
+
+    /**
+     * OAuth 임시 토큰 검증
+     */
+    public boolean validateOAuthToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            // 토큰 타입 확인
+            String tokenType = claims.get("type", String.class);
+            return "OAUTH_SIGNUP".equals(tokenType);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid OAuth token: {}", e.getMessage());
+            return false;
+        }
+    }
+
 
     // TokenInfo DTO
     @Getter
