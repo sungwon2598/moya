@@ -57,6 +57,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
@@ -70,20 +71,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/api/auth/login")
-                        .loginProcessingUrl("/api/auth/login")
-                        .successHandler((request, response, authentication) -> {
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter().write("{\"success\": true}");
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter()
-                                    .write("{\"success\": false, \"message\": \"" + exception.getMessage() + "\"}");
-                        }))
+
 
                 .oauth2Login(oauth2 ->
                         oauth2.authorizationEndpoint(endpoint ->
