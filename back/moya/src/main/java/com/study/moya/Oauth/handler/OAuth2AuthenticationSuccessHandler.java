@@ -78,8 +78,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         addTokenCookie(response, loginResponse.getAccessToken());
 
         //API 응답 설정
-        String redirectUrl = buildRedirectUri(loginResponse);
-        response.sendRedirect(redirectUrl);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(loginResponse));
     }
 
     private void addTokenCookie(HttpServletResponse response, String token) {
@@ -91,7 +92,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private String buildRedirectUri(OauthLoginResponse loginResponse) throws JsonProcessingException {
         return UriComponentsBuilder
-                .fromUriString("http://localhost:3000/api/auth/oauth/callback")
+                .fromUriString("https://moyastudy.com")
                 .queryParam("data", URLEncoder.encode(
                         objectMapper.writeValueAsString(loginResponse),
                         StandardCharsets.UTF_8
