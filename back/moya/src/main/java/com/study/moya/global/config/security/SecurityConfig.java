@@ -31,7 +31,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-//
+
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationConfiguration authenticationConfiguration;
 
@@ -53,15 +53,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    CustomOAuth2UserService customOAuth2UserService,
-                                                   OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler)
-            throws Exception {
+                                                   OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/**", "/api/auth/**", "/css/**", "/js/**", "/*.ico", "/dashboard",
+                        .requestMatchers("/**","/api/auth/**", "/css/**", "/js/**", "/*.ico", "/dashboard",
                                 "/webjars/**", "/swagger-ui.html", "/swagger-ui/**", "/actuator/**",
                                 "/mermaid/**", "/api/mermaid/**",
                                 "/api-docs/**", "/v3/api-docs/**", "/result", "/",
@@ -71,28 +71,14 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/api/auth/login")
-                        .loginProcessingUrl("/api/auth/login")
-                        .successHandler((request, response, authentication) -> {
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter().write("{\"success\": true}");
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter()
-                                    .write("{\"success\": false, \"message\": \"" + exception.getMessage() + "\"}");
-                        }))
+
 
                 .oauth2Login(oauth2 ->
                         oauth2.authorizationEndpoint(endpoint ->
                                         endpoint.baseUri("/oauth2/authorization")  // 기본 인증 엔드포인트 URI
                                 )
                                 .redirectionEndpoint(endpoint ->
-                                                endpoint.baseUri("/login/oauth2/code/*")
-                                        // 리다이렉션 URI를 Google 콘솔에 등록된 것과 일치하게 수정
+                                        endpoint.baseUri("/login/oauth2/code/*")  // 리다이렉션 URI를 Google 콘솔에 등록된 것과 일치하게 수정
                                 )
                                 .userInfoEndpoint(userInfo ->
                                         userInfo.userService(customOAuth2UserService)

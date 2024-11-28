@@ -90,14 +90,6 @@ public class MemberService implements UserDetailsService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public boolean existsByEmail(String email) {
-        log.debug("이메일 존재 여부 확인 시작 - 이메일: {}", email);
-        boolean exists = memberRepository.existsByEmail(email);
-        log.debug("이메일 존재 여부 확인 완료 - 이메일: {}, 존재여부: {}", email, exists);
-        return exists;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {
@@ -116,57 +108,5 @@ public class MemberService implements UserDetailsService {
         }
     }
 
-    //사용자의 구글 로그인의 완료 여부에 따른 Logic
-    public boolean createOrUpdateOAuthMember(
-            String email,
-            String providerId,
-            String accessToken,
-            String refreshToken,
-            Instant tokenExpirationTime,
-            String profileImageUrl) {
-
-        Optional<Member> existingMember = memberRepository.findByEmail(email);
-
-        if (existingMember.isPresent()) {
-            Member member = existingMember.get();
-            member.updateTokenInfo(
-                    accessToken,
-                    refreshToken,
-                    tokenExpirationTime
-            );
-            return false;
-        } else {
-            Member newMember = Member.builder()
-                    .email(email)
-                    .providerId(providerId)
-                    .profileImageUrl(profileImageUrl)
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .tokenExpirationTime(tokenExpirationTime)
-                    .password(null)                    // 나중에 설정
-                    .nickname(null)                    // 나중에 설정
-                    .termsAgreed(false)               // 나중에 설정
-                    .privacyPolicyAgreed(false)       // 나중에 설정
-                    .marketingAgreed(false)           // 나중에 설정
-                    .build();
-
-            memberRepository.save(newMember);
-            return true;
-        }
-    }
-
-    //구글 로그인 완료시
-    public void completeSignUp(
-            String email,
-            String nickname,
-            Boolean termsAgreed,
-            Boolean privacyPolicyAgreed,
-            Boolean marketingAgreed) {
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
-
-        member.completeSignUp(nickname, termsAgreed, privacyPolicyAgreed, marketingAgreed);
-    }
 
 }
