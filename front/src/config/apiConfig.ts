@@ -1,3 +1,4 @@
+// src/config/apiConfig.ts
 import axios, { AxiosError } from 'axios';
 import { ChatRoomInfo, CreateRoomRequest } from '@/types/chat';
 
@@ -8,7 +9,7 @@ export const WS_URL = import.meta.env.VITE_WS_URL || 'wss://api.moyastudy.com/ws
 export interface SignUpFormData {
     nickname: string;
     token: string;
-    tokenExpirationTime: string;
+    tokenExpirationTime?: string;
     termsAgreed: boolean;
     privacyPolicyAgreed: boolean;
     marketingAgreed: boolean;
@@ -16,7 +17,19 @@ export interface SignUpFormData {
 
 export interface AuthResponse {
     token: string;
-    memberInfo: {
+    memberInfo?: {
+        id: number;
+        email: string;
+        nickname: string;
+        profileImage?: string;
+    };
+}
+
+export interface OAuthCallbackResponse {
+    accessToken: string;
+    refreshToken: string | null;
+    nextStep: 'LOGIN' | 'SIGNUP';
+    memberInfo?: {
         id: number;
         email: string;
         nickname: string;
@@ -136,6 +149,18 @@ export const CHAT_API = {
 
 // 인증 관련 API
 export const AUTH_API = {
+    handleOAuthCallback: async (code: string): Promise<OAuthCallbackResponse> => {
+        try {
+            const response = await axiosInstance.get<never, OAuthCallbackResponse>(
+                `${API_ENDPOINTS.AUTH.GOOGLE_CALLBACK}?code=${code}`
+            );
+            return response;
+        } catch (error) {
+            console.error('OAuth callback failed:', error);
+            throw error;
+        }
+    },
+
     signUpComplete: async (formData: SignUpFormData): Promise<AuthResponse> => {
         try {
             const response = await axiosInstance.post<never, AuthResponse>(
@@ -207,11 +232,4 @@ export const handleApiError = (error: any) => {
         status: 500,
         message: '알 수 없는 에러가 발생했습니다.',
     };
-};
-
-export default {
-    CHAT_API,
-    AUTH_API,
-    handleApiError,
-    API_ENDPOINTS,
 };

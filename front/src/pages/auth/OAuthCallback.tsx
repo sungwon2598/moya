@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { AUTH_API } from '../../config/apiConfig';
-import { LoadingSpinner } from '../../component/common/chat/LoadingSpinner';
+import { useAuth } from '@/context/AuthContext';
+import { AUTH_API } from '@/config/apiConfig';
+import { LoadingSpinner } from '../../component/common/LoadingSpinner.tsx';
 
-export const OAuthCallback: React.FC = () => {
+export  const OAuthCallback: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -19,22 +19,26 @@ export const OAuthCallback: React.FC = () => {
 
                 const response = await AUTH_API.handleOAuthCallback(code);
 
-                if (response.data.nextStep === 'SIGNUP') {
+                if (response.nextStep === 'SIGNUP') {
+                    // 신규 회원인 경우
                     navigate('/signup', {
                         state: {
-                            token: response.data.accessToken
+                            tempToken: response.accessToken
                         }
                     });
                 } else {
+                    // 기존 회원인 경우
                     login({
-                        token: response.data.accessToken,
-                        memberInfo: response.data.memberInfo!
+                        token: response.accessToken,
+                        memberInfo: response.memberInfo
                     });
                     navigate('/');
                 }
             } catch (error) {
                 console.error('OAuth callback error:', error);
-                navigate('/login');
+                navigate('/login', {
+                    state: { error: 'Google 로그인 중 오류가 발생했습니다.' }
+                });
             }
         };
 

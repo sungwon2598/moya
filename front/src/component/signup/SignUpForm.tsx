@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { AUTH_API, SignUpFormData } from '@/config/apiConfig';
+import { AUTH_API } from '@/config/apiConfig';
 import Alert from './Alert';
+import { LoadingSpinner } from '../../component/common/LoadingSpinner';
+import OAuthCallback from "../../pages/auth/OAuthCallback.tsx";
 
 interface SignUpFormProps {
-    token: string;
-    tokenExpirationTime: string;
+    tempToken: string;
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ token, tokenExpirationTime }) => {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
     const navigate = useNavigate();
     const { login } = useAuth();
-    const [formData, setFormData] = useState<SignUpFormData>({
+    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        token: tempToken,
         nickname: '',
-        token,
-        tokenExpirationTime,
+        introduction: '',
         termsAgreed: false,
         privacyPolicyAgreed: false,
         marketingAgreed: false
@@ -56,21 +58,31 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ token, tokenExpirationTi
             return;
         }
 
+        setIsLoading(true);
         try {
             const response = await AUTH_API.signUpComplete(formData);
             login(response);
             navigate('/');
         } catch (error) {
             setError('회원가입 처리 중 오류가 발생했습니다.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-[400px]">
+                <LoadingSpinner />
+            </div>
+        );
+    }
+
     return (
-        <div className="w-full space-y-6">
+        <div className="w-full max-w-md mx-auto space-y-6 p-6">
             {error && <Alert variant="error">{error}</Alert>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* 닉네임 입력 필드 */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         닉네임 *
@@ -97,7 +109,19 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ token, tokenExpirationTi
                     </div>
                 </div>
 
-                {/* 약관 동의 체크박스들 */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        자기소개
+                    </label>
+                    <textarea
+                        value={formData.introduction}
+                        onChange={(e) => setFormData({ ...formData, introduction: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moya-primary"
+                        rows={4}
+                        placeholder="자기소개를 입력하세요"
+                    />
+                </div>
+
                 <div className="space-y-2">
                     <div className="flex items-start">
                         <input
@@ -143,7 +167,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ token, tokenExpirationTi
 
                 <button
                     type="submit"
-                    disabled={!isNicknameValid}
+                    disabled={!isNicknameValid || isLoading}
                     className="w-full px-4 py-2 bg-moya-primary text-white rounded-lg hover:bg-moya-secondary transition-colors disabled:opacity-50"
                 >
                     가입하기
