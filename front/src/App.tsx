@@ -9,7 +9,7 @@ import RoadmapPreview from './pages/RoadmapPreview';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
 import OAuthCallback from './pages/auth/OAuthCallback';
-import SignUpForm from './component/signup/SignUpForm';
+import SignupPage from './pages/auth/SignupPage'; // SignupPage로 변경
 
 const App: React.FC = () => {
     return (
@@ -31,8 +31,8 @@ const App: React.FC = () => {
 
                             {/* 채팅 관련 라우트 */}
 
-                            <Route path="/oauth/callback/google" element={<OAuthCallback />} />
-                            <Route path="/signup" element={<SignUpForm />} />
+                            <Route path="/api/auth/oauth/callback" element={<OAuthCallback />} />
+                            <Route path="/signup" element={<SignupPage />} /> {/* SignupPage로 변경 */}
 
                             <Route path="chat">
                                 <Route index element={<ChatList />} />

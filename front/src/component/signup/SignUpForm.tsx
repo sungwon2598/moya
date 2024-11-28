@@ -4,7 +4,6 @@ import { useAuth } from '@/context/AuthContext';
 import { AUTH_API } from '@/config/apiConfig';
 import Alert from './Alert';
 import { LoadingSpinner } from '../../component/common/LoadingSpinner';
-import OAuthCallback from "../../pages/auth/OAuthCallback.tsx";
 
 interface SignUpFormProps {
     tempToken: string;

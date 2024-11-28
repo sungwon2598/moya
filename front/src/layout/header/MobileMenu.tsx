@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, X } from 'lucide-react';
-import { DropdownItem } from '@types/header';
+import { DropdownItem } from '@/types/header';
 
 interface MobileMenuProps {
     isOpen: boolean;
