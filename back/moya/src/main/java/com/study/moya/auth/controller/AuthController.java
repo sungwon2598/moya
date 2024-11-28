@@ -1,8 +1,7 @@
 package com.study.moya.auth.controller;
 
-import com.study.moya.auth.dto.LoginRequest;
-import com.study.moya.auth.dto.SignupRequest;
-import com.study.moya.auth.dto.UserInfoResponse;
+import com.study.moya.Oauth.exception.InvalidTokenException;
+import com.study.moya.auth.dto.*;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
 import com.study.moya.auth.service.AuthService;
@@ -14,6 +13,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -24,11 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @Slf4j
@@ -137,32 +134,53 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
+            @RequestHeader(value = "Authorization", required = false) String accessToken,
             @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
-            HttpServletRequest request,
+            @RequestParam String email,
             HttpServletResponse response) {
 
-        if (refreshToken != null) {
-            try {
-                // 서버에서 리프레시 토큰 무효화
-                authService.invalidateRefreshToken(refreshToken);
-                log.info("리프레시 토큰 무효화 성공");
-            } catch (Exception e) {
-                log.warn("리프레시 토큰 무효화 중 오류 발생: {}", e.getMessage());
+        log.info("로그아웃 요청 받음 - email: {}", email);
+
+        try{
+            if(accessToken == null){
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(LogoutResponse.error("Authorization 헤더가 필요합니다", null));
             }
+
+            String token = accessToken.replace("Bearer ", "");
+            LogoutRequest request = LogoutRequest.builder()
+                    .email(email)
+                    .accessToken(token)
+                    .refreshToken(refreshToken)
+                    .build();
+
+            log.debug("Logout request created: {}", request);
+            authService.logout(request);
+            log.info("Access Token + Refresh Token 무효화 완료");
+
+            deleteRefreshTokenCookie(response);
+            log.info("Refresh Token 쿠키 제거 완료");
+
+            SecurityContextHolder.clearContext();
+            log.info("시큐리티 컨텍스트 클리어 완료");
+
+            return ResponseEntity.ok(LogoutResponse.success("로그아웃되었습니다"));
+        } catch (InvalidTokenException e) {
+            log.error("Invalid token error during logout: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(LogoutResponse.error("인증 오류", e.getMessage()));
+        } catch (Exception e){
+            log.error("Unexpected error during logout", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(LogoutResponse.error(
+                            "로그아웃 처리 중 오류가 발생했습니다",
+                            e.getMessage()
+                    ));
         }
 
-        // 쿠키 삭제
-        deleteRefreshTokenCookie(response);
-        log.info("리프레시 토큰 쿠키 삭제 완료");
-
-        // 시큐리티 컨텍스트 클리어
-        SecurityContextHolder.clearContext();
-        log.info("시큐리티 컨텍스트 클리어 완료");
-
-        log.info("로그아웃 성공");
-        return (ResponseEntity
-                .ok()
-                .body("로그아웃되었습니다"));
     }
 
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {

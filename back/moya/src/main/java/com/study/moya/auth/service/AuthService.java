@@ -1,6 +1,8 @@
 package com.study.moya.auth.service;
 
+import com.study.moya.Oauth.exception.InvalidTokenException;
 import com.study.moya.auth.dto.LoginRequest;
+import com.study.moya.auth.dto.LogoutRequest;
 import com.study.moya.auth.dto.UserInfoResponse;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
@@ -9,6 +11,7 @@ import com.study.moya.member.constants.MemberErrorCode;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.exception.MemberException;
 import com.study.moya.member.repository.MemberRepository;
+import com.study.moya.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,10 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RedisService redisService;
     private final AuthenticationManager authenticationManager;
     private final MemberRepository memberRepository;
     private final JwtTokenProvider tokenProvider;
+
 
     @Transactional
     public TokenInfo authenticateUser(LoginRequest loginRequest) {
@@ -87,10 +91,30 @@ public class AuthService {
         );
     }
 
-    public void invalidateRefreshToken(String refreshToken) {
-        // 리프레시 토큰을 DB에서 찾아서 삭제
-        refreshTokenRepository.deleteByToken(refreshToken);
-        log.info("리프레시 토큰 삭제 완료");
-    }
+    @Transactional
+    public void logout(LogoutRequest request) {
+        log.info("모든 토큰 무효화 프로세스 시작 - email: {}", request.getEmail());
+        try {
+            String savedAccessToken = redisService.getAccessToken(request.getEmail());
 
+            if (!isValidTokenPair(request.getAccessToken(), savedAccessToken)) {
+                log.warn("Access Token 불일치 - email: {}", request.getEmail());
+                throw new InvalidTokenException("유효하지 않은 Access Token 입니다");
+            }
+            redisService.deleteAllTokens(request.getAccessToken());
+            log.info("모든 토큰이 삭제되었습니다 - email: {}", request.getAccessToken());
+        } catch (Exception e) {
+            log.error("로그아웃 처리 중 요류 발생 - email: {}", request.getAccessToken(), e);
+            throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
+        }
+    }
+    /**
+     * 토큰 유효성 검증 메서드
+     */
+    private boolean isValidTokenPair (String providedToken, String savedToken){
+        if (providedToken == null || savedToken == null) {
+            return false;
+        }
+        return providedToken.equals(savedToken);
+    }
 }
