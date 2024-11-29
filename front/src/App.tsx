@@ -31,7 +31,7 @@ const App: React.FC = () => {
 
                             {/* 채팅 관련 라우트 */}
 
-                            <Route path="/api/auth/oauth/callback" element={<OAuthCallback />} />
+                            <Route path="/callback/google" element={<OAuthCallback />} />
                             <Route path="/signup" element={<SignupPage />} /> {/* SignupPage로 변경 */}
 
                             <Route path="chat">

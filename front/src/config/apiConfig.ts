@@ -100,8 +100,8 @@ export const API_ENDPOINTS = {
         ROOM_INFO: (roomId: string) => `/ws/chat/room/${roomId}`,
     },
     AUTH: {
-        GOOGLE_LOGIN: '/api/auth/oauth/login/google',
-        GOOGLE_CALLBACK: '/api/auth/oauth/callback/google',
+        GOOGLE_LOGIN: '/oauth2/authorization/google',  // 수정
+        GOOGLE_CALLBACK: '/login/oauth2/code/google',  // 수정
         SIGNUP_COMPLETE: '/api/auth/oauth/signup/complete',
         CHECK_NICKNAME: (nickname: string) => `/api/auth/check-nickname/${nickname}`,
         LOGOUT: '/api/auth/logout',
@@ -149,14 +149,15 @@ export const CHAT_API = {
 
 // 인증 관련 API
 export const AUTH_API = {
-    handleOAuthCallback: async (code: string): Promise<OAuthCallbackResponse> => {
+
+    handleGoogleCallback: async (code: string): Promise<OAuthCallbackResponse> => {
         try {
             const response = await axiosInstance.get<never, OAuthCallbackResponse>(
                 `${API_ENDPOINTS.AUTH.GOOGLE_CALLBACK}?code=${code}`
             );
             return response;
         } catch (error) {
-            console.error('OAuth callback failed:', error);
+            console.error('Google callback failed:', error);
             throw error;
         }
     },

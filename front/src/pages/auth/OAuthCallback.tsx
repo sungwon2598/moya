@@ -1,51 +1,54 @@
+// OAuthCallback.tsx
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LoadingSpinner } from '@/component/common/LoadingSpinner';
-
-interface OAuthResponse {
-    accessToken: string;
-    refreshToken: null;
-    nextStep: 'SIGNUP' | 'LOGIN';
-    newUser: boolean;
-}
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { AUTH_API } from '@/config/apiConfig';
+import {LoadingSpinner} from "../../component/common/LoadingSpinner.tsx";
 
 const OAuthCallback: React.FC = () => {
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     useEffect(() => {
-        const processOAuthResponse = () => {
-            try {
-                // 페이지에 렌더링된 JSON 문자열을 파싱
-                const responseText = document.body.textContent;
-                if (!responseText) return;
+        const handleCallback = async () => {
+            const code = searchParams.get('code');
+            if (!code) {
+                navigate('/', {
+                    state: { error: '인증 코드가 없습니다.' }
+                });
+                return;
+            }
 
-                const response = JSON.parse(responseText) as OAuthResponse;
+            try {
+                // handleGoogleCallback 대신 handleOAuthCallback 사용
+                const response = await AUTH_API.handleOAuthCallback(code);
 
                 if (response.nextStep === 'SIGNUP') {
-                    // 회원가입 폼으로 이동, temporaryToken 전달
                     navigate('/signup', {
                         state: {
                             tempToken: response.accessToken
                         },
-                        replace: true // 히스토리 스택에서 현재 페이지 교체
+                        replace: true
                     });
                 } else {
-                    // 이미 가입된 회원인 경우 메인으로 이동
+                    login({
+                        token: response.accessToken,
+                        memberInfo: response.memberInfo!
+                    });
                     navigate('/', { replace: true });
                 }
             } catch (error) {
-                console.error('OAuth 응답 처리 중 오류:', error);
-                navigate('/login', {
-                    state: { error: '로그인 처리 중 오류가 발생했습니다.' },
-                    replace: true
+                console.error('OAuth callback error:', error);
+                navigate('/', {
+                    state: { error: '로그인 처리 중 오류가 발생했습니다.' }
                 });
             }
         };
 
-        processOAuthResponse();
-    }, [navigate]);
+        handleCallback();
+    }, [searchParams]);
 
-    // 처리 중일 때 보여줄 로딩 상태
     return (
         <div className="flex items-center justify-center min-h-screen">
             <LoadingSpinner />
