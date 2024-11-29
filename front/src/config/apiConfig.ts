@@ -150,7 +150,7 @@ export const CHAT_API = {
 // 인증 관련 API
 export const AUTH_API = {
 
-    handleGoogleCallback: async (code: string): Promise<OAuthCallbackResponse> => {
+    handleOAuthCallback: async (code: string): Promise<OAuthCallbackResponse> => {
         try {
             const response = await axiosInstance.get<never, OAuthCallbackResponse>(
                 `${API_ENDPOINTS.AUTH.GOOGLE_CALLBACK}?code=${code}`
