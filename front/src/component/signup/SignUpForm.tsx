@@ -6,15 +6,15 @@ import Alert from './Alert';
 import { LoadingSpinner } from '../../component/common/LoadingSpinner';
 
 interface SignUpFormProps {
-    asscessToken: string;
+    tempToken: string;
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ asscessToken }) => {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        token: asscessToken,
+        token: tempToken,
         nickname: '',
         introduction: '',
         termsAgreed: false,

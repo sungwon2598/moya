@@ -1,6 +1,5 @@
-// OAuthCallback.tsx
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // useSearchParams 제거
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { LoadingSpinner } from "../../component/common/LoadingSpinner";
 
