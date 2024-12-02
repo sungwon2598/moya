@@ -47,10 +47,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ asscessToken }) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isNicknameValid) {
-            setError('닉네임 중복 확인이 필요합니다.');
-            return;
-        }
+        // 닉네임 중복 확인 체크를 건너뛰기 위해 주석 처리
+        // if (!isNicknameValid) {
+        //     setError('닉네임 중복 확인이 필요합니다.');
+        //     return;
+        // }
 
         if (!formData.termsAgreed || !formData.privacyPolicyAgreed) {
             setError('필수 약관에 동의해주세요.');
@@ -166,7 +167,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ asscessToken }) => {
 
                 <button
                     type="submit"
-                    disabled={!isNicknameValid || isLoading}
+                    disabled={isLoading}
                     className="w-full px-4 py-2 bg-moya-primary text-white rounded-lg hover:bg-moya-secondary transition-colors disabled:opacity-50"
                 >
                     가입하기
