@@ -1,19 +1,10 @@
 package com.study.moya.member.domain;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.time.Instant;
-import java.util.Collection;
-import java.util.stream.Collectors;
 import com.study.moya.BaseEntity;
 import com.study.moya.member.constants.MemberConstants;
 import com.study.moya.member.constants.MemberErrorCode;
 import com.study.moya.member.exception.MemberException;
-import com.study.moya.member.util.StringCryptoConverter;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -27,10 +18,13 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -54,7 +48,7 @@ public class Member extends BaseEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @Convert(converter = StringCryptoConverter.class)
+    //    @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, length = 100)
     private String email;
 
@@ -79,7 +73,7 @@ public class Member extends BaseEntity implements UserDetails {
     private Instant tokenExpirationTime;
     //-----------------------------------------------------
 
-//    @Convert(converter = StringCryptoConverter.class)
+    //    @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, updatable = false)
     private String providerId;
 
@@ -115,8 +109,10 @@ public class Member extends BaseEntity implements UserDetails {
     }
 
     @Builder
-    public Member(String email, String password, String nickname, String providerId, String profileImageUrl, String accessToken, String refreshToken, Instant tokenExpirationTime,
-                  Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed, Set<Role> roles, MemberStatus status) {
+    public Member(String email, String password, String nickname, String providerId, String profileImageUrl,
+                  String accessToken, String refreshToken, Instant tokenExpirationTime,
+                  Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed, Set<Role> roles,
+                  MemberStatus status) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
@@ -132,7 +128,7 @@ public class Member extends BaseEntity implements UserDetails {
         this.privacyConsent = new PrivacyConsent(termsAgreed, privacyPolicyAgreed, marketingAgreed);
     }
 
-    @Builder(builderMethodName =  "updateBuilder")
+    @Builder(builderMethodName = "updateBuilder")
     public Member(Member existingMember, String accessToken, String refreshToken, Instant tokenExpirationTime) {
         this.email = existingMember.getEmail();
         this.password = existingMember.getPassword();
@@ -266,7 +262,7 @@ public class Member extends BaseEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return this.password;
     }
 
     @Override

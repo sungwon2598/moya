@@ -1,16 +1,21 @@
 package com.study.moya.chat.text.controller;
 
+import com.study.moya.chat.message.hadnler.ChatMessageHandlerManager;
 import com.study.moya.chat.text.dto.chat.ChatDTO;
-import com.study.moya.chat.text.dto.chat.MessageType;
+import com.study.moya.chat.text.dto.chatroom.ChatRoomDTO;
 import com.study.moya.chat.text.service.ChatService;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-
-import java.time.LocalDateTime;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Slf4j
 @Controller
@@ -19,56 +24,46 @@ public class TextChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
+    private final ChatMessageHandlerManager messageHandlerManager;
 
     @MessageMapping("/chat/message")
-    public void handleChatMessage(@Payload ChatDTO chatDTO) {
-        switch (chatDTO.type()) {
-            case JOIN -> handleJoin(chatDTO);
-            case CHAT -> handleChat(chatDTO);
-            case LEAVE -> handleLeave(chatDTO);
-            default -> {
-                log.warn("지원되지 않는 메세지 타입 : {}", chatDTO.type());
-                throw new IllegalStateException(" 잘못된 메세지 형식입니다. : " + chatDTO.type());
-            }
+    public void handleChatMessage(@Payload ChatDTO chatDTO, Principal principal) {
+        String userEmail = principal.getName();
+        log.debug("채팅 메시지 처리 중 - 사용자: {}, 타입: {}", userEmail, chatDTO.type());
+
+        messageHandlerManager.handle(chatDTO, userEmail);
+    }
+
+    @PostMapping("/room/{roomId}/leave")
+    public ResponseEntity<Void> leaveRoom(@PathVariable String roomId, Principal principal) {
+        String userEmail = principal.getName();
+        log.debug("채팅방 나가기 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
+
+        try {
+            chatService.removeUserFromRoom(roomId, userEmail);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("채팅방 나가기 실패: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
         }
     }
 
-    private void handleJoin(ChatDTO chatDTO) {
-        chatService.addUserToRoom(chatDTO.roomId(), chatDTO.sender());
+    @DeleteMapping("/room/{roomId}")
+    public ResponseEntity<Void> deleteRoom(@PathVariable String roomId, Principal principal) {
+        String userEmail = principal.getName();
+        log.debug("채팅방 삭제 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
 
-        ChatDTO joinMessage = new ChatDTO(
-                MessageType.JOIN,
-                chatDTO.roomId(),
-                chatDTO.sender(),
-                chatDTO.sender() + "님이 입장하였습니다.",
-                LocalDateTime.now()
-        );
+        try {
+            ChatRoomDTO room = chatService.findRoomById(roomId);
+            if (!userEmail.equals(room.getCreator())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
 
-        messagingTemplate.convertAndSend("/sub/chat/room/" + chatDTO.roomId(), joinMessage);
+            chatService.deleteRoom(roomId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("채팅방 삭제 실패: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
-
-    private void handleChat(ChatDTO chatDTO) {
-        ChatDTO chatMessage = new ChatDTO(
-                MessageType.CHAT,
-                chatDTO.roomId(),
-                chatDTO.sender(),
-                chatDTO.message(),
-                LocalDateTime.now()
-        );
-
-        messagingTemplate.convertAndSend("/sub/chat/room/" + chatDTO.roomId(), chatMessage);
-    }
-
-    private void handleLeave(ChatDTO chatDTO) {
-        ChatDTO leaveMessage = new ChatDTO(
-                MessageType.LEAVE,
-                chatDTO.roomId(),
-                chatDTO.sender(),
-                chatDTO.sender() + "님이 나갔습니다.",
-                LocalDateTime.now()
-        );
-
-        messagingTemplate.convertAndSend("/sub/chat/room/" + chatDTO.roomId(), leaveMessage);
-    }
-
 }
