@@ -1,5 +1,6 @@
 package com.study.moya.chat.text.controller;
 
+import com.study.moya.chat.message.SystemMessageType;
 import com.study.moya.chat.message.hadnler.ChatMessageHandlerManager;
 import com.study.moya.chat.text.dto.chat.ChatDTO;
 import com.study.moya.chat.text.dto.chatroom.ChatRoomDTO;
@@ -40,7 +41,8 @@ public class TextChatController {
         log.debug("채팅방 나가기 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
 
         try {
-            chatService.removeUserFromRoom(roomId, userEmail);
+            ChatDTO leaveMessage = ChatDTO.createSystemMessage(roomId, userEmail, SystemMessageType.LEAVE);
+            messageHandlerManager.handle(leaveMessage, userEmail);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             log.warn("채팅방 나가기 실패: {}", e.getMessage());

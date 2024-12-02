@@ -1,9 +1,9 @@
 package com.study.moya.chat.message.hadnler;
 
 import com.study.moya.chat.message.ChatType;
+import com.study.moya.chat.message.SystemMessageType;
 import com.study.moya.chat.text.dto.chat.ChatDTO;
 import com.study.moya.chat.text.service.ChatService;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -12,27 +12,29 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JoinMessageHandler implements MessageHandler {
+public class SystemMessageHandler implements MessageHandler {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
 
     @Override
     public void handle(ChatDTO chatDTO, String userEmail) {
-        chatService.addUserToRoom(chatDTO.roomId(), userEmail);
+        if (chatDTO.systemMessageType() == SystemMessageType.JOIN) {
+            chatService.addUserToRoom(chatDTO.roomId(), userEmail);
+        } else if (chatDTO.systemMessageType() == SystemMessageType.LEAVE) {
+            chatService.removeUserFromRoom(chatDTO.roomId(), userEmail);
+        }
 
-        ChatDTO joinMessage = new ChatDTO(
-                ChatType.JOIN,
+        ChatDTO systemMessage = ChatDTO.createSystemMessage(
                 chatDTO.roomId(),
                 userEmail,
-                userEmail + "님이 입장하였습니다.",
-                LocalDateTime.now()
+                chatDTO.systemMessageType()
         );
 
-        messagingTemplate.convertAndSend("/sub/chat/room/" + chatDTO.roomId(), joinMessage);
+        messagingTemplate.convertAndSend("/sub/chat/room/" + chatDTO.roomId(), systemMessage);
     }
 
     @Override
     public boolean supports(ChatDTO chatDTO) {
-        return ChatType.JOIN.equals(chatDTO.type());
+        return ChatType.SYSTEM.equals(chatDTO.type());
     }
 }
