@@ -56,27 +56,30 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
     const handleGoogleLogin = () => {
         try {
-            setIsLoading(true);
+        //     setIsLoading(true);
+        //
+        //     const popup = window.open(
+        //         `${BASE_URL}/api/auth/oauth/login/google`,
+        //         'googleLogin',
+        //         'width=500,height=600,left=' +
+        //         (window.screen.width / 2 - 250) +
+        //         ',top=' + (window.screen.height / 2 - 300)
+        //     );
+        //
+        //     if (!popup) {
+        //         throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+        //     }
+        //
+        //     // 팝업 창 닫힘 감지
+        //     const checkPopup = setInterval(() => {
+        //         if (popup.closed) {
+        //             clearInterval(checkPopup);
+        //             setIsLoading(false);
+        //         }
+        //     }, 1000);
 
-            const popup = window.open(
-                `${BASE_URL}/api/auth/oauth/login/google`,
-                'googleLogin',
-                'width=500,height=600,left=' +
-                (window.screen.width / 2 - 250) +
-                ',top=' + (window.screen.height / 2 - 300)
-            );
-
-            if (!popup) {
-                throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-            }
-
-            // 팝업 창 닫힘 감지
-            const checkPopup = setInterval(() => {
-                if (popup.closed) {
-                    clearInterval(checkPopup);
-                    setIsLoading(false);
-                }
-            }, 1000);
+            window.open(`${BASE_URL}/api/auth/oauth/login/google`
+            )
 
         } catch (error) {
             setIsLoading(false);
