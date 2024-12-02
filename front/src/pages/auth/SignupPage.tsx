@@ -6,9 +6,11 @@ const SignUpPage: React.FC = () => {
     const location = useLocation();
     const tempToken = location.state?.accessToken;
 
-    if (!tempToken) {
-        return <Navigate to="/" replace />;
-    }
+    console.log(tempToken);
+    //
+    // if (!tempToken) {
+    //     return <Navigate to="/" replace />;
+    // }
 
     return <SignUpForm tempToken={tempToken} />;
 };
