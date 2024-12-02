@@ -8,6 +8,7 @@ import RoadmapPreview from './pages/RoadmapPreview';
 // import LearningRoad from './pages/learningRoad/LearningRoad';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
+import EditProfile from "./pages/profile/EditProfile.tsx";
 
 
 const App: React.FC = () => {
@@ -32,6 +33,8 @@ const App: React.FC = () => {
                                 <Route index element={<ChatList />} />
                                 <Route path=":roomId" element={<ChatRoom />} />
                             </Route>
+
+                            <Route path="profile/edit" element={<EditProfile />} />
 
                             {/* 404 페이지 처리 */}
                             <Route path="*" element={<div>Page Not Found</div>} />
