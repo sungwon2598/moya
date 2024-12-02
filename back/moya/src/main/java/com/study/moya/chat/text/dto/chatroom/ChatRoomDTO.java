@@ -1,52 +1,43 @@
 package com.study.moya.chat.text.dto.chatroom;
 
-import lombok.Builder;
-import lombok.Getter;
-
-import java.util.Collections;
-import java.util.HashMap;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
-public class ChatRoomDTO {
-    private final String roomId;
-    private final String roomName;
-    private long userCount;
-    private final ChatRoomType type;
-    private final Map<String, String> userList; // userId -> userName
+@Setter
+public class ChatRoomDTO implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-    @Builder
-    public ChatRoomDTO(String roomName, ChatRoomType type) {
+    private String roomId;
+    private String roomName;
+    private String creator;
+    private long userCount;
+    private Map<String, String> userList;
+
+    public ChatRoomDTO() {
         this.roomId = UUID.randomUUID().toString();
-        this.roomName = roomName;
+        this.userList = new ConcurrentHashMap<>();
         this.userCount = 0;
-        this.type = type;
-        this.userList = new HashMap<>();
     }
 
-    // 사용자 추가
+    public ChatRoomDTO(String roomName) {
+        this();
+        this.roomName = roomName;
+    }
+
     public void addUser(String userId, String userName) {
         if (userList.putIfAbsent(userId, userName) == null) {
             userCount++;
         }
     }
 
-    // 사용자 삭제
     public void removeUser(String userId) {
         if (userList.remove(userId) != null) {
             userCount--;
         }
     }
-
-//    // 엔티티를 DTO로 변환하는 정적 메서드
-//    public static ChatRoomDTO fromModel(Index chatRoom) {
-//        return ChatRoomDTO.builder()
-//                .roomId(chatRoom.getRoomId())
-//                .roomName(chatRoom.getRoomName())
-//                .userCount(chatRoom.getUserCount())
-//                .type(chatRoom.getType())
-//                .userList(chatRoom.getUserList())
-//                .build();
-//    }
 }
