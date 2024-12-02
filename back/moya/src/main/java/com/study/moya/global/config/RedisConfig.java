@@ -1,5 +1,7 @@
 package com.study.moya.global.config;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.study.moya.chat.domain.RedisChatMessage;
 import java.time.Duration;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -45,6 +47,33 @@ class RedisConfig {
         template.setHashValueSerializer(serializer);
 
         // 기본 직렬화 설정
+        template.setDefaultSerializer(serializer);
+        template.setEnableDefaultSerializer(true);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    @Bean
+    public RedisTemplate<String, RedisChatMessage> chatMessageRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, RedisChatMessage> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.activateDefaultTyping(
+                objectMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(serializer);
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(serializer);
         template.setDefaultSerializer(serializer);
         template.setEnableDefaultSerializer(true);
 

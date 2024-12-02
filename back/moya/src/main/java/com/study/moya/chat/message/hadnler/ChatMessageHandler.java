@@ -2,6 +2,7 @@ package com.study.moya.chat.message.hadnler;
 
 import com.study.moya.chat.message.ChatType;
 import com.study.moya.chat.text.dto.chat.ChatDTO;
+import com.study.moya.chat.text.service.ChatService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ChatMessageHandler implements MessageHandler {
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatService chatService;
 
     @Override
     public void handle(ChatDTO chatDTO, String userEmail) {
@@ -24,6 +26,7 @@ public class ChatMessageHandler implements MessageHandler {
                 LocalDateTime.now()
         );
 
+        chatService.saveMessage(chatMessage);
         messagingTemplate.convertAndSend("/sub/chat/room/" + chatDTO.roomId(), chatMessage);
     }
 
