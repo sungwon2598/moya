@@ -35,7 +35,7 @@ const OAuthCallback: React.FC = () => {
                 }
             } catch (error) {
                 console.error('OAuth 응답 처리 실패:', error);
-                navigate('/signup', {
+                navigate('/', {
                     state: {
                         error: '로그인 처리 중 오류가 발생했습니다.'
                     },
