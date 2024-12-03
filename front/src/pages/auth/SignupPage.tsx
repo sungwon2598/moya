@@ -1,13 +1,26 @@
-import React from 'react';
-import { Navigate, useSearchParams, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import SignUpForm from '@/component/signup/SignUpForm';
 
 const SignUpPage: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const location = useLocation();
-    // URL 파라미터와 state 모두 체크
-    const accessToken = searchParams.get('accessToken') || location.state?.tempToken;
-    const nextStep = searchParams.get('nextStep') || location.state?.nextStep;
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [nextStep, setNextStep] = useState<string | null>(null);
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('accessToken');
+        const step = urlParams.get('nextStep');
+
+        console.log('URL Parameters:', {
+            accessToken: token,
+            nextStep: step
+        });
+
+        if (token) {
+            setAccessToken(token);
+            setNextStep(step);
+        }
+    }, []);
 
     // 유효성 검사
     if (!accessToken) {
