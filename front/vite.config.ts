@@ -62,14 +62,12 @@ export default defineConfig(({ mode }): UserConfig => {
       open: true,
       cors: true,
       proxy: {
-        // API 프록시 설정이 필요한 경우 추가
-        // '/api': {
-        //   target: 'http://localhost:8080',
-        //   changeOrigin: true,
-        //   secure: false,
-        //   ws: true,
-        // }
-      },
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+
+        }      },
       hmr: {
         overlay: true
       }

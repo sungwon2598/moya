@@ -5,31 +5,36 @@ import { ModalProvider } from './context/ModalContext';
 import RootLayout from './layout/RootLayout';
 import Main from './pages/main/Main';
 import RoadmapPreview from './pages/RoadmapPreview';
-// import LearningRoad from './pages/learningRoad/LearningRoad';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
 import OAuthCallback from './pages/auth/OAuthCallback';
-import SignupPage from './pages/auth/SignupPage'; // SignupPage로 변경
+import SignupPage from './pages/auth/SignupPage';
 
 const App: React.FC = () => {
     return (
         <ModalProvider>
-        <AuthProvider>
+            <AuthProvider>
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<RootLayout />}>
+                            {/* 메인 페이지 */}
                             <Route index element={<Main />} />
+
+                            {/* 로드맵 관련 라우트 */}
                             <Route path="roadmap">
                                 <Route path="preview" element={<RoadmapPreview />} />
                             </Route>
 
-                            {/* OAuth & Auth 관련 라우트 */}
-                            <Route path="/login/oauth2/code/google" element={<OAuthCallback />} />
-                            <Route path="/signup" element={<SignupPage />} />
+                            {/* OAuth & Auth 관련 라우트 - 통합 */}
                             <Route path="oauth">
                                 <Route path="signup" element={<SignupPage />} />
                                 <Route path="callback" element={<OAuthCallback />} />
                             </Route>
+                            {/* Google OAuth 콜백 */}
+                            <Route
+                                path="login/oauth2/code/google"
+                                element={<OAuthCallback />}
+                            />
 
                             {/* 채팅 관련 라우트 */}
                             <Route path="chat">
@@ -38,11 +43,20 @@ const App: React.FC = () => {
                             </Route>
 
                             {/* 404 페이지 처리 */}
-                            <Route path="*" element={<div>Page Not Found</div>} />
+                            <Route
+                                path="*"
+                                element={
+                                    <div className="flex min-h-screen items-center justify-center">
+                                        <h1 className="text-2xl font-bold text-gray-800">
+                                            페이지를 찾을 수 없습니다
+                                        </h1>
+                                    </div>
+                                }
+                            />
                         </Route>
                     </Routes>
                 </BrowserRouter>
-        </AuthProvider>
+            </AuthProvider>
         </ModalProvider>
     );
 };
