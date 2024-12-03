@@ -42,7 +42,6 @@ const OAuthCallback: React.FC = () => {
                 });
             }
         };
-
         processResponse();
     }, [navigate, login]);
 

@@ -25,9 +25,11 @@ const App: React.FC = () => {
 
                             {/* OAuth & Auth 관련 라우트 */}
                             <Route path="/login/oauth2/code/google" element={<OAuthCallback />} />
-                            <Route path="/oauth/signup" element={<SignupPage />} />
-                            <Route path="/oauth/callback" element={<OAuthCallback />} />
                             <Route path="/signup" element={<SignupPage />} />
+                            <Route path="oauth">
+                                <Route path="signup" element={<SignupPage />} />
+                                <Route path="callback" element={<OAuthCallback />} />
+                            </Route>
 
                             {/* 채팅 관련 라우트 */}
                             <Route path="chat">
