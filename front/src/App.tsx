@@ -15,26 +15,23 @@ const App: React.FC = () => {
     return (
         <ModalProvider>
         <AuthProvider>
-
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<RootLayout />}>
                             <Route index element={<Main />} />
                             <Route path="roadmap">
-                            <Route path="preview" element={<RoadmapPreview />}>
-                                {/* <Route index element={<LearningRoad />} /> */}
+                                <Route path="preview" element={<RoadmapPreview />} />
                             </Route>
+
+                            {/* OAuth & Auth 관련 라우트 */}
+                            <Route path="login/oauth2/code/google" element={<OAuthCallback />} />
+                            <Route path="oauth">
+                                <Route path="signup" element={<SignupPage />} />
+                                <Route path="callback" element={<OAuthCallback />} />
                             </Route>
-                            {/* 향후 추가될 라우트들 */}
-                            {/* <Route path="register" element={<Register />} /> */}
-                            {/* <Route path="login" element={<Login />} /> */}
+                            <Route path="signup" element={<SignupPage />} />
 
                             {/* 채팅 관련 라우트 */}
-
-                            <Route path="/login/oauth2/code/google" element={<OAuthCallback />} />
-                            <Route path="/oauth/signup" element={<SignupPage />} />
-                            <Route path="/signup" element={<SignupPage />} />
-
                             <Route path="chat">
                                 <Route index element={<ChatList />} />
                                 <Route path=":roomId" element={<ChatRoom />} />
@@ -47,7 +44,6 @@ const App: React.FC = () => {
                 </BrowserRouter>
         </AuthProvider>
         </ModalProvider>
-
     );
 };
 

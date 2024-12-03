@@ -1,14 +1,13 @@
 import React from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+import {  Navigate, useSearchParams } from 'react-router-dom';
 import SignUpForm from '@/component/signup/SignUpForm';
 
 const SignUpPage: React.FC = () => {
     const [searchParams] = useSearchParams();
-
     const accessToken = searchParams.get('accessToken');
     const nextStep = searchParams.get('nextStep');
-    const isNewUser = searchParams.get('isNewUser');
 
+    // 유효성 검사
     if (!accessToken || nextStep !== 'SIGNUP') {
         return <Navigate to="/" replace />;
     }
