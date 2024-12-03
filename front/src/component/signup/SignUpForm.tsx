@@ -16,10 +16,10 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ tempToken }) => {
     const [formData, setFormData] = useState({
         token: tempToken,
         nickname: '',
-        introduction: '',
         termsAgreed: false,
         privacyPolicyAgreed: false,
-        marketingAgreed: false
+        marketingAgreed: false,
+        introduction: '', // 선택적 필드로 추가
     });
 
     const [error, setError] = useState<string | null>(null);

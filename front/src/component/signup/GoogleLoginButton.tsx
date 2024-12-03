@@ -1,8 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { BASE_URL } from '@/config/apiConfig';
-import { useAuth } from '@/context/AuthContext';
+import {LoadingSpinner} from "../common/LoadingSpinner.tsx";
 
 interface GoogleLoginButtonProps {
     className?: string;
@@ -12,75 +10,14 @@ interface GoogleLoginButtonProps {
 
 const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
                                                                  className = '',
-                                                                 onSuccess,
                                                                  onError
                                                              }) => {
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
-    const { login } = useAuth();
-
-    const handleMessage = useCallback((event: MessageEvent) => {
-        if (event.data.type === 'oauth-callback') {
-            setIsLoading(false);
-            const { data } = event;
-
-            try {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                if (data.nextStep === 'SIGNUP') {
-                    navigate('/signup', {
-                        state: {
-                            tempToken: data.tempToken,
-                            email: data.email,
-                            name: data.name
-                        }
-                    });
-                } else {
-                    login(data);
-                    onSuccess?.();
-                    navigate('/');
-                }
-            } catch (error) {
-                console.error('OAuth callback error:', error);
-                onError?.(error as Error);
-            }
-        }
-    }, [navigate, login, onSuccess, onError]);
-
-    useEffect(() => {
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, [handleMessage]);
 
     const handleGoogleLogin = () => {
         try {
-        //     setIsLoading(true);
-        //
-        //     const popup = window.open(
-        //         `${BASE_URL}/api/auth/oauth/login/google`,
-        //         'googleLogin',
-        //         'width=500,height=600,left=' +
-        //         (window.screen.width / 2 - 250) +
-        //         ',top=' + (window.screen.height / 2 - 300)
-        //     );
-        //
-        //     if (!popup) {
-        //         throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-        //     }
-        //
-        //     // 팝업 창 닫힘 감지
-        //     const checkPopup = setInterval(() => {
-        //         if (popup.closed) {
-        //             clearInterval(checkPopup);
-        //             setIsLoading(false);
-        //         }
-        //     }, 1000);
-
-            window.open(`${BASE_URL}/api/auth/oauth/login/google`
-            )
-
+            setIsLoading(true);
+            window.location.href = `${BASE_URL}/api/auth/oauth/login/google`;
         } catch (error) {
             setIsLoading(false);
             onError?.(error as Error);
@@ -92,11 +29,11 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
             onClick={handleGoogleLogin}
             disabled={isLoading}
             className={`w-full h-12 px-4 bg-white border border-gray-300 rounded-lg 
-        hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 
-        disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+                hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 
+                disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
         >
             {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
+                <LoadingSpinner />
             ) : (
                 <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -118,8 +55,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
                 </svg>
             )}
             <span className="font-medium text-gray-700">
-        {isLoading ? '로그인 중...' : 'Google로 계속하기'}
-      </span>
+                {isLoading ? '로그인 중...' : 'Google로 계속하기'}
+            </span>
         </button>
     );
 };

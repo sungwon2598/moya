@@ -1,18 +1,20 @@
 import React from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
-import SignUpForm from '../../component/signup/SignUpForm';
+import SignUpForm from '@/component/signup/SignUpForm';
 
 const SignUpPage: React.FC = () => {
     const location = useLocation();
-    const tempToken = location.state?.accessToken;
+    const { tempToken } = location.state || {};
 
-    console.log(tempToken);
-    //
-    // if (!tempToken) {
-    //     return <Navigate to="/" replace />;
-    // }
+    if (!tempToken) {
+        return <Navigate to="/" replace />;
+    }
 
-    return <SignUpForm tempToken={tempToken} />;
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <SignUpForm tempToken={tempToken} />
+        </div>
+    );
 };
 
 export default SignUpPage;
