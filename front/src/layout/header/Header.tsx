@@ -24,7 +24,7 @@ const navigationItems = [
 const authNavigationItems = [
     {
         label: '채팅',
-        path: '/chat',
+        path: '/study',
         type: 'A' as const,
         icon: MessageCircle
     }

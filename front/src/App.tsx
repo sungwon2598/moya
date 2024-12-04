@@ -8,6 +8,7 @@ import RoadmapPreview from './pages/RoadmapPreview';
 // import LearningRoad from './pages/learningRoad/LearningRoad';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
+import StudyLayout from './pages/study/components/StudyLayout';
 
 
 const App: React.FC = () => {
@@ -26,12 +27,14 @@ const App: React.FC = () => {
                             {/* 향후 추가될 라우트들 */}
                             {/* <Route path="register" element={<Register />} /> */}
                             {/* <Route path="login" element={<Login />} /> */}
-
+        {/* <Route path="admin" element={<Admin />} /> */}
                             {/* 채팅 관련 라우트 */}
                             <Route path="chat">
                                 <Route index element={<ChatList />} />
                                 <Route path=":roomId" element={<ChatRoom />} />
                             </Route>
+                            <Route path="/study" element={<StudyLayout />} />
+
 
                             {/* 404 페이지 처리 */}
                             <Route path="*" element={<div>Page Not Found</div>} />

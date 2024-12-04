@@ -1,6 +1,6 @@
 // src/config/apiConfig.ts
 import axios, { AxiosError } from 'axios';
-import { ChatRoomInfo, CreateRoomRequest } from '@/types/chat';
+import { ChatRoomInfo, CreateRoomRequest } from '@/types/study';
 
 // API 기본 URL 설정
 export const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.moyastudy.com';
@@ -61,8 +61,8 @@ axiosInstance.interceptors.response.use(
 // API 엔드포인트 정의
 export const API_ENDPOINTS = {
     CHAT: {
-        ROOMS: '/ws/chat',
-        CREATE_ROOM: '/ws/chat/create',
+        ROOMS: '/ws/study',
+        CREATE_ROOM: '/ws/study/create',
         ROOM_INFO: (roomId: string) => `/ws/chat/room/${roomId}`,
     },
     /* 인증 관련 엔드포인트는 주석 처리

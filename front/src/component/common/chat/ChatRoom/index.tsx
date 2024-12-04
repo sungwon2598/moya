@@ -93,7 +93,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                 };
 
                 client.publish({
-                    destination: '/pub/chat/message',
+                    destination: '/pub/study/message',
                     body: JSON.stringify(joinMessage)
                 });
             },
@@ -152,7 +152,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                 };
 
                 clientRef.current.publish({
-                    destination: '/pub/chat/message',
+                    destination: '/pub/study/message',
                     body: JSON.stringify(leaveMessage)
                 });
             }
@@ -179,7 +179,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         };
 
         clientRef.current.publish({
-            destination: '/pub/chat/message',
+            destination: '/pub/study/message',
             body: JSON.stringify(chatMessage)
         });
     };
