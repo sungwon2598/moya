@@ -8,7 +8,7 @@ import RoadmapPreview from './pages/RoadmapPreview';
 // import LearningRoad from './pages/learningRoad/LearningRoad';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
-import StudyLayout from './pages/study/components/StudyLayout';
+import StudyLayout from './pages/study/components/layout/StudyLayout';
 
 
 const App: React.FC = () => {
