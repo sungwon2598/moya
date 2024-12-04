@@ -1,19 +1,23 @@
 package com.study.moya.chat.text.service;
 
+import com.study.moya.chat.domain.ChatRoom;
 import com.study.moya.chat.domain.RedisChatMessage;
+import com.study.moya.chat.repository.ChatMessageRepository;
+import com.study.moya.chat.repository.ChatRoomMemberRepository;
+import com.study.moya.chat.repository.ChatRoomRepository;
 import com.study.moya.chat.text.dto.chat.ChatDTO;
-import com.study.moya.chat.text.dto.chatroom.ChatRoomDTO;
+import com.study.moya.chat.text.dto.chat.ChatMessageResponse;
+import com.study.moya.member.domain.Member;
+import com.study.moya.member.repository.MemberRepository;
 import java.time.Duration;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,26 +25,102 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private static final int DEFAULT_CHAT_LOAD_SIZE = 50;
     private final RedisTemplate<String, RedisChatMessage> chatMessageRedisTemplate;
+    private final ChatMessageRepository chatMessageRepository;
 
-    private static final String CHAT_ROOMS_KEY = "CHAT_ROOM";  // 채팅방 목록
-    private static final String CHAT_ROOM_USERS_KEY = "CHAT_ROOM_USERS:";  // 채팅방 사용자
-    private static final String CHAT_MESSAGES_KEY = "CHAT_MESSAGES:";  // 채팅 메시지 저장
-    private static final long CHAT_ROOM_EXPIRE_TIME = 24 * 60 * 60; // 24시간
-    private static final long CHAT_MESSAGE_EXPIRE_TIME = 7 * 24 * 60 * 60; // 7일
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final MemberRepository memberRepository;
+
+    private static final String CHAT_MESSAGES_KEY = "CHAT_MESSAGES:";
+    private static final Duration CHAT_MESSAGE_EXPIRE_TIME = Duration.ofDays(7);
+
+    public ChatRoom createTextRoom(String roomName, String creatorEmail) {
+        Member creator = memberRepository.findByEmail(creatorEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        ChatRoom chatRoom = ChatRoom.builder()
+                .name(roomName)
+                .creator(creator)
+                .build();
+
+        chatRoom.addMember(creator);
+        return chatRoomRepository.save(chatRoom);
+    }
+
+    public void addUserToRoom(String roomId, String userEmail) {
+        ChatRoom chatRoom = chatRoomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Chat room not found"));
+
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        if (!chatRoomMemberRepository.existsByChatRoomAndMember(chatRoom, member)) {
+            chatRoom.addMember(member);
+            chatRoomRepository.save(chatRoom);
+        }
+    }
+
+    public void removeUserFromRoom(String roomId, String userEmail) {
+        ChatRoom chatRoom = chatRoomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Chat room not found"));
+
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        chatRoom.removeMember(member);
+        chatRoomRepository.save(chatRoom);
+    }
 
     public void saveMessage(ChatDTO chatDTO) {
         RedisChatMessage redisMessage = convertToRedisMessage(chatDTO);
-        String messageKey = CHAT_MESSAGES_KEY + chatDTO.roomId();  // 채팅방별 키 구조
+        String messageKey = CHAT_MESSAGES_KEY + chatDTO.roomId();
 
         chatMessageRedisTemplate.opsForList().rightPush(messageKey, redisMessage);
-        chatMessageRedisTemplate.expire(messageKey, Duration.ofSeconds(CHAT_MESSAGE_EXPIRE_TIME));
+        chatMessageRedisTemplate.expire(messageKey, CHAT_MESSAGE_EXPIRE_TIME);
 
         log.debug("Saved chat message to Redis - Room: {}, Sender: {}",
                 chatDTO.roomId(), chatDTO.sender());
     }
 
+    public List<ChatRoom> getUserChatRooms(String userEmail) {
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+        return chatRoomRepository.findByMember(member);
+    }
+
+    public ChatRoom findRoomById(String roomId) {
+        return chatRoomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다: " + roomId));
+    }
+
+    public boolean isRoomMember(String roomId, String userEmail) {
+        ChatRoom chatRoom = findRoomById(roomId);
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        return chatRoomMemberRepository.existsByChatRoomAndMember(chatRoom, member);
+    }
+
+    public void deleteRoom(String roomId, String userEmail) {
+        ChatRoom chatRoom = findRoomById(roomId);
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        if (!chatRoom.getCreator().equals(member)) {
+            throw new IllegalArgumentException("방장만 채팅방을 삭제할 수 있습니다.");
+        }
+
+        // Redis에서 채팅 메시지 삭제
+        String messageKey = CHAT_MESSAGES_KEY + roomId;
+        chatMessageRedisTemplate.delete(messageKey);
+
+        // DB에서 채팅방 삭제
+        chatRoomRepository.delete(chatRoom);
+    }
+
+    // 채팅 메시지 관련 메서드들은 그대로 유지
     private RedisChatMessage convertToRedisMessage(ChatDTO chatDTO) {
         RedisChatMessage message = new RedisChatMessage();
         message.setRoomId(chatDTO.roomId());
@@ -61,100 +141,31 @@ public class ChatService {
         return messages != null ? messages : Collections.emptyList();
     }
 
-    public ChatRoomDTO createTextRoom(String roomName, String creator) {
-        ChatRoomDTO chatRoom = new ChatRoomDTO(roomName);
-        chatRoom.setCreator(creator);
-
-        HashOperations<String, String, ChatRoomDTO> hashOps = redisTemplate.opsForHash();
-        hashOps.put(CHAT_ROOMS_KEY, chatRoom.getRoomId(), chatRoom);
-
-        redisTemplate.expire(CHAT_ROOMS_KEY, Duration.ofSeconds(CHAT_ROOM_EXPIRE_TIME));
-
-        log.info("Created chat room in Redis: {}", chatRoom.getRoomId());
-        return chatRoom;
-    }
-
-    public void addUserToRoom(String roomId, String userEmail) {
-        String roomUsersKey = CHAT_ROOM_USERS_KEY + roomId;
-        HashOperations<String, String, ChatRoomDTO> hashOps = redisTemplate.opsForHash();
-
-        ChatRoomDTO room = hashOps.get(CHAT_ROOMS_KEY, roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("채팅방을 찾을 수 없습니다: " + roomId);
+    public List<ChatMessageResponse> loadChatHistory(String roomId, String userEmail, LocalDateTime before) {
+        // 권한 체크
+        if (!isRoomMember(roomId, userEmail)) {
+            throw new IllegalArgumentException("채팅방의 멤버가 아닙니다.");
         }
 
-        SetOperations<String, Object> setOps = redisTemplate.opsForSet();
-        setOps.add(roomUsersKey, userEmail);
-        redisTemplate.expire(roomUsersKey, Duration.ofSeconds(CHAT_ROOM_EXPIRE_TIME));
-
-        room.addUser(userEmail, userEmail);
-        hashOps.put(CHAT_ROOMS_KEY, roomId, room);
-
-        log.info("Added user {} to chat room {}", userEmail, roomId);
-    }
-
-    public void removeUserFromRoom(String roomId, String userEmail) {
-        String roomUsersKey = CHAT_ROOM_USERS_KEY + roomId;
-        HashOperations<String, String, ChatRoomDTO> hashOps = redisTemplate.opsForHash();
-
-        ChatRoomDTO room = hashOps.get(CHAT_ROOMS_KEY, roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("채팅방을 찾을 수 없습니다: " + roomId);
+        // 첫 로딩이면 가장 최근 메시지부터
+        if (before == null) {
+            return chatMessageRepository.findByRoomIdOrderByTimestampDesc(
+                            roomId,
+                            PageRequest.of(0, DEFAULT_CHAT_LOAD_SIZE)
+                    )
+                    .stream()
+                    .map(ChatMessageResponse::new)
+                    .collect(Collectors.toList());
         }
 
-        SetOperations<String, Object> setOps = redisTemplate.opsForSet();
-        setOps.remove(roomUsersKey, userEmail);
-
-        room.removeUser(userEmail);
-        hashOps.put(CHAT_ROOMS_KEY, roomId, room);
-
-        log.info("Removed user {} from chat room {}", userEmail, roomId);
-    }
-
-    public ChatRoomDTO findRoomById(String roomId) {
-        HashOperations<String, String, ChatRoomDTO> hashOps = redisTemplate.opsForHash();
-        ChatRoomDTO room = hashOps.get(CHAT_ROOMS_KEY, roomId);
-
-        if (room == null) {
-            throw new IllegalArgumentException("채팅방을 찾을 수 없습니다: " + roomId);
-        }
-
-        return room;
-    }
-
-    public List<ChatRoomDTO> findAllRooms() {
-        HashOperations<String, String, ChatRoomDTO> hashOps = redisTemplate.opsForHash();
-        return new ArrayList<>(hashOps.values(CHAT_ROOMS_KEY));
-    }
-
-    public Set<String> getRoomUsers(String roomId) {
-        String roomUsersKey = CHAT_ROOM_USERS_KEY + roomId;
-        SetOperations<String, Object> setOps = redisTemplate.opsForSet();
-        Set<Object> members = setOps.members(roomUsersKey);
-
-        if (members == null) {
-            return Collections.emptySet();
-        }
-
-        return members.stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
-    }
-
-    public void deleteRoom(String roomId) {
-        String roomUsersKey = CHAT_ROOM_USERS_KEY + roomId;
-        String chatMessagesKey = CHAT_MESSAGES_KEY + roomId;
-
-        HashOperations<String, String, ChatRoomDTO> hashOps = redisTemplate.opsForHash();
-
-        Long deletedRooms = hashOps.delete(CHAT_ROOMS_KEY, roomId);
-        redisTemplate.delete(roomUsersKey);
-        redisTemplate.delete(chatMessagesKey);
-
-        if (deletedRooms > 0) {
-            log.info("Deleted chat room and related data from Redis: {}", roomId);
-        } else {
-            throw new IllegalArgumentException("삭제할 채팅방을 찾을 수 없습니다: " + roomId);
-        }
+        // 특정 시점 이전의 메시지 로딩 (페이지네이션)
+        return chatMessageRepository.findByRoomIdAndTimestampBeforeOrderByTimestampDesc(
+                        roomId,
+                        before,
+                        PageRequest.of(0, DEFAULT_CHAT_LOAD_SIZE)
+                )
+                .stream()
+                .map(ChatMessageResponse::new)
+                .collect(Collectors.toList());
     }
 }

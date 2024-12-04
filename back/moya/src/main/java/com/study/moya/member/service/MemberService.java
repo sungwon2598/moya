@@ -4,6 +4,7 @@ import com.study.moya.auth.dto.SignupRequest;
 import com.study.moya.auth.exception.EmailAlreadyExistsException;
 import com.study.moya.auth.exception.UserNotFoundException;
 import com.study.moya.member.domain.Member;
+import com.study.moya.member.domain.MemberStatus;
 import com.study.moya.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,7 @@ public class MemberService implements UserDetailsService {
                 .providerId(signUpRequest.providerId())
                 .profileImageUrl(signUpRequest.profileImageUrl())
                 .termsAgreed(signUpRequest.termsAgreed())
+                .status(MemberStatus.ACTIVE)
                 .privacyPolicyAgreed(signUpRequest.privacyPolicyAgreed())
                 .marketingAgreed(signUpRequest.marketingAgreed())
                 .build();

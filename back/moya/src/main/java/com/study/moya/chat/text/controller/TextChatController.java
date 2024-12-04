@@ -35,37 +35,37 @@ public class TextChatController {
         messageHandlerManager.handle(chatDTO, userEmail);
     }
 
-    @PostMapping("/room/{roomId}/leave")
-    public ResponseEntity<Void> leaveRoom(@PathVariable String roomId, Principal principal) {
-        String userEmail = principal.getName();
-        log.debug("채팅방 나가기 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
-
-        try {
-            ChatDTO leaveMessage = ChatDTO.createSystemMessage(roomId, userEmail, SystemMessageType.LEAVE);
-            messageHandlerManager.handle(leaveMessage, userEmail);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            log.warn("채팅방 나가기 실패: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @DeleteMapping("/room/{roomId}")
-    public ResponseEntity<Void> deleteRoom(@PathVariable String roomId, Principal principal) {
-        String userEmail = principal.getName();
-        log.debug("채팅방 삭제 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
-
-        try {
-            ChatRoomDTO room = chatService.findRoomById(roomId);
-            if (!userEmail.equals(room.getCreator())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-
-            chatService.deleteRoom(roomId);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            log.warn("채팅방 삭제 실패: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @PostMapping("/room/{roomId}/leave")
+//    public ResponseEntity<Void> leaveRoom(@PathVariable String roomId, Principal principal) {
+//        String userEmail = principal.getName();
+//        log.debug("채팅방 나가기 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
+//
+//        try {
+//            ChatDTO leaveMessage = ChatDTO.createSystemMessage(roomId, userEmail, SystemMessageType.LEAVE);
+//            messageHandlerManager.handle(leaveMessage, userEmail);
+//            return ResponseEntity.ok().build();
+//        } catch (IllegalArgumentException e) {
+//            log.warn("채팅방 나가기 실패: {}", e.getMessage());
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
+//
+//    @DeleteMapping("/room/{roomId}")
+//    public ResponseEntity<Void> deleteRoom(@PathVariable String roomId, Principal principal) {
+//        String userEmail = principal.getName();
+//        log.debug("채팅방 삭제 요청 - 사용자: {}, 방 ID: {}", userEmail, roomId);
+//
+//        try {
+//            ChatRoomDTO room = chatService.findRoomById(roomId);
+//            if (!userEmail.equals(room.getCreator())) {
+//                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//            }
+//
+//            chatService.deleteRoom(roomId);
+//            return ResponseEntity.ok().build();
+//        } catch (IllegalArgumentException e) {
+//            log.warn("채팅방 삭제 실패: {}", e.getMessage());
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
 }
