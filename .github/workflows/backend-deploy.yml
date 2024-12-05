@@ -58,12 +58,6 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
-            # Docker 그룹에 현재 사용자가 없다면 추가
-            if ! groups | grep -q docker; then
-              sudo usermod -aG docker $USER
-              newgrp docker
-            fi
-            
             # 프로젝트 디렉토리로 이동
             cd /home/ubuntu/moya/back/moya
             
@@ -78,7 +72,23 @@ jobs:
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # Docker Compose로 스프링부트 앱만 재빌드 및 재시작 (sudo 없이)
+            # Dockerfile 생성
+            cat > Dockerfile << 'EOL'
+            FROM eclipse-temurin:21-jdk AS builder
+            WORKDIR /app
+            COPY . .
+            RUN chmod +x ./gradlew
+            RUN ./gradlew clean build -x test
+
+            FROM eclipse-temurin:21-jre
+            WORKDIR /app
+            COPY --from=builder /app/build/libs/*.jar app.jar
+            ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof"
+            EXPOSE 8080
+            ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar app.jar"]
+            EOL
+            
+            # Docker Compose로 스프링부트 앱만 재빌드 및 재시작
             cd /home/ubuntu/moya-docker
             docker-compose up -d --build springboot-app
 
