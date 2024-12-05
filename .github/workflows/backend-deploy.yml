@@ -9,7 +9,6 @@ on:
     types: [opened, closed]
     paths:
       - 'back/**'
-
 jobs:
   Check_Path:
     runs-on: ubuntu-latest
@@ -46,13 +45,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-          distribution: 'adopt'
-
+      
       - name: SSH로 홈서버 접속하기
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -72,25 +65,34 @@ jobs:
             git reset --hard
             git clean -fd
             
-            # git 설정 및 pull
+            # git pull
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
             
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # Docker Compose 디렉토리로 이동
+            # 필요한 디렉토리 생성
+            mkdir -p /home/ubuntu/moya/back/moya/logs
+            mkdir -p /home/ubuntu/moya/back/moya/heapdump
+            
+            # Dockerfile 생성
+            echo "FROM eclipse-temurin:21-jdk AS builder" > Dockerfile
+            echo "WORKDIR /app" >> Dockerfile
+            echo "COPY . ." >> Dockerfile
+            echo "RUN chmod +x ./gradlew" >> Dockerfile
+            echo "RUN ./gradlew clean build -x test" >> Dockerfile
+            echo "" >> Dockerfile
+            echo "FROM eclipse-temurin:21-jre" >> Dockerfile
+            echo "WORKDIR /app" >> Dockerfile
+            echo "COPY --from=builder /app/build/libs/moya-0.0.1-SNAPSHOT.jar app.jar" >> Dockerfile
+            echo "ENV JAVA_OPTS=\"-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof\"" >> Dockerfile
+            echo "EXPOSE 8080" >> Dockerfile
+            echo "ENTRYPOINT [\"sh\", \"-c\", \"java \$JAVA_OPTS -jar app.jar\"]" >> Dockerfile
+            
+            # Docker Compose로 스프링부트 앱만 재빌드 및 재시작
             cd /home/ubuntu/moya-docker
-            
-            # 기존 컨테이너 중지 및 제거 (springboot만)
-            sudo docker-compose stop springboot-app
-            sudo docker-compose rm -f springboot-app
-            
-            # 새로운 이미지 빌드 및 컨테이너 시작
-            sudo docker-compose up -d --build springboot-app
-            
-            # 컨테이너 로그 확인
-            sudo docker logs -f moya-springboot &
+            docker-compose up -d --build springboot-app
 
   Notify:
     needs: [Check_Path, Deploy]
