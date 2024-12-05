@@ -71,9 +71,9 @@ jobs:
             
             # 도커 컴포즈로 서비스 재시작
             cd /home/ubuntu/moya-docker
-            docker compose stop springboot-app
-            docker compose rm -f springboot-app
-            docker compose up -d --build springboot-app
+            docker-compose stop springboot-app
+            docker-compose rm -f springboot-app
+            docker-compose up -d --build springboot-app
 
   Notify:
     needs: [Check_Path, Deploy]
