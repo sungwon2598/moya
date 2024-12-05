@@ -58,6 +58,14 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
+            # Docker 권한 확인
+            if ! groups $USER | grep -q docker; then
+              # docker 그룹에 현재 사용자 추가
+              sudo usermod -aG docker $USER
+              # 현재 세션에 docker 그룹 추가
+              newgrp docker
+            fi
+            
             # 프로젝트 디렉토리로 이동
             cd /home/ubuntu/moya/back/moya
             
@@ -155,10 +163,12 @@ jobs:
                 driver: bridge
             EOL
             
-            # Docker Compose 실행
+            # 디렉토리 생성
             mkdir -p /home/ubuntu/moya/back/moya/{logs,heapdump}
-            sudo docker-compose down
-            sudo docker-compose up -d --build
+            
+            # Docker Compose 명령어 실행 (sudo 없이)
+            docker-compose down
+            docker-compose up -d --build
 
   Notify:
     needs: [Check_Path, Deploy]
