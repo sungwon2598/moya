@@ -80,26 +80,25 @@ jobs:
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # Docker 관련 파일 생성
-            cat > Dockerfile << 'EOL'
+            # Dockerfile 생성
+            cat << 'DOCKERFILE' > Dockerfile
             FROM eclipse-temurin:21-jdk AS builder
             WORKDIR /app
             COPY . .
             RUN chmod +x ./gradlew
             RUN ./gradlew clean build -x test
-            
+
             FROM eclipse-temurin:21-jre
             WORKDIR /app
             COPY --from=builder /app/build/libs/*SNAPSHOT.jar app.jar
             ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof"
             EXPOSE 8080
             ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar app.jar"]
-            EOL
+            DOCKERFILE
             
+            # docker-compose.yml 생성
             cd /home/ubuntu/moya-docker
-            
-            # docker-compose.yml 파일 업데이트
-            cat > docker-compose.yml << 'EOL'
+            cat << 'COMPOSE' > docker-compose.yml
             version: '3.8'
             
             services:
@@ -121,7 +120,7 @@ jobs:
                 restart: always
                 networks:
                   - moya-network
-
+            
               redis:
                 image: redis:latest
                 container_name: moya-redis
@@ -133,7 +132,7 @@ jobs:
                 restart: always
                 networks:
                   - moya-network
-
+            
               springboot-app:
                 build:
                   context: /home/ubuntu/moya/back/moya
@@ -153,20 +152,20 @@ jobs:
                 restart: always
                 networks:
                   - moya-network
-
+            
             volumes:
               mysql-data:
               redis-data:
-
+            
             networks:
               moya-network:
                 driver: bridge
-            EOL
+            COMPOSE
             
             # 디렉토리 생성
             mkdir -p /home/ubuntu/moya/back/moya/{logs,heapdump}
             
-            # Docker Compose 명령어 실행 (sudo 없이)
+            # Docker Compose 실행
             docker-compose down
             docker-compose up -d --build
 
