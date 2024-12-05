@@ -58,11 +58,9 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
-            # Docker 권한 확인
+            # Docker 권한 확인 및 설정
             if ! groups $USER | grep -q docker; then
-              # docker 그룹에 현재 사용자 추가
               sudo usermod -aG docker $USER
-              # 현재 세션에 docker 그룹 추가
               newgrp docker
             fi
             
@@ -81,8 +79,7 @@ jobs:
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
             # Dockerfile 생성
-            cat << 'DOCKERFILE' > Dockerfile
-            FROM eclipse-temurin:21-jdk AS builder
+            echo 'FROM eclipse-temurin:21-jdk AS builder
             WORKDIR /app
             COPY . .
             RUN chmod +x ./gradlew
@@ -93,14 +90,12 @@ jobs:
             COPY --from=builder /app/build/libs/*SNAPSHOT.jar app.jar
             ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof"
             EXPOSE 8080
-            ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar app.jar"]
-            DOCKERFILE
+            ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar app.jar"]' > Dockerfile
             
             # docker-compose.yml 생성
             cd /home/ubuntu/moya-docker
-            cat << 'COMPOSE' > docker-compose.yml
-            version: '3.8'
-            
+            echo 'version: "3.8"
+
             services:
               mysql:
                 image: mysql:8.0
@@ -120,7 +115,7 @@ jobs:
                 restart: always
                 networks:
                   - moya-network
-            
+
               redis:
                 image: redis:latest
                 container_name: moya-redis
@@ -132,7 +127,7 @@ jobs:
                 restart: always
                 networks:
                   - moya-network
-            
+
               springboot-app:
                 build:
                   context: /home/ubuntu/moya/back/moya
@@ -152,21 +147,21 @@ jobs:
                 restart: always
                 networks:
                   - moya-network
-            
+
             volumes:
               mysql-data:
               redis-data:
-            
+
             networks:
               moya-network:
-                driver: bridge
-            COMPOSE
+                driver: bridge' > docker-compose.yml
             
             # 디렉토리 생성
             mkdir -p /home/ubuntu/moya/back/moya/{logs,heapdump}
             
-            # Docker Compose 실행
-            docker-compose down
+            # Docker Compose 실행 (이전 컨테이너 중지 후 새로 빌드)
+            cd /home/ubuntu/moya-docker
+            docker-compose down || true
             docker-compose up -d --build
 
   Notify:
