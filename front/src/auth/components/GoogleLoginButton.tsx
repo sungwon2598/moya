@@ -1,83 +1,82 @@
 import { FC, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../store';
+import { loginWithGoogle } from '../store/authSlice';
 import { useScript } from '../hooks/useScript';
-import { useAuth } from '../hooks/useAuth';
-import type { CredentialResponse } from 'google-one-tap';
+
+interface GoogleCredentialResponse {
+    credential: string;
+    select_by: string;
+    clientId?: string;
+}
+
+interface GoogleButtonProps {
+    text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+    theme?: 'outline' | 'filled_blue' | 'filled_black';
+    size?: 'large' | 'medium' | 'small';
+    width?: string;
+}
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID!;
 
-export const GoogleLoginButton: FC = () => {
+export const GoogleLoginButton: FC<GoogleButtonProps> = ({
+                                                             text = 'signin_with',
+                                                             theme = 'filled_blue',
+                                                             size = 'large',
+                                                             width = '250'
+                                                         }) => {
     const buttonRef = useRef<HTMLDivElement>(null);
+    const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
-    const { handleGoogleLogin, isAuthenticated } = useAuth();
-    const googleScriptLoaded = useScript('https://accounts.google.com/gsi/client');
 
-    useEffect(() => {
-        if (googleScriptLoaded && buttonRef.current) {
+    const handleCredentialResponse = async (response: GoogleCredentialResponse) => {
+        try {
+            console.log('[Google OAuth] Received credential response');
+            const result = await dispatch(loginWithGoogle(response.credential)).unwrap();
+
+            if (result) {
+                console.log('[Google OAuth] Login successful, redirecting to main page');
+                navigate('/');
+            } else {
+                console.error('[Google OAuth] Login failed: No user data received');
+            }
+        } catch (error) {
+            console.error('[Google OAuth] Login failed:', error);
+        }
+    };
+
+    const scriptLoaded = useScript('https://accounts.google.com/gsi/client', () => {
+        if (buttonRef.current) {
             console.log('[Google OAuth] Script loaded, initializing...');
 
             window.google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
-                callback: async (response: CredentialResponse) => {
-                    console.log('[Google OAuth] Received credential response');
-
-                    if (response.credential) {
-                        try {
-                            console.log('[Google OAuth] Attempting login with credential');
-                            await handleGoogleLogin(response.credential);
-                            console.log('[Google OAuth] Login successful, redirecting to main page');
-                            navigate('/');
-                        } catch (error) {
-                            console.error('[Google OAuth] Login failed:', error);
-                        }
-                    }
-                }
+                callback: handleCredentialResponse,
             });
 
             window.google.accounts.id.renderButton(buttonRef.current, {
-                theme: 'outline',
-                size: 'large',
-                type: 'standard'
+                type: 'standard',
+                theme,
+                size,
+                text,
+                width
             });
 
             console.log('[Google OAuth] Button rendered');
         }
-    }, [googleScriptLoaded, handleGoogleLogin, navigate]);
+    });
 
-    // 로그인 상태 변경 감지 및 리다이렉션
     useEffect(() => {
-        if (isAuthenticated) {
-            console.log('[Auth] User authenticated, redirecting to main page');
-            navigate('/');
-        }
-    }, [isAuthenticated, navigate]);
+        return () => {
+            // 컴포넌트 언마운트 시 Google 클라이언트 정리
+            window.google?.accounts?.id?.cancel();
+        };
+    }, []);
 
-    return <div ref={buttonRef} />;
-};
-
-// api/authApi.ts
-export const authenticateWithGoogle = async (credential: string) => {
-    console.log('[API] Sending credential to backend');
-
-    try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/google`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ credential })
-        });
-
-        if (!response.ok) {
-            console.error('[API] Backend authentication failed:', response.status);
-            throw new Error('Authentication failed');
-        }
-
-        console.log('[API] Backend authentication successful');
-        return response.json();
-    } catch (error) {
-        console.error('[API] Network error:', error);
-        throw error;
+    if (!scriptLoaded) {
+        return <div className="w-[250px] h-[40px] bg-gray-100 rounded animate-pulse" />;
     }
+
+    return <div ref={buttonRef} className="google-login-button" />;
 };

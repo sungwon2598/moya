@@ -1,19 +1,17 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { loginStart, loginSuccess, loginFailure, logout } from '../store/authSlice';
-import { authenticateWithGoogle } from '../api/authApi';
+import { RootState, AppDispatch } from '../../store';
+import { loginWithGoogle, logout, checkLoginStatus } from '../store/authSlice';
 
 export const useAuth = () => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const auth = useSelector((state: RootState) => state.auth);
 
     const handleGoogleLogin = async (credential: string) => {
         try {
-            dispatch(loginStart());
-            const userData = await authenticateWithGoogle(credential);
-            dispatch(loginSuccess(userData.user));
+            return await dispatch(loginWithGoogle(credential)).unwrap();
         } catch (error) {
-            dispatch(loginFailure(error instanceof Error ? error.message : 'Authentication failed'));
+            console.error('Google login failed:', error);
+            throw error;
         }
     };
 
@@ -21,9 +19,19 @@ export const useAuth = () => {
         dispatch(logout());
     };
 
+    const checkAuth = async () => {
+        try {
+            return await dispatch(checkLoginStatus()).unwrap();
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            throw error;
+        }
+    };
+
     return {
         ...auth,
         handleGoogleLogin,
-        handleLogout
+        handleLogout,
+        checkAuth
     };
 };

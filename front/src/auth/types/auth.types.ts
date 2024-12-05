@@ -1,16 +1,12 @@
 export interface User {
     email: string;
-    name: string;
-    picture: string;
+    firstName: string;
+    lastName: string;
 }
 
 export interface AuthState {
-    isAuthenticated: boolean;
+    isLogin: boolean;
     user: User | null;
     loading: boolean;
     error: string | null;
-}
-
-export interface GoogleCredentialResponse {
-    credential: string;
 }

@@ -1,20 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-export const useScript = (src: string): boolean => {
+export const useScript = (src: string, onLoad?: () => void): boolean => {
     const [loaded, setLoaded] = useState(false);
+
+    const handleLoad = useCallback(() => {
+        setLoaded(true);
+        onLoad?.();
+    }, [onLoad]);
 
     useEffect(() => {
         const script = document.createElement('script');
         script.src = src;
         script.async = true;
-        script.onload = () => setLoaded(true);
+        script.onload = handleLoad;
 
         document.body.appendChild(script);
 
         return () => {
             document.body.removeChild(script);
         };
-    }, [src]);
+    }, [src, handleLoad]);
 
     return loaded;
 };

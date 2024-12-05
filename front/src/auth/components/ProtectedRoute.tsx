@@ -1,28 +1,34 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { FC, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../store';
+import { checkLoginStatus } from '../store/authSlice';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const { isAuthenticated, loading } = useSelector(
-        (state: RootState) => state.auth
-    );
+export const ProtectedRoute: FC<ProtectedRouteProps> = ({ children }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+    const { isLogin, loading } = useSelector((state: RootState) => state.auth);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            await dispatch(checkLoginStatus());
+        };
+        checkAuth();
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (!loading && !isLogin) {
+            navigate('/');
+        }
+    }, [isLogin, loading, navigate]);
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-            </div>
-        );
+        return <div>Loading...</div>;
     }
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
-
-    return <>{children}</>;
+    return isLogin ? <>{children}</> : <Navigate to="/" />;
 };
