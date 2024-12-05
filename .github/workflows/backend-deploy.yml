@@ -58,6 +58,12 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
+            # Docker 그룹에 현재 사용자가 없다면 추가
+            if ! groups | grep -q docker; then
+              sudo usermod -aG docker $USER
+              newgrp docker
+            fi
+            
             # 프로젝트 디렉토리로 이동
             cd /home/ubuntu/moya/back/moya
             
@@ -72,9 +78,9 @@ jobs:
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # Docker Compose로 스프링부트 앱만 재빌드 및 재시작
+            # Docker Compose로 스프링부트 앱만 재빌드 및 재시작 (sudo 없이)
             cd /home/ubuntu/moya-docker
-            sudo docker-compose up -d --build springboot-app
+            docker-compose up -d --build springboot-app
 
   Notify:
     needs: [Check_Path, Deploy]
