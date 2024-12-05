@@ -59,13 +59,10 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
+            # 백엔드 코드 업데이트
             cd /home/ubuntu/moya/back/moya
-            
-            # 로컬 변경사항 초기화
             git reset --hard
             git clean -fd
-            
-            # git pull
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
             
@@ -74,8 +71,9 @@ jobs:
             
             # 도커 컴포즈로 서비스 재시작
             cd /home/ubuntu/moya-docker
-            docker-compose down springboot-app
-            docker-compose up -d --build springboot-app
+            docker compose stop springboot-app
+            docker compose rm -f springboot-app
+            docker compose up -d --build springboot-app
 
   Notify:
     needs: [Check_Path, Deploy]
