@@ -81,7 +81,7 @@ jobs:
             echo "" >> Dockerfile
             echo "FROM eclipse-temurin:21-jre" >> Dockerfile
             echo "WORKDIR /app" >> Dockerfile
-            echo "COPY --from=builder /app/build/libs/*.jar app.jar" >> Dockerfile
+            echo "COPY --from=builder /app/build/libs/moya-0.0.1-SNAPSHOT.jar app.jar" >> Dockerfile
             echo "ENV JAVA_OPTS=\"-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof\"" >> Dockerfile
             echo "EXPOSE 8080" >> Dockerfile
             echo "ENTRYPOINT [\"sh\", \"-c\", \"java \$JAVA_OPTS -jar app.jar\"]" >> Dockerfile
