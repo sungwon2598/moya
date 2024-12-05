@@ -1,44 +1,29 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { loginStart, loginSuccess, loginFailure, logout } from '../store/authSlice';
-import { authApi } from '../api/authApi';
-import { LoginRequest } from '../types/auth.types';
-import { setStoredToken, removeStoredToken } from '../utils/tokenUtils';
+import { authenticateWithGoogle } from '../api/authApi';
 
 export const useAuth = () => {
     const dispatch = useDispatch();
     const auth = useSelector((state: RootState) => state.auth);
 
-    const login = async (credentials: LoginRequest) => {
+    const handleGoogleLogin = async (credential: string) => {
         try {
             dispatch(loginStart());
-            const response = await authApi.login(credentials);
-            setStoredToken(response.accessToken);
-            dispatch(loginSuccess({
-                token: response.accessToken,
-                user: response.user
-            }));
-        } catch (error: any) {
-            const errorMessage = error.response?.data?.message || '로그인에 실패했습니다.';
-            dispatch(loginFailure(errorMessage));
-            throw error;
+            const userData = await authenticateWithGoogle(credential);
+            dispatch(loginSuccess(userData.user));
+        } catch (error) {
+            dispatch(loginFailure(error instanceof Error ? error.message : 'Authentication failed'));
         }
     };
 
-    const logoutUser = async () => {
-        try {
-            await authApi.logout();
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            removeStoredToken();
-            dispatch(logout());
-        }
+    const handleLogout = () => {
+        dispatch(logout());
     };
 
     return {
         ...auth,
-        login,
-        logout: logoutUser
+        handleGoogleLogin,
+        handleLogout
     };
 };

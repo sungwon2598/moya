@@ -1,35 +1,20 @@
-import axios from 'axios';
-import { LoginRequest, LoginResponse } from '../types/auth.types';
-import { getStoredToken } from '../utils/tokenUtils';
+// import { GoogleCredentialResponse } from '../types/auth.types';
 
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+const API_URL = process.env.REACT_APP_API_URL;
 
-// Request interceptor
-api.interceptors.request.use(
-    (config) => {
-        const token = getStoredToken();
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+export const authenticateWithGoogle = async (credential: string) => {
+    const response = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential })
+    });
+
+    if (!response.ok) {
+        throw new Error('Google authentication failed');
     }
-);
 
-export const authApi = {
-    login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-        const response = await api.post<LoginResponse>('/auth/login', credentials);
-        return response.data;
-    },
-
-    logout: async (): Promise<void> => {
-        await api.post('/auth/logout');
-    },
+    return response.json();
 };

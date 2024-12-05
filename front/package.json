@@ -26,6 +26,7 @@
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "google-one-tap": "^1.0.6",
     "lucide-react": "^0.456.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@types/google-one-tap": "^1.2.6",
     "@types/node": "^22.10.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

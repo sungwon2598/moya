@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { GoogleLoginButton } from '../../auth/components/GoogleLoginButton';
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -10,7 +11,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 const MainContent: React.FC = () => {
-    const { isLoggedIn } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
 
     const actionButtons = [
         {
@@ -36,8 +37,16 @@ const MainContent: React.FC = () => {
         }
     ];
 
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
     return (
-        <main className="bg-gray-50 flex flex-col items-center justify-center px-4">
+        <main className="bg-gray-50 flex flex-col items-center justify-center px-4 min-h-screen py-16">
             {/* 메인 포스터 섹션 */}
             <div className="w-full max-w-5xl mb-16">
                 <div className="relative aspect-video bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -52,10 +61,10 @@ const MainContent: React.FC = () => {
 
                     {/* 중앙 텍스트 */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <h1 className="text-6xl font-bold text-blue-600 mb-4">
+                        <h1 className="text-4xl md:text-6xl font-bold text-blue-600 mb-4">
                             MOYA
                         </h1>
-                        <p className="text-xl text-gray-600 max-w-lg mb-8">
+                        <p className="text-lg md:text-xl text-gray-600 max-w-lg mb-8 px-4">
                             학습 성장을 위한 최적의 스터디 플랫폼,
                             <br />
                             MOYA와 함께 성장하는 여정을 시작하세요
@@ -65,7 +74,7 @@ const MainContent: React.FC = () => {
             </div>
 
             {/* 액션 버튼 그리드 - 로그인 시에만 표시 */}
-            {isLoggedIn && (
+            {isAuthenticated && (
                 <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                     {actionButtons.map((button, index) => (
                         <button
@@ -81,24 +90,30 @@ const MainContent: React.FC = () => {
                             <p className="text-gray-600 text-sm">
                                 {button.description}
                             </p>
+                            <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-blue-100 transition-colors"></div>
                         </button>
                     ))}
                 </div>
             )}
 
-            {/* 비로그인 시 구글 로그인 버튼 */}
-            {!isLoggedIn && (
+            {/* 비로그인 시 구글 로그인 섹션 */}
+            {!isAuthenticated && (
                 <div className="w-full max-w-md flex flex-col items-center gap-6 mb-12">
                     <div className="text-center mb-2">
                         <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                             MOYA 시작하기
                         </h2>
-                        <p className="text-gray-600">
+                        <p className="text-gray-600 mb-6">
                             Google 계정으로 간편하게 시작해보세요
                         </p>
                     </div>
 
-                    <p className="text-sm text-gray-500 text-center">
+                    {/* Google 로그인 버튼 */}
+                    <div className="w-full flex justify-center items-center">
+                        <GoogleLoginButton />
+                    </div>
+
+                    <p className="text-sm text-gray-500 text-center max-w-sm px-4">
                         계속 진행하면 MOYA의{' '}
                         <a href="/terms" className="text-blue-600 hover:underline">
                             이용약관

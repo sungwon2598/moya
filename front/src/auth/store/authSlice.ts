@@ -1,12 +1,9 @@
-// src/auth/store/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User } from '../types/auth.types';
-import { getStoredToken } from '../utils/tokenUtils';
 
 const initialState: AuthState = {
+    isAuthenticated: false,
     user: null,
-    token: getStoredToken(),
-    isAuthenticated: !!getStoredToken(),
     loading: false,
     error: null
 };
@@ -19,24 +16,19 @@ const authSlice = createSlice({
             state.loading = true;
             state.error = null;
         },
-        loginSuccess: (state, action: PayloadAction<{ token: string; user: User }>) => {
-            state.loading = false;
-            state.token = action.payload.token;
-            state.user = action.payload.user;
+        loginSuccess: (state, action: PayloadAction<User>) => {
             state.isAuthenticated = true;
+            state.user = action.payload;
+            state.loading = false;
             state.error = null;
         },
         loginFailure: (state, action: PayloadAction<string>) => {
             state.loading = false;
             state.error = action.payload;
-            state.token = null;
-            state.user = null;
-            state.isAuthenticated = false;
         },
         logout: (state) => {
-            state.token = null;
-            state.user = null;
             state.isAuthenticated = false;
+            state.user = null;
             state.loading = false;
             state.error = null;
         }

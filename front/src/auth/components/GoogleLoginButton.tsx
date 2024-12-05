@@ -1,48 +1,83 @@
-import React, { useRef, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
+import { FC, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useScript } from '../hooks/useScript';
-import { loginWithGoogle } from '../store/authSlice';
-import { GoogleCredentialResponse } from '../types/auth.types';
+import { useAuth } from '../hooks/useAuth';
+import type { CredentialResponse } from 'google-one-tap';
 
-interface GoogleLoginButtonProps {
-    text?: string;
-}
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID!;
 
-export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
-                                                                        text = 'signin_with',
-                                                                    }) => {
-    const dispatch = useDispatch();
+export const GoogleLoginButton: FC = () => {
     const buttonRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+    const { handleGoogleLogin, isAuthenticated } = useAuth();
+    const googleScriptLoaded = useScript('https://accounts.google.com/gsi/client');
 
-    const handleSuccess = useCallback(
-        async (response: GoogleCredentialResponse) => {
-            await dispatch(loginWithGoogle(response.credential));
-        },
-        [dispatch]
-    );
+    useEffect(() => {
+        if (googleScriptLoaded && buttonRef.current) {
+            console.log('[Google OAuth] Script loaded, initializing...');
 
-    const initializeGoogleButton = useCallback(() => {
-        if (window.google && buttonRef.current) {
             window.google.accounts.id.initialize({
-                client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID!,
-                callback: handleSuccess,
+                client_id: GOOGLE_CLIENT_ID,
+                callback: async (response: CredentialResponse) => {
+                    console.log('[Google OAuth] Received credential response');
+
+                    if (response.credential) {
+                        try {
+                            console.log('[Google OAuth] Attempting login with credential');
+                            await handleGoogleLogin(response.credential);
+                            console.log('[Google OAuth] Login successful, redirecting to main page');
+                            navigate('/');
+                        } catch (error) {
+                            console.error('[Google OAuth] Login failed:', error);
+                        }
+                    }
+                }
             });
 
             window.google.accounts.id.renderButton(buttonRef.current, {
-                theme: 'filled_blue',
+                theme: 'outline',
                 size: 'large',
-                text,
-                width: 250,
+                type: 'standard'
             });
+
+            console.log('[Google OAuth] Button rendered');
         }
-    }, [handleSuccess, text]);
+    }, [googleScriptLoaded, handleGoogleLogin, navigate]);
 
-    useScript('https://accounts.google.com/gsi/client', initializeGoogleButton);
+    // 로그인 상태 변경 감지 및 리다이렉션
+    useEffect(() => {
+        if (isAuthenticated) {
+            console.log('[Auth] User authenticated, redirecting to main page');
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate]);
 
-    return (
-        <div
-            ref={buttonRef}
-            className="flex justify-center items-center p-4"
-        />
-    );
+    return <div ref={buttonRef} />;
+};
+
+// api/authApi.ts
+export const authenticateWithGoogle = async (credential: string) => {
+    console.log('[API] Sending credential to backend');
+
+    try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/google`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ credential })
+        });
+
+        if (!response.ok) {
+            console.error('[API] Backend authentication failed:', response.status);
+            throw new Error('Authentication failed');
+        }
+
+        console.log('[API] Backend authentication successful');
+        return response.json();
+    } catch (error) {
+        console.error('[API] Network error:', error);
+        throw error;
+    }
 };
