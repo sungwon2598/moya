@@ -9,6 +9,7 @@ on:
     types: [opened, closed]
     paths:
       - 'back/**'
+
 jobs:
   Check_Path:
     runs-on: ubuntu-latest
@@ -45,7 +46,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'adopt'
+
       - name: SSH로 홈서버 접속하기
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -58,12 +65,6 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
-            # Docker 권한 확인 및 설정
-            if ! groups $USER | grep -q docker; then
-              sudo usermod -aG docker $USER
-              newgrp docker
-            fi
-            
             # 프로젝트 디렉토리로 이동
             cd /home/ubuntu/moya/back/moya
             
@@ -71,98 +72,25 @@ jobs:
             git reset --hard
             git clean -fd
             
-            # git pull
+            # git 설정 및 pull
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
             
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # Dockerfile 생성
-            echo 'FROM eclipse-temurin:21-jdk AS builder
-            WORKDIR /app
-            COPY . .
-            RUN chmod +x ./gradlew
-            RUN ./gradlew clean build -x test
-
-            FROM eclipse-temurin:21-jre
-            WORKDIR /app
-            COPY --from=builder /app/build/libs/*SNAPSHOT.jar app.jar
-            ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof"
-            EXPOSE 8080
-            ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar app.jar"]' > Dockerfile
-            
-            # docker-compose.yml 생성
+            # Docker Compose 디렉토리로 이동
             cd /home/ubuntu/moya-docker
-            echo 'version: "3.8"
-
-            services:
-              mysql:
-                image: mysql:8.0
-                container_name: moya-mysql
-                environment:
-                  MYSQL_ROOT_PASSWORD: Seoil7345!
-                  MYSQL_DATABASE: teams
-                  MYSQL_USER: moyastudy
-                  MYSQL_PASSWORD: Seoil7345!
-                ports:
-                  - "3306:3306"
-                volumes:
-                  - mysql-data:/var/lib/mysql
-                command:
-                  - --character-set-server=utf8mb4
-                  - --collation-server=utf8mb4_unicode_ci
-                restart: always
-                networks:
-                  - moya-network
-
-              redis:
-                image: redis:latest
-                container_name: moya-redis
-                command: redis-server --requirepass Seoil7345!
-                ports:
-                  - "6379:6379"
-                volumes:
-                  - redis-data:/data
-                restart: always
-                networks:
-                  - moya-network
-
-              springboot-app:
-                build:
-                  context: /home/ubuntu/moya/back/moya
-                  dockerfile: Dockerfile
-                container_name: moya-springboot
-                ports:
-                  - "8080:8080"
-                environment:
-                  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/teams
-                  SPRING_DATA_REDIS_HOST: redis
-                volumes:
-                  - /home/ubuntu/moya/back/moya/logs:/app/logs
-                  - /home/ubuntu/moya/back/moya/heapdump:/app/heapdump
-                depends_on:
-                  - mysql
-                  - redis
-                restart: always
-                networks:
-                  - moya-network
-
-            volumes:
-              mysql-data:
-              redis-data:
-
-            networks:
-              moya-network:
-                driver: bridge' > docker-compose.yml
             
-            # 디렉토리 생성
-            mkdir -p /home/ubuntu/moya/back/moya/{logs,heapdump}
+            # 기존 컨테이너 중지 및 제거 (springboot만)
+            sudo docker-compose stop springboot-app
+            sudo docker-compose rm -f springboot-app
             
-            # Docker Compose 실행 (이전 컨테이너 중지 후 새로 빌드)
-            cd /home/ubuntu/moya-docker
-            docker-compose down || true
-            docker-compose up -d --build
+            # 새로운 이미지 빌드 및 컨테이너 시작
+            sudo docker-compose up -d --build springboot-app
+            
+            # 컨테이너 로그 확인
+            sudo docker logs -f moya-springboot &
 
   Notify:
     needs: [Check_Path, Deploy]
