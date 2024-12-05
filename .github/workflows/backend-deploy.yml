@@ -72,27 +72,93 @@ jobs:
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # 필요한 디렉토리 생성
-            mkdir -p /home/ubuntu/moya/back/moya/logs
-            mkdir -p /home/ubuntu/moya/back/moya/heapdump
+            # Docker 관련 파일 생성
+            cat > Dockerfile << 'EOL'
+            FROM eclipse-temurin:21-jdk AS builder
+            WORKDIR /app
+            COPY . .
+            RUN chmod +x ./gradlew
+            RUN ./gradlew clean build -x test
             
-            # Dockerfile 생성
-            echo "FROM eclipse-temurin:21-jdk AS builder" > Dockerfile
-            echo "WORKDIR /app" >> Dockerfile
-            echo "COPY . ." >> Dockerfile
-            echo "RUN chmod +x ./gradlew" >> Dockerfile
-            echo "RUN ./gradlew clean build -x test" >> Dockerfile
-            echo "" >> Dockerfile
-            echo "FROM eclipse-temurin:21-jre" >> Dockerfile
-            echo "WORKDIR /app" >> Dockerfile
-            echo "COPY --from=builder /app/build/libs/moya-0.0.1-SNAPSHOT.jar app.jar" >> Dockerfile
-            echo "ENV JAVA_OPTS=\"-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof\"" >> Dockerfile
-            echo "EXPOSE 8080" >> Dockerfile
-            echo "ENTRYPOINT [\"sh\", \"-c\", \"java \$JAVA_OPTS -jar app.jar\"]" >> Dockerfile
+            FROM eclipse-temurin:21-jre
+            WORKDIR /app
+            COPY --from=builder /app/build/libs/*SNAPSHOT.jar app.jar
+            ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/heapdump.hprof"
+            EXPOSE 8080
+            ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar app.jar"]
+            EOL
             
-            # Docker Compose로 스프링부트 앱만 재빌드 및 재시작
             cd /home/ubuntu/moya-docker
-            docker-compose up -d --build springboot-app
+            
+            # docker-compose.yml 파일 업데이트
+            cat > docker-compose.yml << 'EOL'
+            version: '3.8'
+            
+            services:
+              mysql:
+                image: mysql:8.0
+                container_name: moya-mysql
+                environment:
+                  MYSQL_ROOT_PASSWORD: Seoil7345!
+                  MYSQL_DATABASE: teams
+                  MYSQL_USER: moyastudy
+                  MYSQL_PASSWORD: Seoil7345!
+                ports:
+                  - "3306:3306"
+                volumes:
+                  - mysql-data:/var/lib/mysql
+                command:
+                  - --character-set-server=utf8mb4
+                  - --collation-server=utf8mb4_unicode_ci
+                restart: always
+                networks:
+                  - moya-network
+
+              redis:
+                image: redis:latest
+                container_name: moya-redis
+                command: redis-server --requirepass Seoil7345!
+                ports:
+                  - "6379:6379"
+                volumes:
+                  - redis-data:/data
+                restart: always
+                networks:
+                  - moya-network
+
+              springboot-app:
+                build:
+                  context: /home/ubuntu/moya/back/moya
+                  dockerfile: Dockerfile
+                container_name: moya-springboot
+                ports:
+                  - "8080:8080"
+                environment:
+                  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/teams
+                  SPRING_DATA_REDIS_HOST: redis
+                volumes:
+                  - /home/ubuntu/moya/back/moya/logs:/app/logs
+                  - /home/ubuntu/moya/back/moya/heapdump:/app/heapdump
+                depends_on:
+                  - mysql
+                  - redis
+                restart: always
+                networks:
+                  - moya-network
+
+            volumes:
+              mysql-data:
+              redis-data:
+
+            networks:
+              moya-network:
+                driver: bridge
+            EOL
+            
+            # Docker Compose 실행
+            mkdir -p /home/ubuntu/moya/back/moya/{logs,heapdump}
+            sudo docker-compose down
+            sudo docker-compose up -d --build
 
   Notify:
     needs: [Check_Path, Deploy]
