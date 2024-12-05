@@ -72,6 +72,10 @@ jobs:
             # application.yml 생성
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
+            # 필요한 디렉토리 생성
+            mkdir -p /home/ubuntu/moya/back/moya/logs
+            mkdir -p /home/ubuntu/moya/back/moya/heapdump
+            
             # Dockerfile 생성
             echo "FROM eclipse-temurin:21-jdk AS builder" > Dockerfile
             echo "WORKDIR /app" >> Dockerfile
