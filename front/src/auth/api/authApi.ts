@@ -1,39 +1,35 @@
 import axios from 'axios';
+import { LoginRequest, LoginResponse } from '../types/auth.types';
+import { getStoredToken } from '../utils/tokenUtils';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+// Request interceptor
+api.interceptors.request.use(
+    (config) => {
+        const token = getStoredToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const authApi = {
-    async postLoginToken(credential: string) {
-        try {
-            const { data } = await axios.post(
-                `${API_BASE_URL}/v1/oauth/login`,
-                { credential },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    withCredentials: true,
-                }
-            );
-            return data;
-        } catch (error) {
-            console.error('Login Error:', error);
-            return false;
-        }
+    login: async (credentials: LoginRequest): Promise<LoginResponse> => {
+        const response = await api.post<LoginResponse>('/auth/login', credentials);
+        return response.data;
     },
 
-    async getUserInfo() {
-        try {
-            const { data } = await axios.get<UserInfo>(
-                `${API_BASE_URL}/v1/oauth/user/info`,
-                {
-                    withCredentials: true,
-                }
-            );
-            return data;
-        } catch (error) {
-            console.error('Get User Info Error:', error);
-            return null;
-        }
+    logout: async (): Promise<void> => {
+        await api.post('/auth/logout');
     },
 };

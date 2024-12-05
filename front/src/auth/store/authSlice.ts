@@ -1,77 +1,47 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState } from '../types/auth.types';
-import { authApi } from '../api/authApi';
+// src/auth/store/authSlice.ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { AuthState, User } from '../types/auth.types';
+import { getStoredToken } from '../utils/tokenUtils';
 
 const initialState: AuthState = {
-    isAuthenticated: false,
     user: null,
+    token: getStoredToken(),
+    isAuthenticated: !!getStoredToken(),
     loading: false,
-    error: null,
+    error: null
 };
-
-export const loginWithGoogle = createAsyncThunk(
-    'auth/loginWithGoogle',
-    async (credential: string) => {
-        const result = await authApi.postLoginToken(credential);
-        if (!result) throw new Error('Login failed');
-        const userInfo = await authApi.getUserInfo();
-        return userInfo;
-    }
-);
-
-export const fetchUserInfo = createAsyncThunk(
-    'auth/fetchUserInfo',
-    async () => {
-        const userInfo = await authApi.getUserInfo();
-        if (!userInfo) throw new Error('Failed to fetch user info');
-        return userInfo;
-    }
-);
 
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        logout: (state) => {
-            state.isAuthenticated = false;
+        loginStart: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+        loginSuccess: (state, action: PayloadAction<{ token: string; user: User }>) => {
+            state.loading = false;
+            state.token = action.payload.token;
+            state.user = action.payload.user;
+            state.isAuthenticated = true;
+            state.error = null;
+        },
+        loginFailure: (state, action: PayloadAction<string>) => {
+            state.loading = false;
+            state.error = action.payload;
+            state.token = null;
             state.user = null;
-            state.error = null;
+            state.isAuthenticated = false;
         },
-        clearError: (state) => {
+        logout: (state) => {
+            state.token = null;
+            state.user = null;
+            state.isAuthenticated = false;
+            state.loading = false;
             state.error = null;
-        },
-    },
-    extraReducers: (builder) => {
-        builder
-            // Login cases
-            .addCase(loginWithGoogle.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(loginWithGoogle.fulfilled, (state, action) => {
-                state.isAuthenticated = true;
-                state.user = action.payload;
-                state.loading = false;
-            })
-            .addCase(loginWithGoogle.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.error.message || 'Login failed';
-            })
-            // Fetch user info cases
-            .addCase(fetchUserInfo.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(fetchUserInfo.fulfilled, (state, action) => {
-                state.isAuthenticated = true;
-                state.user = action.payload;
-                state.loading = false;
-            })
-            .addCase(fetchUserInfo.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.error.message || 'Failed to fetch user info';
-            });
-    },
+        }
+    }
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
 export default authSlice.reducer;

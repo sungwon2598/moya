@@ -1,7 +1,6 @@
 import React from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import GoogleLoginButton from '../../component/signup/GoogleLoginButton';
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -97,11 +96,6 @@ const MainContent: React.FC = () => {
                         <p className="text-gray-600">
                             Google 계정으로 간편하게 시작해보세요
                         </p>
-                    </div>
-
-                    {/* 구글 로그인 버튼 추가 */}
-                    <div className="w-full">
-                        <GoogleLoginButton />
                     </div>
 
                     <p className="text-sm text-gray-500 text-center">
