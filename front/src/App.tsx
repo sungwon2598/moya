@@ -1,11 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { ModalProvider } from './context/ModalContext';
 import RootLayout from './layout/RootLayout';
 import Main from './pages/main/Main';
 import RoadmapPreview from './pages/RoadmapPreview';
+// import LearningRoad from './pages/learningRoad/LearningRoad';
 import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
+import EditProfile from "./pages/profile/EditProfile.tsx";
 import {store} from './store'
 import {AuthProvider} from "./context/AuthContext.tsx";
 import {Provider} from "react-redux";
@@ -42,6 +45,11 @@ const App: React.FC = () => {
                                         </div>
                                     }
                                 />
+
+                                <Route path="profile/edit" element={<EditProfile />} />
+
+                                {/* 404 페이지 처리 */}
+                                <Route path="*" element={<div>Page Not Found</div>} />
                             </Route>
                         </Routes>
                     </BrowserRouter>
