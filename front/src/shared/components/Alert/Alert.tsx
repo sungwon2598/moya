@@ -1,90 +1,101 @@
 import React from 'react';
-import { AlertCircle, CheckCircle2, Info, XCircle } from 'lucide-react';
-import { cn } from '@utils/cn';
+import {
+    AlertTriangle,
+    CheckCircle,
+    Info,
+    X,
+    XCircle
+} from 'lucide-react';
+import { cn } from '@shared/utils/cn';
 
-export type AlertType = 'success' | 'error' | 'warning' | 'info';
+export type AlertVariant = 'success' | 'error' | 'warning' | 'info';
 
-interface AlertProps {
-    type?: AlertType;
+export interface AlertProps {
+    variant?: AlertVariant;
     title?: string;
-    message?: string;
-    className?: string;
+    children: React.ReactNode;
     onClose?: () => void;
-    children?: React.ReactNode;  // children prop 추가
+    className?: string;
 }
 
-const Alert: React.FC<AlertProps> = ({
-                                         type = 'info',
-                                         title,
-                                         message,
-                                         className,
-                                         onClose
-                                     }) => {
-    const alertStyles = {
-        success: {
-            container: 'bg-green-50 border-green-200',
-            icon: 'text-green-500',
-            title: 'text-green-800',
-            message: 'text-green-700',
-        },
-        error: {
-            container: 'bg-red-50 border-red-200',
-            icon: 'text-red-500',
-            title: 'text-red-800',
-            message: 'text-red-700',
-        },
-        warning: {
-            container: 'bg-yellow-50 border-yellow-200',
-            icon: 'text-yellow-500',
-            title: 'text-yellow-800',
-            message: 'text-yellow-700',
-        },
-        info: {
-            container: 'bg-blue-50 border-blue-200',
-            icon: 'text-blue-500',
-            title: 'text-blue-800',
-            message: 'text-blue-700',
-        },
-    };
+const variants = {
+    success: {
+        containerClass: 'bg-green-50 text-green-800 border-green-200',
+        iconClass: 'text-green-500',
+        Icon: CheckCircle
+    },
+    error: {
+        containerClass: 'bg-red-50 text-red-800 border-red-200',
+        iconClass: 'text-red-500',
+        Icon: XCircle
+    },
+    warning: {
+        containerClass: 'bg-yellow-50 text-yellow-800 border-yellow-200',
+        iconClass: 'text-yellow-500',
+        Icon: AlertTriangle
+    },
+    info: {
+        containerClass: 'bg-blue-50 text-blue-800 border-blue-200',
+        iconClass: 'text-blue-500',
+        Icon: Info
+    }
+} as const;
 
-    const AlertIcon = {
-        success: CheckCircle2,
-        error: XCircle,
-        warning: AlertCircle,
-        info: Info,
-    }[type];
+export const Alert: React.FC<AlertProps> = ({
+                                                variant = 'info',
+                                                title,
+                                                children,
+                                                onClose,
+                                                className
+                                            }) => {
+    const { containerClass, iconClass, Icon } = variants[variant];
 
     return (
-        <div className={cn(
-            'flex gap-3 p-4 rounded-lg border',
-            alertStyles[type].container,
-            className
-        )}>
-            <AlertIcon className={cn('w-5 h-5 mt-0.5', alertStyles[type].icon)} />
-            <div className="flex-1">
-                {title && (
-                    <h5 className={cn('font-semibold mb-1', alertStyles[type].title)}>
-                        {title}
-                    </h5>
-                )}
-                <p className={cn('text-sm', alertStyles[type].message)}>
-                    {message}
-                </p>
-            </div>
-            {onClose && (
-                <button
-                    onClick={onClose}
-                    className={cn(
-                        'p-1 hover:bg-opacity-20 hover:bg-black rounded transition-colors',
-                        'self-start -mt-1 -mr-1'
-                    )}
-                    aria-label="Close alert"
-                >
-                    <svg className="w-4 h-4 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                </button>
+        <div
+            role="alert"
+            className={cn(
+                'relative rounded-lg border p-4',
+                containerClass,
+                className
             )}
+        >
+            <div className="flex">
+                <div className="flex-shrink-0">
+                    <Icon className={cn('h-5 w-5', iconClass)} aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                    {title && (
+                        <h3 className="text-sm font-medium mb-1">
+                            {title}
+                        </h3>
+                    )}
+                    <div className="text-sm">
+                        {children}
+                    </div>
+                </div>
+                {onClose && (
+                    <div className="ml-auto pl-3">
+                        <div className="-mx-1.5 -my-1.5">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className={cn(
+                                    'inline-flex rounded-md p-1.5',
+                                    'hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2',
+                                    'focus:ring-offset-transparent transition-colors',
+                                    variant === 'error' && 'focus:ring-red-500',
+                                    variant === 'success' && 'focus:ring-green-500',
+                                    variant === 'warning' && 'focus:ring-yellow-500',
+                                    variant === 'info' && 'focus:ring-blue-500'
+                                )}
+                            >
+                                <span className="sr-only">닫기</span>
+                                <X className="h-5 w-5" aria-hidden="true" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

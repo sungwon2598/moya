@@ -1,8 +1,10 @@
+import { LucideIcon } from 'lucide-react';
+
 export interface DropdownItem {
     label: string;
     href?: string;
     onClick?: () => void;
-    icon?: React.ComponentType;
+    icon?: LucideIcon;
     type?: 'default' | 'danger';
 }
 

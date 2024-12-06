@@ -1,7 +1,7 @@
 import { FC, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../../app/store/store.ts';
+import { RootState, AppDispatch } from '@store/store.ts';
 import { checkLoginStatus } from '../store/authSlice.ts';
 
 interface ProtectedRouteProps {

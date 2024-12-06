@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Types } from '../../../app/types/types.tsx';
+import { Types } from '../../../core/types/types.tsx';
 
  const NavItem: React.FC<Types> = ({ label, path, type, icon: Icon }) => {
     const getStyle = (): string => {

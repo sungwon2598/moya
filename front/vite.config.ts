@@ -12,21 +12,12 @@ export default defineConfig(({ mode }): UserConfig => {
         '@': path.resolve(__dirname, './src'),
         '@core': path.resolve(__dirname, './src/core'),
         '@features': path.resolve(__dirname, './src/features'),
-        '@shared': path.resolve(__dirname, './src/shared'),
         '@pages': path.resolve(__dirname, './src/pages'),
+        '@shared': path.resolve(__dirname, './src/shared'),
         '@styles': path.resolve(__dirname, './src/styles'),
-        '@assets': path.resolve(__dirname, './src/assets'),
         '@types': path.resolve(__dirname, './src/core/types'),
-
-        // 자주 사용되는 하위 경로들에 대한 별칭
-        '@config': path.resolve(__dirname, './src/core/config'),
-        '@providers': path.resolve(__dirname, './src/core/providers'),
         '@store': path.resolve(__dirname, './src/core/store'),
-        '@components': path.resolve(__dirname, './src/shared/components'),
-        '@hooks': path.resolve(__dirname, './src/shared/hooks'),
-        '@utils': path.resolve(__dirname, './src/shared/utils'),
-        '@constants': path.resolve(__dirname, './src/shared/constants'),
-        '@ui': path.resolve(__dirname, './src/shared/components/ui')
+        '@config': path.resolve(__dirname, './src/core/config')
       }
     },
     define: {

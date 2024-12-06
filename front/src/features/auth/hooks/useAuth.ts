@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../../app/store/store.ts';
+import { RootState, AppDispatch } from '@store/store.ts';
 import { loginWithGoogle, logout, checkLoginStatus } from '../store/authSlice.ts';
 
 export const useAuth = () => {
