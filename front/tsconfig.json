@@ -23,6 +23,7 @@
       "@pages/*": ["src/pages/*"],
       "@hooks/*": ["src/hooks/*"],
       "@utils/*": ["src/utils/*"],
+      "@types/*": ["src/types/*"],
       "@styles/*": ["src/styles/*"],
       "@assets/*": ["src/assets/*"]
     }

@@ -3,8 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }): UserConfig => {
-  // env 타입 명시적 정의
-  const env = loadEnv(mode, path.resolve(process.cwd()), '') as Record<string, string>;
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react()],
@@ -20,13 +19,12 @@ export default defineConfig(({ mode }): UserConfig => {
       }
     },
     define: {
-      // env 객체를 JSON으로 문자열화하여 전달
       'process.env': JSON.stringify(env)
     },
     build: {
       outDir: 'dist',
       emptyOutDir: true,
-      sourcemap: false,
+      sourcemap: true, // 개발 디버깅을 위해 true로 설정
       rollupOptions: {
         output: {
           manualChunks: {
@@ -60,8 +58,19 @@ export default defineConfig(({ mode }): UserConfig => {
     },
     server: {
       port: 3000,
+      host: true,
       open: true,
-      cors: true
+      cors: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+
+        }      },
+      hmr: {
+        overlay: true
+      }
     },
     preview: {
       port: 3000,
