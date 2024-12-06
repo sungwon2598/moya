@@ -10,3 +10,17 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
 }
+
+export interface AuthState {
+    isLogin: boolean;
+    user: User | null;
+    loading: boolean;
+    error: string | null;
+}
+
+export interface LoginResponse {
+    success: boolean;
+    data?: {
+        user: User;
+    };
+}

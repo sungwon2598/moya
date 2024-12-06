@@ -9,23 +9,41 @@ const initialState: AuthState = {
     error: null
 };
 
+// 사용자 정보 체크 thunk
 export const checkLoginStatus = createAsyncThunk<User | false>(
     'auth/checkLoginStatus',
-    async () => {
-        const userInfo = await getUserInfo();
-        return userInfo;
+    async (_, { rejectWithValue }) => {
+        try {
+            const userInfo = await getUserInfo();
+            return userInfo;
+        } catch (error) {
+            return rejectWithValue('Failed to fetch user info');
+        }
     }
 );
 
+// Google 로그인 thunk
 export const loginWithGoogle = createAsyncThunk<User | false, string>(
     'auth/loginWithGoogle',
-    async (credential) => {
-        const success = await postLoginToken(credential);
-        if (success) {
+    async (credential, { rejectWithValue }) => {
+        try {
+            const loginResponse = await postLoginToken(credential);
+            if (!loginResponse.success) {
+                throw new Error('Login failed');
+            }
+
+            // 로그인 성공 시 사용자 정보 조회
             const userInfo = await getUserInfo();
+            if (!userInfo) {
+                throw new Error('Failed to fetch user info after login');
+            }
+
             return userInfo;
+        } catch (error) {
+            return rejectWithValue(
+                error instanceof Error ? error.message : 'Google login failed'
+            );
         }
-        return false;
     }
 );
 
@@ -36,6 +54,9 @@ const authSlice = createSlice({
         logout: (state) => {
             state.isLogin = false;
             state.user = null;
+            state.error = null;
+        },
+        clearError: (state) => {
             state.error = null;
         }
     },
@@ -54,7 +75,8 @@ const authSlice = createSlice({
             .addCase(checkLoginStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.isLogin = false;
-                state.error = action.error.message || 'Failed to check login status';
+                state.user = null;
+                state.error = action.payload as string || 'Failed to check login status';
             })
             // Google 로그인
             .addCase(loginWithGoogle.pending, (state) => {
@@ -68,10 +90,12 @@ const authSlice = createSlice({
             })
             .addCase(loginWithGoogle.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || 'Google login failed';
+                state.isLogin = false;
+                state.user = null;
+                state.error = action.payload as string || 'Google login failed';
             });
     }
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;
