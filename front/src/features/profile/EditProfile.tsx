@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../auth/hooks/useAuth';
-import { ProfileForm } from './ProfileForm';
+import  ProfileForm  from '@shared/components/profile/ProfileForm';
 import type { ProfileFormData } from '@core/types/profile';
 
 const EditProfile: React.FC = () => {

@@ -1,111 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { User, School, Code } from 'lucide-react';
+import React, { useState } from 'react';
+import { Input } from '@shared/components/Input/Input';
+import { Alert } from '@shared/components/Alert/Alert';
+import {
+    ProfileFormData,
+    ProfileFormProps,
+    POSITION_OPTIONS,
+    EXPERIENCE_OPTIONS,
+    ValidationErrors,
+    VALIDATION_MESSAGES
+} from '@/core/types/profile';
 
-const POSITIONS = ['프론트엔드', '백엔드', '풀스택', '데브옵스', '모바일'] as const;
-const YEARS = ['0년', '1년', '2년', '3년', '4년', '5년 이상'] as const;
+const POSITIONS = [
+    { value: POSITION_OPTIONS.EMPTY, label: '직무 선택' },
+    { value: POSITION_OPTIONS.FRONTEND, label: '프론트엔드' },
+    { value: POSITION_OPTIONS.BACKEND, label: '백엔드' },
+    { value: POSITION_OPTIONS.FULLSTACK, label: '풀스택' },
+    { value: POSITION_OPTIONS.DEVOPS, label: '데브옵스' },
+    { value: POSITION_OPTIONS.MOBILE, label: '모바일' }
+] as const;
 
-type Position = typeof POSITIONS[number];
-type ExperienceYear = typeof YEARS[number];
+const EXPERIENCES = [
+    { value: EXPERIENCE_OPTIONS.EMPTY, label: '경력 선택' },
+    { value: EXPERIENCE_OPTIONS.ZERO, label: '신입' },
+    { value: EXPERIENCE_OPTIONS.ONE, label: '1년' },
+    { value: EXPERIENCE_OPTIONS.TWO, label: '2년' },
+    { value: EXPERIENCE_OPTIONS.THREE, label: '3년' },
+    { value: EXPERIENCE_OPTIONS.FOUR, label: '4년' },
+    { value: EXPERIENCE_OPTIONS.FIVE_PLUS, label: '5년 이상' }
+] as const;
 
-interface ProfileFormData {
-    nickname: string;
-    position: Position | '';
-    school: string;
-    experience: ExperienceYear | '';
-    description: string;
-    links: string[];
-}
-
-interface ProfileFormProps {
-    onSubmitSuccess?: () => void;
-}
-
-export default function ProfileForm({ onSubmitSuccess }: ProfileFormProps) {
+export const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit }) => {
     const [formData, setFormData] = useState<ProfileFormData>({
         nickname: '',
-        position: '',
+        position: POSITION_OPTIONS.EMPTY,
         school: '',
-        experience: '',
+        experience: EXPERIENCE_OPTIONS.EMPTY,
         description: '',
-        links: ['']
+        links: [''],
+        ...initialData
     });
 
-    const [errors, setErrors] = useState<Partial<ProfileFormData & { submit: string }>>({});
+    const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchProfileData = async () => {
-            try {
-                // 임시로 fetch 대신 setTimeout 사용
-                setTimeout(() => {
-                    setFormData({
-                        nickname: '테스트 사용자',
-                        position: '프론트엔드',
-                        school: '테스트 학교',
-                        experience: '1년',
-                        description: '안녕하세요',
-                        links: ['https://github.com']
-                    });
-                    setIsLoading(false);
-                }, 1000);
-            } catch (error) {
-                console.error('프로필 데이터 로딩 실패:', error);
-                setIsLoading(false);
-            }
-        };
+    const validateForm = (): boolean => {
+        const newErrors: ValidationErrors = {};
 
-        fetchProfileData();
-    }, []);
-
-    const validateForm = () => {
-        const newErrors: Partial<ProfileFormData> = {};
         if (!formData.nickname.trim()) {
-            newErrors.nickname = '닉네임을 입력해주세요';
+            newErrors.nickname = VALIDATION_MESSAGES.NICKNAME_REQUIRED;
         }
-        if (!formData.position) {
-            newErrors.position = '직무를 선택해주세요';
+
+        if (formData.position === POSITION_OPTIONS.EMPTY) {
+            newErrors.position = VALIDATION_MESSAGES.POSITION_REQUIRED;
         }
-        if (!formData.experience) {
-            newErrors.experience = '경력을 선택해주세요';
+
+        if (formData.experience === EXPERIENCE_OPTIONS.EMPTY) {
+            newErrors.experience = VALIDATION_MESSAGES.EXPERIENCE_REQUIRED;
         }
-        if (!formData.description.trim()) {
-            newErrors.description = '자기소개를 입력해주세요';
-        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validateForm()) return;
 
+        if (!validateForm()) {
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
-            setIsSubmitting(true);
-            setSuccessMessage(null);
-            // 임시로 API 호출 대신 setTimeout 사용
-            setTimeout(() => {
-                setSuccessMessage('프로필이 성공적으로 수정되었습니다.');
-                onSubmitSuccess?.();
-                setIsSubmitting(false);
-                setTimeout(() => setSuccessMessage(null), 3000);
-            }, 1000);
+            await onSubmit(formData);
         } catch (error) {
-            console.error('프로필 수정 실패:', error);
-            setErrors(prev => ({ ...prev, submit: '프로필 수정 중 오류가 발생했습니다' }));
+            setErrors(prev => ({
+                ...prev,
+                submit: VALIDATION_MESSAGES.SUBMIT_ERROR
+            }));
+        } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        if (errors[name as keyof ProfileFormData]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name as keyof ProfileFormData];
+                return newErrors;
+            });
         }
     };
 
     const handleLinkChange = (index: number, value: string) => {
         const newLinks = [...formData.links];
         newLinks[index] = value;
-        setFormData({ ...formData, links: newLinks });
+        setFormData(prev => ({
+            ...prev,
+            links: newLinks
+        }));
     };
 
     const addLink = () => {
-        setFormData(prev => ({ ...prev, links: [...prev.links, ''] }));
+        setFormData(prev => ({
+            ...prev,
+            links: [...prev.links, '']
+        }));
     };
 
     const removeLink = (index: number) => {
@@ -115,187 +123,145 @@ export default function ProfileForm({ onSubmitSuccess }: ProfileFormProps) {
         }));
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-moya-primary"></div>
-            </div>
-        );
-    }
-
     return (
-        <div className="w-full max-w-2xl mx-auto p-6">
-            <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900">프로필 수정</h2>
-                <p className="mt-2 text-sm text-gray-600">
-                    내 정보를 수정하고 관리할 수 있습니다
-                </p>
-            </div>
-
-            {successMessage && (
-                <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-lg">
-                    {successMessage}
-                </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            {errors.submit && (
+                <Alert variant="error">
+                    {errors.submit}
+                </Alert>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow">
-                {/* 닉네임 입력 */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        닉네임 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <User className="h-5 w-5 text-gray-400" />
+            <div>
+                <label className="block text-sm font-medium text-gray-700">닉네임 *</label>
+                <Input
+                    type="text"
+                    name="nickname"
+                    value={formData.nickname}
+                    onChange={handleInputChange}
+                    placeholder="닉네임을 입력하세요"
+                    required
+                    maxLength={20}
+                    error={errors.nickname}
+                />
+                {errors.nickname && (
+                    <p className="mt-1 text-sm text-red-500">{errors.nickname}</p>
+                )}
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">직무 *</label>
+                <select
+                    name="position"
+                    value={formData.position}
+                    onChange={handleInputChange}
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-moya-primary focus:ring-moya-primary ${
+                        errors.position ? 'border-red-500' : ''
+                    }`}
+                    required
+                >
+                    {POSITIONS.map(({ value, label }) => (
+                        <option key={value} value={value}>
+                            {label}
+                        </option>
+                    ))}
+                </select>
+                {errors.position && (
+                    <p className="mt-1 text-sm text-red-500">{errors.position}</p>
+                )}
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">학교</label>
+                <Input
+                    type="text"
+                    name="school"
+                    value={formData.school}
+                    onChange={handleInputChange}
+                    placeholder="학교명을 입력하세요"
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">경력 *</label>
+                <select
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-moya-primary focus:ring-moya-primary ${
+                        errors.experience ? 'border-red-500' : ''
+                    }`}
+                    required
+                >
+                    {EXPERIENCES.map(({ value, label }) => (
+                        <option key={value} value={value}>
+                            {label}
+                        </option>
+                    ))}
+                </select>
+                {errors.experience && (
+                    <p className="mt-1 text-sm text-red-500">{errors.experience}</p>
+                )}
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">자기소개</label>
+                <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-moya-primary focus:ring-moya-primary ${
+                        errors.description ? 'border-red-500' : ''
+                    }`}
+                    placeholder="자기소개를 입력하세요"
+                />
+                {errors.description && (
+                    <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+                )}
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">외부 링크</label>
+                <div className="space-y-2">
+                    {formData.links.map((link, index) => (
+                        <div key={index} className="flex gap-2">
+                            <Input
+                                type="url"
+                                value={link}
+                                onChange={e => handleLinkChange(index, e.target.value)}
+                                placeholder="https://"
+                                className="flex-1"
+                            />
+                            {formData.links.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={() => removeLink(index)}
+                                    className="px-3 py-2 text-red-600 hover:text-red-700"
+                                >
+                                    삭제
+                                </button>
+                            )}
                         </div>
-                        <input
-                            type="text"
-                            value={formData.nickname}
-                            onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-moya-primary focus:border-moya-primary"
-                            placeholder="닉네임을 입력하세요"
-                        />
-                    </div>
-                    {errors.nickname && (
-                        <p className="mt-1 text-sm text-red-600">{errors.nickname}</p>
-                    )}
-                </div>
-
-                {/* 직무 선택 */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        직무 <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={formData.position}
-                        onChange={(e) => setFormData({ ...formData, position: e.target.value as Position })}
-                        className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:ring-moya-primary focus:border-moya-primary"
-                    >
-                        <option value="">직무를 선택하세요</option>
-                        {POSITIONS.map((position) => (
-                            <option key={position} value={position}>
-                                {position}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.position && (
-                        <p className="mt-1 text-sm text-red-600">{errors.position}</p>
-                    )}
-                </div>
-
-                {/* 학교 입력 */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        학교
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <School className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            value={formData.school}
-                            onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-moya-primary focus:border-moya-primary"
-                            placeholder="학교를 입력하세요"
-                        />
-                    </div>
-                </div>
-
-                {/* 경력 선택 */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        경력 <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={formData.experience}
-                        onChange={(e) => setFormData({ ...formData, experience: e.target.value as ExperienceYear })}
-                        className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:ring-moya-primary focus:border-moya-primary"
-                    >
-                        <option value="">경력을 선택하세요</option>
-                        {YEARS.map((year) => (
-                            <option key={year} value={year}>
-                                {year}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.experience && (
-                        <p className="mt-1 text-sm text-red-600">{errors.experience}</p>
-                    )}
-                </div>
-
-                {/* 자기소개 */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        자기소개 <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={4}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-moya-primary focus:border-moya-primary"
-                        placeholder="자기소개를 입력하세요"
-                    />
-                    {errors.description && (
-                        <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-                    )}
-                </div>
-
-                {/* 링크 추가 */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        링크
-                    </label>
-                    <div className="space-y-2">
-                        {formData.links.map((link, index) => (
-                            <div key={index} className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Code className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="url"
-                                        value={link}
-                                        onChange={(e) => handleLinkChange(index, e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-moya-primary focus:border-moya-primary"
-                                        placeholder="https://"
-                                    />
-                                </div>
-                                {index > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => removeLink(index)}
-                                        className="px-3 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"
-                                    >
-                                        삭제
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            onClick={addLink}
-                            className="text-sm text-moya-primary hover:text-moya-secondary"
-                        >
-                            + 링크 추가
-                        </button>
-                    </div>
-                </div>
-
-                {/* 제출 버튼 */}
-                <div>
+                    ))}
                     <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-moya-primary hover:bg-moya-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-moya-primary disabled:opacity-50"
+                        type="button"
+                        onClick={addLink}
+                        className="text-sm text-moya-primary hover:text-moya-secondary"
                     >
-                        {isSubmitting ? '저장 중...' : '프로필 저장'}
+                        + 링크 추가
                     </button>
-                    {errors.submit && (
-                        <p className="mt-2 text-sm text-red-600 text-center">{errors.submit}</p>
-                    )}
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2 bg-moya-primary text-white rounded-lg hover:bg-moya-secondary transition-colors duration-200 disabled:opacity-50"
+            >
+                {isSubmitting ? '저장 중...' : '저장'}
+            </button>
+        </form>
     );
-}
+};
+
+export default ProfileForm;
