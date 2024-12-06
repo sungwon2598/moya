@@ -10,7 +10,6 @@ import ChatList from './pages/chat/ChatList';
 import ChatRoom from './pages/chat/ChatRoom';
 import EditProfile from "./pages/profile/EditProfile.tsx";
 import {store} from './store'
-import {AuthProvider} from "./context/AuthContext.tsx";
 import {Provider} from "react-redux";
 const App: React.FC = () => {
     return (
