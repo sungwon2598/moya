@@ -3,30 +3,39 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }): UserConfig => {
-  // env 타입 명시적 정의
-  const env = loadEnv(mode, path.resolve(process.cwd()), '') as Record<string, string>;
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '@components': path.resolve(__dirname, './src/components'),
+        '@core': path.resolve(__dirname, './src/core'),
+        '@features': path.resolve(__dirname, './src/features'),
+        '@shared': path.resolve(__dirname, './src/shared'),
         '@pages': path.resolve(__dirname, './src/pages'),
-        '@hooks': path.resolve(__dirname, './src/hooks'),
-        '@utils': path.resolve(__dirname, './src/utils'),
         '@styles': path.resolve(__dirname, './src/styles'),
-        '@assets': path.resolve(__dirname, './src/assets')
+        '@assets': path.resolve(__dirname, './src/assets'),
+        '@types': path.resolve(__dirname, './src/core/types'),
+
+        // 자주 사용되는 하위 경로들에 대한 별칭
+        '@config': path.resolve(__dirname, './src/core/config'),
+        '@providers': path.resolve(__dirname, './src/core/providers'),
+        '@store': path.resolve(__dirname, './src/core/store'),
+        '@components': path.resolve(__dirname, './src/shared/components'),
+        '@hooks': path.resolve(__dirname, './src/shared/hooks'),
+        '@utils': path.resolve(__dirname, './src/shared/utils'),
+        '@constants': path.resolve(__dirname, './src/shared/constants'),
+        '@ui': path.resolve(__dirname, './src/shared/components/ui')
       }
     },
     define: {
-      // env 객체를 JSON으로 문자열화하여 전달
       'process.env': JSON.stringify(env)
     },
     build: {
       outDir: 'dist',
       emptyOutDir: true,
-      sourcemap: false,
+      sourcemap: true, // 개발 디버깅을 위해 true로 설정
       rollupOptions: {
         output: {
           manualChunks: {
@@ -60,8 +69,19 @@ export default defineConfig(({ mode }): UserConfig => {
     },
     server: {
       port: 3000,
+      host: true,
       open: true,
-      cors: true
+      cors: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+
+        }      },
+      hmr: {
+        overlay: true
+      }
     },
     preview: {
       port: 3000,

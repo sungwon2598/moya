@@ -19,12 +19,24 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
+      "@core/*": ["src/core/*"],
+      "@features/*": ["src/features/*"],
+      "@shared/*": ["src/shared/*"],
       "@pages/*": ["src/pages/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@utils/*": ["src/utils/*"],
       "@styles/*": ["src/styles/*"],
-      "@assets/*": ["src/assets/*"]
+      "@assets/*": ["src/assets/*"],
+      "@types/*": ["src/core/types/*"],
+
+
+      // 자주 사용되는 하위 경로들에 대한 별칭
+      "@config/*": ["src/core/config/*"],
+      "@providers/*": ["src/core/providers/*"],
+      "@store/*": ["src/core/store/*"],
+      "@components/*": ["src/shared/components/*"],
+      "@hooks/*": ["src/shared/hooks/*"],
+      "@utils/*": ["src/shared/utils/*"],
+      "@constants/*": ["src/shared/constants/*"],
+      "@ui/*": ["src/shared/components/ui/*"]
     }
   },
   "include": ["src", "vite.config.ts"],
