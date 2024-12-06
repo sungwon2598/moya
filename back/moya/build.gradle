@@ -49,6 +49,7 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.14.3'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.session:spring-session-data-redis'
 
 	implementation 'com.google.http-client:google-http-client-jackson2:1.42.2'
 	implementation 'com.google.apis:google-api-services-calendar:v3-rev20220715-2.0.0'
@@ -60,6 +61,10 @@ dependencies {
 
 	// JSON 처리를 위한 Jackson 라이브러리
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+	testImplementation 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'ch.qos.logback:logback-classic'
 }
 
 dependencyManagement {
