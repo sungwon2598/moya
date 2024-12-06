@@ -1,7 +1,7 @@
 import { FC, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../../app/store/store.ts';
+import { AppDispatch } from '@store/store.ts';
 import { loginWithGoogle } from '../store/authSlice.ts';
 import { useScript } from '../hooks/useScript.ts';
 

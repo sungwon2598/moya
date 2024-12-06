@@ -1,11 +1,9 @@
-// src/components/footer/Footer.tsx
-
 import React from 'react';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { FooterLink, SocialLink } from './FooterComponents.tsx';
 import FooterSection from './FooterSection.tsx';
 import { companyInfo, footerSections, socialLinks } from './footerData.ts';
-import {QuickLink} from "../../../app/types/footer.ts";
+import {QuickLink} from "@/core/types/footer.ts";
 
 const iconMap = {
     Facebook,

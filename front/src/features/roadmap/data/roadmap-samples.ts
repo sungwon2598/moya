@@ -1,5 +1,5 @@
 import { Code, Server, Smartphone, Binary, Database } from 'lucide-react';
-import { RoadmapItem } from '../../app/types/roadmap.ts';
+import { RoadmapItem } from '../../../core/types/roadmap.ts';
 
 export const roadmapSamples: RoadmapItem[] = [
     {

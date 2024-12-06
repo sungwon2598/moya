@@ -1,21 +1,25 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import ProfileForm from '@components/profile/ProfileForm';
+import { useAuth } from '../auth/hooks/useAuth';
+import { ProfileForm } from './ProfileForm';
+import type { ProfileFormData } from '@core/types/profile';
 
-export default function EditProfile() {
-    const navigate = useNavigate();
-    const { isLoggedIn } = true;
+const EditProfile: React.FC = () => {
+    const { isLogin: isLoggedIn } = useAuth(); // isLogin을 isLoggedIn으로 alias
 
-    // 비로그인 상태일 경우 메인 페이지로 리다이렉트
-    React.useEffect(() => {
-        if (!isLoggedIn) {
-            navigate('/', { replace: true });
+    const handleSubmit = async (data: ProfileFormData) => {
+        try {
+            // API 호출 로직
+            console.log('Submitting profile data:', data);
+        } catch (error) {
+            console.error('Failed to update profile:', error);
         }
-    }, [isLoggedIn, navigate]);
+    };
 
     if (!isLoggedIn) {
-        return null;
+        return <div>로그인이 필요합니다.</div>;
     }
 
-    return <ProfileForm />;
-}
+    return <ProfileForm onSubmit={handleSubmit} />;
+};
+
+export default EditProfile;

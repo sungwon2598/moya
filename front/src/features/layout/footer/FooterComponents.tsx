@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FooterLinkProps, SocialLinkProps } from '../../../app/types/footer.ts';
+import { FooterLinkProps, SocialLinkProps } from '../../../core/types/footer.ts';
 
 export const FooterLink: React.FC<FooterLinkProps> = ({ href, children }) => (
     <div className="block">
