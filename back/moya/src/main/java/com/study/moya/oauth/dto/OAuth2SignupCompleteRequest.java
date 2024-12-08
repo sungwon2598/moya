@@ -1,4 +1,4 @@
-package com.study.moya.Oauth.dto;
+package com.study.moya.oauth.dto;
 
 import lombok.Builder;
 import lombok.Getter;

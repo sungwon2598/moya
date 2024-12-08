@@ -1,7 +1,5 @@
 package com.study.moya.global.config.security;
 
-import com.study.moya.Oauth.handler.OAuth2AuthenticationSuccessHandler;
-import com.study.moya.Oauth.service.CustomOAuth2UserService;
 import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
@@ -51,9 +49,7 @@ public class SecurityConfig {
 //    private long maxAge;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   CustomOAuth2UserService customOAuth2UserService,
-                                                   OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -70,20 +66,6 @@ public class SecurityConfig {
                                 "/whiteboard", " /api/auth/oauth/**"
                         ).permitAll()
                         .anyRequest().authenticated()
-                )
-
-
-                .oauth2Login(oauth2 ->
-                        oauth2.authorizationEndpoint(endpoint ->
-                                        endpoint.baseUri("/oauth2/authorization")  // 기본 인증 엔드포인트 URI
-                                )
-                                .redirectionEndpoint(endpoint ->
-                                        endpoint.baseUri("/login/oauth2/code/*")  // 리다이렉션 URI를 Google 콘솔에 등록된 것과 일치하게 수정
-                                )
-                                .userInfoEndpoint(userInfo ->
-                                        userInfo.userService(customOAuth2UserService)
-                                )
-                                .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
 
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration),

@@ -1,4 +1,4 @@
-package com.study.moya.Oauth.dto;
+package com.study.moya.oauth.dto;
 
 import com.study.moya.member.domain.Role;
 import lombok.Builder;
