@@ -1,7 +1,7 @@
 package com.study.moya.ai_roadmap.controller;
 
-import com.study.moya.ai_roadmap.dto.RoadmapRequest;
-import com.study.moya.ai_roadmap.dto.WeeklyRoadmapResponse;
+import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
+import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

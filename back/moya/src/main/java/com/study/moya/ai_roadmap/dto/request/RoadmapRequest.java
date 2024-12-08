@@ -1,4 +1,4 @@
-package com.study.moya.ai_roadmap.dto;
+package com.study.moya.ai_roadmap.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
