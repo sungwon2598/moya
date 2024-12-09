@@ -1,7 +1,10 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { Menu, Home, Book, User, ChevronDown, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import NavItem from './NavItem.tsx';
+import NavItem from './components/NavItem';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/core/store/store';
+import {UserDropdown} from "./components/usermenu/UserDropdown.tsx";
 
 // 네비게이션 아이템 설정
 const navigationItems = [
@@ -28,9 +31,22 @@ const authNavigationItems = [
         icon: MessageCircle
     }
 ];
+export const Header: React.FC = () => {
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const { isLogin, user } = useSelector((state: RootState) => state.auth);
 
-const Header: React.FC = () => {
-    const  isLoggedIn = true;
+    // 외부 클릭 감지
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
         <header className="bg-white border-b border-moya-primary/10 fixed w-full top-0 z-50">
@@ -42,15 +58,13 @@ const Header: React.FC = () => {
                             <span className="text-xl font-bold text-moya-primary">MOYA</span>
                         </Link>
                         <div className="hidden md:flex items-center">
-                            {/* 기본 네비게이션 아이템 */}
                             {navigationItems.map((item) => (
                                 <NavItem
                                     key={item.path}
                                     {...item}
                                 />
                             ))}
-                            {/* 인증이 필요한 네비게이션 아이템 */}
-                            {isLoggedIn && authNavigationItems.map((item) => (
+                            {isLogin && authNavigationItems.map((item) => (
                                 <NavItem
                                     key={item.path}
                                     {...item}
@@ -58,15 +72,26 @@ const Header: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <button className="flex items-center space-x-1 text-gray-600 hover:text-moya-primary transition-colors duration-200">
+                    <div className="flex items-center space-x-4" ref={dropdownRef}>
+                        <button
+                            className="flex items-center space-x-1 text-gray-600 hover:text-moya-primary transition-colors duration-200"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            aria-expanded={isDropdownOpen}
+                            aria-haspopup="true"
+                        >
                             <User className="w-5 h-5" />
-                            <span className="text-sm font-medium">게스트</span>
+                            <span className="text-sm font-medium">
+                                {isLogin ? user?.nickName : '게스트'}
+                            </span>
                             <ChevronDown className="w-4 h-4" />
                         </button>
-                        <button className="bg-moya-primary hover:bg-moya-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow-md">
-                            로그인
-                        </button>
+                        {isDropdownOpen && (
+                            <UserDropdown
+                                user={user}
+                                isLogin={isLogin}
+                                onClose={() => setIsDropdownOpen(false)}
+                            />
+                        )}
                     </div>
                 </nav>
             </div>
