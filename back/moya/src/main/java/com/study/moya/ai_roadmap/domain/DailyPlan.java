@@ -47,6 +47,10 @@ public class DailyPlan extends BaseEntity {
         this.weeklyPlan = weeklyPlan;
     }
 
+    public void updateWorkSheet(String workSheet) {
+        this.workSheet = workSheet;
+    }
+
     private void validateDayNumber(Integer dayNumber) {
         if (dayNumber == null || dayNumber < 1 || dayNumber > 7) {
             throw new IllegalArgumentException("일자는 1-7 사이여야 합니다.");
