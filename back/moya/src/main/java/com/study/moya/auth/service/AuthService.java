@@ -1,12 +1,11 @@
 package com.study.moya.auth.service;
 
-import com.study.moya.Oauth.exception.InvalidTokenException;
+import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.dto.LoginRequest;
 import com.study.moya.auth.dto.LogoutRequest;
 import com.study.moya.auth.dto.UserInfoResponse;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
-import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.constants.MemberErrorCode;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.exception.MemberException;

@@ -2,8 +2,8 @@ package com.study.moya.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.study.moya.Oauth.dto.OAuthTempMemberInfo;
-import com.study.moya.Oauth.exception.InvalidTokenException;
+import com.study.moya.oauth.dto.OAuthTempMemberInfo;
+import com.study.moya.oauth.exception.InvalidTokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

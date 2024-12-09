@@ -2,11 +2,10 @@ package com.study.moya.auth;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.study.moya.Oauth.exception.InvalidTokenException;
+import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.service.AuthService;
 import com.study.moya.redis.RedisService;
 import com.study.moya.auth.dto.LogoutRequest;
-import com.study.moya.auth.dto.LogoutResponse;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
