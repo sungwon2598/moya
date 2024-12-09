@@ -7,16 +7,19 @@ interface LoginResponse {
         user: User;
     };
 }
-
 export const getUserInfo = async (): Promise<User | false> => {
     try {
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/v1/oauth/user/info`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Access-Control-Allow-Origin': import.meta.env.VITE_ALLOWED_ORIGIN || '*',
+                ...(token && { 'Authorization': `Bearer ${token}` })
             },
-            credentials: 'include'
+            credentials: 'include',
+            mode: 'cors' // CORS 모드 명시적 설정
         });
 
         if (!response.ok) {
@@ -36,10 +39,12 @@ export const postLoginToken = async (credential: string): Promise<LoginResponse>
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Access-Control-Allow-Origin': import.meta.env.VITE_ALLOWED_ORIGIN || '*'
             },
             credentials: 'include',
-            body: JSON.stringify({ credential }) // credential을 객체로 감싸서 전송
+            mode: 'cors',
+            body: JSON.stringify({ credential })
         });
 
         if (!response.ok) {
