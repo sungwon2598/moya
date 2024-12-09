@@ -26,7 +26,7 @@ public class PrivacyConsent {
     private LocalDateTime privacyPolicyAgreedAt;
 
     @Column(name = "marketing_agreed")
-    private Boolean marketingAgreed = false;
+    private Boolean marketingAgreed;
 
     @Column(name = "marketing_agreed_at")
     private LocalDateTime marketingAgreedAt;
@@ -44,7 +44,8 @@ public class PrivacyConsent {
     }
 
     public void updateMarketingConsent(Boolean agreed) {
-        this.marketingAgreed = agreed != null ? agreed : false;
+            this.marketingAgreed = agreed != null ? agreed : false;
         this.marketingAgreedAt = Boolean.TRUE.equals(agreed) ? LocalDateTime.now() : null;
     }
+
 }

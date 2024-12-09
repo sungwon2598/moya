@@ -108,7 +108,7 @@ public class Member extends BaseEntity implements UserDetails {
         //createPointAccount();
     }
 
-//    @Builder
+//    @Builder(builderMethodName = "createBuilder")
 //    public Member(String email, String password, String nickname, String providerId, String profileImageUrl,
 //                  String accessToken, String refreshToken, Instant tokenExpirationTime,
 //                  Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed, Set<Role> roles,
@@ -125,11 +125,16 @@ public class Member extends BaseEntity implements UserDetails {
 //        this.roles = roles;
 //        this.lastLoginAt = LocalDateTime.now();
 //        this.personalInfoExpiryDate = calculateExpiryDate();
-//        this.privacyConsent = new PrivacyConsent(termsAgreed, privacyPolicyAgreed, marketingAgreed);
+//        this.privacyConsent = PrivacyConsent.builder()
+//                .termsAgreed(termsAgreed)
+//                .privacyPolicyAgreed(privacyPolicyAgreed)
+//                .marketingAgreed(marketingAgreed)
+//                .build();
 //    }
 //
+//
 //    @Builder(builderMethodName = "updateBuilder")
-//    public Member(Member existingMember, String accessToken, String refreshToken, Instant tokenExpirationTime) {
+//    public Member(Member existingMember, String accessToken, String refreshToken, Instant tokenExpirationTime, Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
 //        this.email = existingMember.getEmail();
 //        this.password = existingMember.getPassword();
 //        this.nickname = existingMember.getNickname();
@@ -137,11 +142,17 @@ public class Member extends BaseEntity implements UserDetails {
 //        this.accessToken = accessToken;
 //        this.refreshToken = refreshToken;
 //        this.tokenExpirationTime = tokenExpirationTime;
-//        this.providerId = getProviderId();
-//        this.roles = getRoles();
-//        this.status = getStatus();
-//        this.privacyConsent = existingMember.getPrivacyConsent();
-//        //localDateTime, personalInfoExpiryDate 설정해야함
+//        this.status = existingMember.getStatus();
+//        this.roles = existingMember.getRoles();
+//        this.lastLoginAt = LocalDateTime.now();
+//        this.providerId = existingMember.getProviderId(); // getProviderId() 대신 직접 가져오기
+//        this.roles = existingMember.getRoles(); // getRoles() 대신 직접 가져오기
+//        this.status = existingMember.getStatus(); // getStatus() 대신 직접 가져오기
+//        this.privacyConsent = PrivacyConsent.builder()
+//                .termsAgreed(termsAgreed)
+//                .privacyPolicyAgreed(privacyPolicyAgreed)
+//                .marketingAgreed(marketingAgreed)
+//                .build();
 //    }
 
     public static MemberBuilder createBuilder() {
