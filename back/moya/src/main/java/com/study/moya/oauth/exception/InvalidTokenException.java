@@ -1,4 +1,4 @@
-package com.study.moya.Oauth.exception;
+package com.study.moya.oauth.exception;
 
 public class InvalidTokenException extends RuntimeException {
     public InvalidTokenException(String message){
