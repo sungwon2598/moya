@@ -1,6 +1,6 @@
 package com.study.moya.auth.controller;
 
-import com.study.moya.Oauth.exception.InvalidTokenException;
+import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.dto.*;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
@@ -14,12 +14,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

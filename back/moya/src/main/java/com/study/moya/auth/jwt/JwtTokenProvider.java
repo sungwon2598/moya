@@ -1,7 +1,7 @@
 package com.study.moya.auth.jwt;
 
 
-import com.study.moya.Oauth.exception.InvalidTokenException;
+import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.domain.RefreshToken;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.exception.TokenProcessingException;
