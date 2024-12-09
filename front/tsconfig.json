@@ -19,13 +19,14 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
+      "@core/*": ["src/core/*"],
+      "@features/*": ["src/features/*"],
       "@pages/*": ["src/pages/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@utils/*": ["src/utils/*"],
-      "@types/*": ["src/types/*"],
+      "@shared/*": ["src/shared/*"],
       "@styles/*": ["src/styles/*"],
-      "@assets/*": ["src/assets/*"]
+      "@types/*": ["src/core/types/*"],
+      "@store/*": ["src/core/store/*"],
+      "@config/*": ["src/core/config/*"]
     }
   },
   "include": ["src", "vite.config.ts"],

@@ -9,6 +9,7 @@ on:
     types: [opened, closed]
     paths:
       - 'back/**'
+
 jobs:
   Check_Path:
     runs-on: ubuntu-latest
@@ -45,11 +46,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-          distribution: 'adopt'
+        
       - name: SSH로 홈서버 접속하기
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -62,39 +59,21 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
+            # 백엔드 코드 업데이트
             cd /home/ubuntu/moya/back/moya
-            # 로컬 변경사항 초기화
             git reset --hard
             git clean -fd
-            
-            # gradle wrapper 설정
-            cat > gradle/wrapper/gradle-wrapper.properties << 'EOL'
-            distributionBase=GRADLE_USER_HOME
-            distributionPath=wrapper/dists
-            distributionUrl=https\://services.gradle.org/distributions/gradle-8.8-bin.zip
-            networkTimeout=10000
-            validateDistributionUrl=true
-            zipStoreBase=GRADLE_USER_HOME
-            zipStorePath=wrapper/dists
-            EOL
-            
-            # test 디렉토리 삭제
-            rm -rf src/test
-            
-            # git 설정 및 pull
             git remote set-url origin git@github.com:sungwon2598/moya.git
             git pull origin main
-
-            # gradlew 파일에 실행 권한 부여 (이 부분 추가)
-            chmod +x gradlew
             
-            # 애플리케이션 설정 파일 생성
+            # application.yml 업데이트
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
-            # 빌드 및 실행
-            ./gradlew clean build
-            sudo fuser -k -n tcp 8080 || true
-            nohup java -Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxHeapFreeRatio=70 -XX:MinHeapFreeRatio=40 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ubuntu/heapdump.hprof -jar build/libs/*SNAPSHOT.jar > ./output.log 2>&1 &
+            # 도커 컴포즈로 서비스 재시작
+            cd /home/ubuntu/moya-docker
+            docker-compose stop springboot-app
+            docker-compose rm -f springboot-app
+            docker-compose up -d --build springboot-app
 
   Notify:
     needs: [Check_Path, Deploy]

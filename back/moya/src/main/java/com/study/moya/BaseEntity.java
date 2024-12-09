@@ -1,5 +1,5 @@
 package com.study.moya;
-
+//깃1
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;

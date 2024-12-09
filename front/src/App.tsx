@@ -1,19 +1,17 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ModalProvider } from './context/ModalContext';
-import RootLayout from './layout/RootLayout';
-import Main from './pages/main/Main';
-import RoadmapPreview from './pages/RoadmapPreview';
-import ChatList from './pages/chat/ChatList';
-import ChatRoom from './pages/chat/ChatRoom';
-import {store} from './store'
-import {AuthProvider} from "./context/AuthContext.tsx";
+import { ModalProvider } from './core/providers/context/ModalContext';
+import RootLayout from './features/layout/RootLayout';
+import Main from './pages/main/MainContent.tsx';
+import RoadmapPreview from './features/roadmap/RoadmapPreview.tsx';
+import EditProfile from "./features/profile/EditProfile.tsx";
+import {store} from './core/store/store.ts'
 import {Provider} from "react-redux";
+
 const App: React.FC = () => {
     return (
         <Provider store={store}>
             <ModalProvider>
-                <AuthProvider>
                     <BrowserRouter>
                         <Routes>
                             <Route path="/" element={<RootLayout />}>
@@ -25,11 +23,6 @@ const App: React.FC = () => {
                                     <Route path="preview" element={<RoadmapPreview />} />
                                 </Route>
 
-                                {/* 채팅 관련 라우트 */}
-                                <Route path="chat">
-                                    <Route index element={<ChatList />} />
-                                    <Route path=":roomId" element={<ChatRoom />} />
-                                </Route>
 
                                 {/* 404 페이지 처리 */}
                                 <Route
@@ -42,10 +35,14 @@ const App: React.FC = () => {
                                         </div>
                                     }
                                 />
+
+                                <Route path="profile/edit" element={<EditProfile />} />
+
+                                {/* 404 페이지 처리 */}
+                                <Route path="*" element={<div>Page Not Found</div>} />
                             </Route>
                         </Routes>
                     </BrowserRouter>
-                </AuthProvider>
             </ModalProvider>
         </Provider>
     );
