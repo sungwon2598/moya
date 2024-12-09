@@ -58,7 +58,7 @@ public class MemberService implements UserDetailsService {
         String encodedPassword = passwordEncoder.encode(signUpRequest.password());
         log.debug("비밀번호 암호화 완료 - 이메일: {}", signUpRequest.email());
 
-        Member member = Member.builder()
+        Member member = Member.createBuilder()
                 .email(signUpRequest.email())
                 .password(encodedPassword)
                 .nickname(signUpRequest.nickname())
