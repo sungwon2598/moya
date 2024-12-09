@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/core/store';
+import { RootState } from '@/core/store/store';
 import { UserAvatar } from './UserAvatar';
 import { UserDropdown } from './UserDropdown';
 
@@ -33,7 +33,7 @@ export const UserMenu: React.FC = () => {
                 <UserAvatar user={user} />
             </button>
 
-            {isOpen && <UserDropdown user={user} onClose={() => setIsOpen(false)} />}
+            {isOpen && <UserDropdown user={user} onClose={() => setIsOpen(false)} isLogin={isLogin} />}
         </div>
     );
 };

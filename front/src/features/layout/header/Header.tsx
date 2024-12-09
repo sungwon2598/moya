@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import { Menu, Home, Book, User, ChevronDown, MessageCircle } from 'lucide-react';
+import {  Home, Book, User, ChevronDown, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NavItem from './components/NavItem';
 import { useSelector } from 'react-redux';

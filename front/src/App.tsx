@@ -36,7 +36,7 @@ const App: React.FC = () => {
                                     }
                                 />
 
-                                <Route path="profile/edit" element={<EditProfile />} />
+                                <Route path="settings/profile" element={<EditProfile />} />
 
                                 {/* 404 페이지 처리 */}
                                 <Route path="*" element={<div>Page Not Found</div>} />

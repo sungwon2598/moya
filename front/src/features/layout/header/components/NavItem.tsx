@@ -6,10 +6,9 @@ interface NavItemProps {
     label: string;
     path: string;
     icon: LucideIcon;
-    type: 'A' | 'B';
 }
 
-const NavItem: React.FC<NavItemProps> = ({ label, path, icon: Icon, type }) => {
+const NavItem: React.FC<NavItemProps> = ({ label, path, icon: Icon,  }) => {
     return (
         <Link
             to={path}

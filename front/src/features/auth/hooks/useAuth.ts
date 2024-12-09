@@ -18,7 +18,6 @@ export const useAuth = () => {
     const handleLogout = () => {
         dispatch(logout());
     };
-
     const checkAuth = async () => {
         try {
             return await dispatch(checkLoginStatus()).unwrap();
