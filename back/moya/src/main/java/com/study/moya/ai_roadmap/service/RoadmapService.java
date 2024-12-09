@@ -5,13 +5,16 @@ import com.study.moya.ai_roadmap.domain.RoadMap;
 import com.study.moya.ai_roadmap.domain.WeeklyPlan;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
+import com.study.moya.ai_roadmap.repository.DailyPlanRepository;
 import com.study.moya.ai_roadmap.repository.RoadMapRepository;
+import com.study.moya.ai_roadmap.repository.WeeklyPlanRepository;
 import com.study.moya.ai_roadmap.util.RoadmapResponseParser;
 import com.theokanning.openai.Usage;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.service.OpenAiService;
 import java.util.concurrent.CompletableFuture;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RoadmapService {
 
     @Value("${openai.api.models.roadmap_generation.model}")
@@ -28,19 +32,10 @@ public class RoadmapService {
     private final OpenAiService openAiService;
     private final RoadmapPromptService promptService;
     private final RoadmapResponseParser responseParser;
-    private final RoadMapRepository roadMapRepository;
 
-    public RoadmapService(
-            OpenAiService openAiService,
-            RoadmapPromptService promptService,
-            RoadmapResponseParser responseParser,
-            RoadMapRepository roadMapRepository
-    ) {
-        this.openAiService = openAiService;
-        this.promptService = promptService;
-        this.responseParser = responseParser;
-        this.roadMapRepository = roadMapRepository;
-    }
+    private final RoadMapRepository roadMapRepository;
+    private final WeeklyPlanRepository weeklyPlanRepository;
+    private final DailyPlanRepository dailyPlanRepository;
 
     @Async
     public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request) {
@@ -86,34 +81,42 @@ public class RoadmapService {
     public Long saveCurriculum(String topic, WeeklyRoadmapResponse response) {
         log.info("커리큘럼 저장 시작");
 
-        RoadMap curriculum = RoadMap.builder()
+        // RoadMap 생성
+        RoadMap roadMap = RoadMap.builder()
                 .topic(topic)
                 .evaluation(response.getCurriculumEvaluation())
                 .overallTips(response.getOverallTips())
                 .build();
 
+        // 먼저 RoadMap을 저장하여 ID를 확보
+        RoadMap savedRoadMap = roadMapRepository.save(roadMap);
+
+        // WeeklyPlan 생성 및 저장
         for (WeeklyRoadmapResponse.WeeklyPlan weeklyPlanDto : response.getWeeklyPlans()) {
             WeeklyPlan weeklyPlan = WeeklyPlan.builder()
                     .weekNumber(weeklyPlanDto.getWeek())
                     .keyword(weeklyPlanDto.getWeeklyKeyword())
+                    .roadMap(savedRoadMap)  // 저장된 RoadMap 참조
                     .build();
 
+            // WeeklyPlan 저장
+            WeeklyPlan savedWeeklyPlan = weeklyPlanRepository.save(weeklyPlan);
+
+            // DailyPlan 생성 및 저장
             for (WeeklyRoadmapResponse.DailyPlan dailyPlanDto : weeklyPlanDto.getDailyPlans()) {
                 DailyPlan dailyPlan = DailyPlan.builder()
                         .dayNumber(dailyPlanDto.getDay())
                         .keyword(dailyPlanDto.getDailyKeyword())
+                        .weeklyPlan(savedWeeklyPlan)  // 저장된 WeeklyPlan 참조
                         .build();
 
-                weeklyPlan.addDailyPlan(dailyPlan);
+                dailyPlanRepository.save(dailyPlan);
             }
-
-            curriculum.addWeeklyPlan(weeklyPlan);
         }
 
-        RoadMap savedCurriculum = roadMapRepository.save(curriculum);
-        log.info("커리큘럼 저장 완료. ID: {}", savedCurriculum.getId());
+        log.info("커리큘럼 저장 완료. ID: {}", savedRoadMap.getId());
 
-        return savedCurriculum.getId();
+        return savedRoadMap.getId();
     }
 
     private void logTokenUsage(Usage usage) {
