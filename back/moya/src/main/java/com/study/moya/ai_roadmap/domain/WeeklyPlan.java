@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @Entity
 @Table(name = "weekly_plans")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,17 +25,21 @@ public class WeeklyPlan extends BaseEntity {
     @Column(nullable = false)
     private String keyword;
 
-    @OneToMany(mappedBy = "weeklyPlan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DailyPlan> dailyPlans = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "roadmap_id")
+    private RoadMap roadMap;
 
     @Builder
-    private WeeklyPlan(Integer weekNumber, String keyword) {
+    private WeeklyPlan(Integer weekNumber, String keyword, RoadMap roadMap) {
+        validateWeekNumber(weekNumber);
         this.weekNumber = weekNumber;
         this.keyword = keyword;
+        this.roadMap = roadMap;
     }
 
-    public void addDailyPlan(DailyPlan dailyPlan) {
-        this.dailyPlans.add(dailyPlan);
-        dailyPlan.setWeeklyPlan(this); // 양방향 관계 설정
+    private void validateWeekNumber(Integer weekNumber) {
+        if (weekNumber == null || weekNumber < 1) {
+            throw new IllegalArgumentException("주차는 1 이상이어야 합니다.");
+        }
     }
 }

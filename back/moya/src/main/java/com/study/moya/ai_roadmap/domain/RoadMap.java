@@ -6,6 +6,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -39,10 +41,6 @@ public class RoadMap extends BaseEntity {
     @Column(name = "tip", columnDefinition = "TEXT")
     private List<String> overallTips = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id")
-    private List<WeeklyPlan> weeklyPlans = new ArrayList<>();
-
     @Builder
     private RoadMap(String topic, String evaluation, List<String> overallTips) {
         this.topic = topic;
@@ -52,7 +50,11 @@ public class RoadMap extends BaseEntity {
         }
     }
 
-    public void addWeeklyPlan(WeeklyPlan weeklyPlan) {
-        this.weeklyPlans.add(weeklyPlan);
+    public void updateTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public void updateEvaluation(String evaluation) {
+        this.evaluation = evaluation;
     }
 }
