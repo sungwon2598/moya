@@ -7,6 +7,8 @@ import RoadmapPreview from './features/roadmap/RoadmapPreview.tsx';
 import EditProfile from "./features/profile/EditProfile.tsx";
 import {store} from './core/store/store.ts'
 import {Provider} from "react-redux";
+import SignInPage from "./pages/auth/SignInPage.tsx";
+import SignUpPage from "./pages/auth/SignUpPage.tsx";
 
 const App: React.FC = () => {
     return (
@@ -17,6 +19,8 @@ const App: React.FC = () => {
                             <Route path="/" element={<RootLayout />}>
                                 {/* 메인 페이지 */}
                                 <Route index element={<Main />} />
+                                <Route path="signin" element={<SignInPage />} />
+                                <Route path="signup" element={<SignUpPage /> } />
 
                                 {/* 로드맵 관련 라우트 */}
                                 <Route path="roadmap">

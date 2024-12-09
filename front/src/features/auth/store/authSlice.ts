@@ -2,21 +2,21 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { AuthState, User } from '../types/auth.types.ts';
 import { getUserInfo, postLoginToken } from '../api/authApi.ts';
 
-const testUser : User = {
-    settings: {emailNotification: false, marketingConsent: false, pushNotification: false},
-    status: "ACTIVE",
-    updatedAt: "",
-    id: 1,
-    email: 'test@example.com',
-    nickName: 'testuser',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaezNYDTu-7tJ23cEoQ8WnsgoB09vMj0joPA&s',
-    createdAt: '2022-01-01T00:00:00Z',
-    role: 'ADMIN'
-}
+// const testUser : User = {
+//     settings: {emailNotification: false, marketingConsent: false, pushNotification: false},
+//     status: "ACTIVE",
+//     updatedAt: "",
+//     id: 1,
+//     email: 'test@example.com',
+//     nickName: 'testuser',
+//     profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaezNYDTu-7tJ23cEoQ8WnsgoB09vMj0joPA&s',
+//     createdAt: '2022-01-01T00:00:00Z',
+//     role: 'ADMIN'
+// }
 
 const initialState: AuthState = {
-    isLogin: true,
-    user: testUser,
+    isLogin: false,
+    user: null,
     loading: false,
     error: null
 };

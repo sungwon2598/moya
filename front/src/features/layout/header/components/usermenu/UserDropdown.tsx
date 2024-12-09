@@ -57,7 +57,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                     <MenuItem
                         icon={LogIn}
                         text="로그인"
-                        href="/login"
+                        href="/signin"
                         onClick={onClose}
                     />
                     <MenuItem
