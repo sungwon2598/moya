@@ -20,7 +20,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
     };
 
     return (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-1 z-50">
+        <div className="absolute right-0 top-[64px] w-56 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
             {isLogin && user ? (
                 // 로그인 상태 메뉴
                 <>

@@ -54,7 +54,7 @@ export const Header: React.FC = () => {
                 <nav className="flex items-center justify-between h-16 px-4">
                     <div className="flex items-center space-x-8">
                         <Link to="/" className="flex items-center space-x-3 cursor-pointer">
-                            <Menu className="w-6 h-6 text-moya-primary" />
+                            {/*<Menu className="w-6 h-6 text-moya-primary" />*/}
                             <span className="text-xl font-bold text-moya-primary">MOYA</span>
                         </Link>
                         <div className="hidden md:flex items-center">
