@@ -1,7 +1,6 @@
 package com.study.moya.ai_roadmap.domain;
 
 import com.study.moya.BaseEntity;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -11,10 +10,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -36,15 +34,20 @@ public class RoadMap extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String evaluation;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @ElementCollection
     @CollectionTable(name = "roadmap_tips", joinColumns = @JoinColumn(name = "roadmap_id"))
     @Column(name = "tip", columnDefinition = "TEXT")
     private List<String> overallTips = new ArrayList<>();
 
     @Builder
-    private RoadMap(String topic, String evaluation, List<String> overallTips) {
+    private RoadMap(String topic, String evaluation, List<String> overallTips, Category category) {
         this.topic = topic;
         this.evaluation = evaluation;
+        this.category = category;
         if (overallTips != null) {
             this.overallTips = overallTips;
         }
@@ -56,5 +59,9 @@ public class RoadMap extends BaseEntity {
 
     public void updateEvaluation(String evaluation) {
         this.evaluation = evaluation;
+    }
+
+    public void updateCategory(Category category) {
+        this.category = category;
     }
 }
