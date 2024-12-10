@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://aip.moyastudy.com';
+const BASE_URL = 'https://api.moyastudy.com';
 
 // 스터디 관련 엔드포인트 정의
 export const STUDY_ENDPOINTS = {

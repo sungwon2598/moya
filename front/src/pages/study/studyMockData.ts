@@ -132,35 +132,29 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
 
 // Mock API Service
 export const mockStudyApiService = {
-    // 카테고리 계층 구조 조회
+    // 기존 메서드들 유지
     getCategoriesHierarchy: async (): Promise<StudyApiResponse<Category[]>> => {
         return {
             data: MOCK_CATEGORIES,
-            meta: {
-                status: 200
-            }
+            meta: { status: 200 }
         };
     },
 
-    // 스터디 목록 조회
     getStudyList: async (page = 0, size = 10, filters?: Record<string, any>): Promise<StudyApiResponse<StudyPost[]>> => {
         let filteredPosts = [...MOCK_STUDY_POSTS];
 
-        // 대분류 필터링
         if (filters?.studies) {
             filteredPosts = filteredPosts.filter(post =>
                 post.studies === filters.studies
             );
         }
 
-        // 중분류 필터링
         if (filters?.studyDetails) {
             filteredPosts = filteredPosts.filter(post =>
                 post.studyDetails === filters.studyDetails
             );
         }
 
-        // 기술 스택 필터링
         if (filters?.techStack) {
             filteredPosts = filteredPosts.filter(post =>
                 post.tags?.some(tag =>
@@ -169,12 +163,10 @@ export const mockStudyApiService = {
             );
         }
 
-        // 진행 방식 필터링
         if (filters?.progressType) {
             // 추후 progressType 필드가 추가되면 구현
         }
 
-        // 페이지네이션 적용
         const start = page * size;
         const end = start + size;
         const paginatedPosts = filteredPosts.slice(start, end);
@@ -192,6 +184,50 @@ export const mockStudyApiService = {
                     last: page >= Math.ceil(filteredPosts.length / size) - 1
                 }
             }
+        };
+    },
+
+    // 새로 추가되는 메서드들
+    getStudyDetail: async (postId: number): Promise<StudyApiResponse<StudyPost>> => {
+        const post = MOCK_STUDY_POSTS.find(post => post.postId === postId);
+
+        if (!post) {
+            throw new Error('게시글을 찾을 수 없습니다.');
+        }
+
+        return {
+            data: { ...post },
+            meta: { status: 200 }
+        };
+    },
+
+    addLike: async (postId: number): Promise<StudyApiResponse<void>> => {
+        const postIndex = MOCK_STUDY_POSTS.findIndex(post => post.postId === postId);
+
+        if (postIndex === -1) {
+            throw new Error('게시글을 찾을 수 없습니다.');
+        }
+
+        MOCK_STUDY_POSTS[postIndex].isLiked = true;
+
+        return {
+            data: undefined,
+            meta: { status: 200 }
+        };
+    },
+
+    removeLike: async (postId: number): Promise<StudyApiResponse<void>> => {
+        const postIndex = MOCK_STUDY_POSTS.findIndex(post => post.postId === postId);
+
+        if (postIndex === -1) {
+            throw new Error('게시글을 찾을 수 없습니다.');
+        }
+
+        MOCK_STUDY_POSTS[postIndex].isLiked = false;
+
+        return {
+            data: undefined,
+            meta: { status: 200 }
         };
     }
 };

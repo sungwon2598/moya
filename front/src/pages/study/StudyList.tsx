@@ -4,6 +4,7 @@ import { Eye, MessageSquare } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
 import Dropdown from './Dropdown';
 import { mockStudyApiService as studyApiService } from './studyMockData';
+import studyApiConfig from "../../core/config/studyApiConfig.ts";
 
 // 카테고리 타입 정의
 interface Category {
@@ -145,7 +146,7 @@ const StudyCard = ({ post }: { post: StudyPost }) => {
 
     return (
         <div
-            onClick={() => navigate(`/studies/${post.postId}`)}
+            onClick={() => navigate(`/study/${post.postId}`)}
             className="bg-white rounded-2xl border border-gray-200 hover:border-gray-300 transition-all cursor-pointer p-6"
         >
             <div className="flex gap-2 mb-4 flex-wrap">
@@ -213,7 +214,7 @@ const StudyList = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await studyApiService.getCategoriesHierarchy();
+            const response = await studyApiConfig.getCategoriesHierarchy();
             setCategories(response.data);
         } catch (error) {
             console.error('카테고리 데이터를 불러오는데 실패했습니다:', error);
