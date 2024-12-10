@@ -9,6 +9,7 @@ import {store} from './core/store/store.ts'
 import {Provider} from "react-redux";
 import SignInPage from "./pages/auth/SignInPage.tsx";
 import SignUpPage from "./pages/auth/SignUpPage.tsx";
+import StudyList from "./pages/study/StudyList.tsx";
 
 const App: React.FC = () => {
     return (
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                                     <Route path="preview" element={<RoadmapPreview />} />
                                 </Route>
 
+                                <Route path="study" element={<StudyList />} />
 
                                 {/* 404 페이지 처리 */}
                                 <Route
