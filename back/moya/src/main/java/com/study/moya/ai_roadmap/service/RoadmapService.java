@@ -4,6 +4,7 @@ import com.study.moya.ai_roadmap.domain.DailyPlan;
 import com.study.moya.ai_roadmap.domain.RoadMap;
 import com.study.moya.ai_roadmap.domain.WeeklyPlan;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
+import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.repository.DailyPlanRepository;
 import com.study.moya.ai_roadmap.repository.RoadMapRepository;
@@ -13,6 +14,7 @@ import com.theokanning.openai.Usage;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.service.OpenAiService;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +69,7 @@ public class RoadmapService {
                 WeeklyRoadmapResponse response = responseParser.parseResponse(apiResponse);
 
                 // 파싱된 응답을 엔티티로 저장
-                saveCurriculum(request.getSubCategory(), response);
+                saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1, request.getSubCategory(), request.getDuration(), response);
 
                 return response;
             } catch (Exception e) {
@@ -78,11 +80,13 @@ public class RoadmapService {
     }
 
     @Transactional
-    public Long saveCurriculum(String topic, WeeklyRoadmapResponse response) {
+    public Long saveCurriculum(int goalLevel, String topic, int duration, WeeklyRoadmapResponse response) {
         log.info("커리큘럼 저장 시작");
 
         // RoadMap 생성
         RoadMap roadMap = RoadMap.builder()
+                .duration(duration)
+                .goalLevel(goalLevel)
                 .topic(topic)
                 .evaluation(response.getCurriculumEvaluation())
                 .overallTips(response.getOverallTips())
@@ -128,5 +132,9 @@ public class RoadmapService {
         } else {
             log.warn("OpenAI 토큰 사용량 정보를 가져올 수 없습니다.");
         }
+    }
+
+    public List<RoadMapSimpleDto> getRoadMapsByCategory(Long categoryId) {
+        return roadMapRepository.findRoadMapsByCategoryId(categoryId);
     }
 }
