@@ -4,6 +4,7 @@ import { Eye, MessageSquare } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
 import Dropdown from './Dropdown';
 import { mockStudyApiService as studyApiService } from './studyMockData';
+
 // 카테고리 타입 정의
 interface Category {
     id: number;
@@ -17,7 +18,24 @@ interface FilterOptions {
     studyDetails: string;
     techStack: string;
     progressType: string;
+    recruitmentStatus: string; // 모집 상태 필터 추가
 }
+
+// 모집 상태 계산 함수
+const getRecruitmentStatus = (startDate: string, endDate: string) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now < start) {
+        return 'upcoming';
+    } else if (now > end) {
+        return 'closed';
+    } else {
+        return 'ongoing';
+    }
+};
+
 const FilterMenu = ({
                         categories,
                         onFilterChange
@@ -26,7 +44,7 @@ const FilterMenu = ({
     onFilterChange: (filter: Partial<FilterOptions>) => void;
 }) => {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
-
+    const [showOnlyRecruiting, setShowOnlyRecruiting] = useState(false);
 
     const progressTypeOptions = [
         { value: '', label: '진행 방식' },
@@ -37,7 +55,6 @@ const FilterMenu = ({
 
     const handleCategoryChange = (value: string) => {
         setSelectedCategory(value);
-        // 카테고리가 선택되면 해당 값을 studies나 studyDetails로 설정
         const mainCategory = categories.find(cat => cat.name === value);
         const subCategory = categories.flatMap(cat => cat.subCategories).find(sub => sub.name === value);
 
@@ -58,6 +75,13 @@ const FilterMenu = ({
         }
     };
 
+    const handleRecruitingFilter = () => {
+        setShowOnlyRecruiting(!showOnlyRecruiting);
+        onFilterChange({
+            recruitmentStatus: !showOnlyRecruiting ? 'ongoing' : ''
+        });
+    };
+
     return (
         <div className="flex flex-wrap gap-4 mb-8 justify-center">
             <Dropdown
@@ -74,31 +98,61 @@ const FilterMenu = ({
                 onChange={(value) => onFilterChange({ progressType: value })}
             />
             <div className="flex gap-4 w-full justify-center mt-4">
-                <button className="px-4 py-2 rounded-full border border-emerald-500 text-emerald-500 hover:bg-emerald-50 transition-colors duration-200">
+                <button
+                    className={`px-4 py-2 rounded-full border transition-colors duration-200 ${
+                        showOnlyRecruiting
+                            ? 'border-emerald-500 bg-emerald-500 text-white'
+                            : 'border-emerald-500 text-emerald-500 hover:bg-emerald-50'
+                    }`}
+                    onClick={handleRecruitingFilter}
+                >
                     👋 모집 중만 보기
                 </button>
-                <button className="px-4 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors duration-200">
-                    👀 내 북마크 보기
-                </button>
+
             </div>
         </div>
     );
 };
-// StudyCard 컴포넌트
+
 const StudyCard = ({ post }: { post: StudyPost }) => {
     const navigate = useNavigate();
     const date = new Date(post.startDate);
     const isNew = Date.now() - date.getTime() < 3 * 24 * 60 * 60 * 1000;
+    const recruitmentStatus = getRecruitmentStatus(post.startDate, post.endDate);
+
+    const getStatusBadge = () => {
+        switch (recruitmentStatus) {
+            case 'upcoming':
+                return (
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full">
+                        🔜 모집 예정
+                    </span>
+                );
+            case 'ongoing':
+                return (
+                    <span className="px-3 py-1 bg-green-50 text-green-600 text-sm rounded-full">
+                        ✨ 모집 중
+                    </span>
+                );
+            case 'closed':
+                return (
+                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                        🔒 모집 마감
+                    </span>
+                );
+        }
+    };
 
     return (
         <div
             onClick={() => navigate(`/studies/${post.postId}`)}
             className="bg-white rounded-2xl border border-gray-200 hover:border-gray-300 transition-all cursor-pointer p-6"
         >
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 flex-wrap">
                 <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
                     🎯 {post.studies} {post.studyDetails && `- ${post.studyDetails}`}
                 </span>
+                {getStatusBadge()}
                 {isNew && (
                     <span className="px-3 py-1 bg-yellow-50 text-yellow-700 text-sm rounded-full">
                         🎉 따끈따끈 새글
@@ -119,24 +173,30 @@ const StudyCard = ({ post }: { post: StudyPost }) => {
                 ))}
             </div>
 
-            <div className="flex items-center justify-between text-gray-500 text-sm">
-                <div className="flex items-center gap-2">
-                    <img
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}`}
-                        alt="avatar"
-                        className="w-6 h-6 rounded-full"
-                    />
-                    <span>{post.authorName}</span>
+            <div className="flex flex-col gap-2">
+                <div className="text-sm text-gray-600">
+                    📅 모집 기간: {new Date(post.startDate).toLocaleDateString()} ~ {new Date(post.endDate).toLocaleDateString()}
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{post.views}</span>
+                <div className="flex items-center justify-between text-gray-500 text-sm">
+                    <div className="flex items-center gap-2">
+                        <img
+                            src={`https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}`}
+                            alt="avatar"
+                            className="w-6 h-6 rounded-full"
+                        />
+                        <span>{post.authorName}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <MessageSquare className="w-4 h-4" />
-                        <span>{post.totalComments}</span>
+
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            <span>{post.views}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4" />
+                            <span>{post.totalComments}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -144,7 +204,6 @@ const StudyCard = ({ post }: { post: StudyPost }) => {
     );
 };
 
-// 메인 컴포넌트
 const StudyList = () => {
     const [posts, setPosts] = useState<StudyPost[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -152,10 +211,8 @@ const StudyList = () => {
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState<Partial<FilterOptions>>({});
 
-    // 카테고리 데이터 fetch
     const fetchCategories = async () => {
         try {
-            console.log("fetch categories")
             const response = await studyApiService.getCategoriesHierarchy();
             setCategories(response.data);
         } catch (error) {
@@ -175,6 +232,7 @@ const StudyList = () => {
                     studyDetails: filters.studyDetails,
                     progressType: filters.progressType,
                     techStack: filters.techStack,
+                    recruitmentStatus: filters.recruitmentStatus,
                 }
             );
             setPosts(response.data);
@@ -217,7 +275,7 @@ const StudyList = () => {
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold">스터디 모집 게시글</h1>
+                    <h1 className="text-3xl font-bold">스터디 전체보기</h1>
                 </div>
 
                 <FilterMenu

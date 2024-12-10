@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import { Home, Book, User, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import NavItem from './components/NavItem';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/core/store/store';
 import { UserDropdown } from "./components/usermenu/UserDropdown.tsx";
+import LoginAlertModal from "../modal/LoginAlertModal.tsx";
+import {ModalContext} from "../../../core/providers/context/ModalContext.tsx";
 
-// 네비게이션 아이템 설정
 const navigationItems = [
     {
         label: '로드맵',
@@ -22,7 +23,6 @@ const navigationItems = [
     }
 ];
 
-// 인증이 필요한 네비게이션 아이템
 const authNavigationItems = [
     {
         label: '채팅',
@@ -38,8 +38,9 @@ export const Header: React.FC = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const { isLogin, user } = useSelector((state: RootState) => state.auth);
+    const navigate = useNavigate();
+    const modalContext = useContext(ModalContext);
 
-    // 외부 클릭 감지
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -54,7 +55,6 @@ export const Header: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // 모바일 메뉴가 열릴 때 body 스크롤 막기
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
@@ -67,13 +67,26 @@ export const Header: React.FC = () => {
         setIsMobileMenuOpen(false);
     };
 
+    const handleCreateStudy = () => {
+        if (!isLogin && modalContext) {
+            modalContext.showModal(
+                <LoginAlertModal onClose={modalContext.hideModal} />,
+                {
+                    showCloseButton: false,
+                }
+            );
+            return;
+        }
+        navigate('/study/create');
+    };
+
+
     return (
         <>
             <header className="bg-white border-b border-moya-primary/10 fixed w-full top-0 z-50">
                 <div className="container mx-auto">
                     <nav className="flex items-center justify-between h-16 px-4">
                         <div className="flex items-center">
-                            {/* 햄버거 메뉴 버튼 */}
                             <button
                                 className="md:hidden p-2 -ml-2 text-gray-600 hover:text-moya-primary"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -82,12 +95,10 @@ export const Header: React.FC = () => {
                                 <Menu className="w-6 h-6" />
                             </button>
 
-                            {/* 로고 */}
                             <Link to="/" className="flex items-center space-x-3 cursor-pointer ml-2 md:ml-0">
                                 <span className="text-xl font-bold text-moya-primary">MOYA</span>
                             </Link>
 
-                            {/* 데스크톱 네비게이션 */}
                             <div className="hidden md:flex items-center ml-8">
                                 {navigationItems.map((item) => (
                                     <NavItem
@@ -104,33 +115,41 @@ export const Header: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* 사용자 메뉴 */}
-                        <div className="flex items-center space-x-4" ref={dropdownRef}>
+                        <div className="flex items-center space-x-4">
+                            {/* 스터디 만들기 버튼 추가 */}
                             <button
-                                className="flex items-center space-x-1 text-gray-600 hover:text-moya-primary transition-colors duration-200"
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                aria-expanded={isDropdownOpen}
-                                aria-haspopup="true"
+                                onClick={handleCreateStudy}
+                                className="hidden md:flex px-4 py-2 bg-emerald-500 text-white rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors duration-200"
                             >
-                                <User className="w-5 h-5" />
-                                <span className="text-sm font-medium">
-                                    {isLogin ? user?.nickName : '게스트'}
-                                </span>
-                                <ChevronDown className="w-4 h-4" />
+                                스터디 모집하기
                             </button>
-                            {isDropdownOpen && (
-                                <UserDropdown
-                                    user={user}
-                                    isLogin={isLogin}
-                                    onClose={() => setIsDropdownOpen(false)}
-                                />
-                            )}
+
+                            <div ref={dropdownRef}>
+                                <button
+                                    className="flex items-center space-x-1 text-gray-600 hover:text-moya-primary transition-colors duration-200"
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    aria-expanded={isDropdownOpen}
+                                    aria-haspopup="true"
+                                >
+                                    <User className="w-5 h-5" />
+                                    <span className="text-sm font-medium">
+                                        {isLogin ? user?.nickName : '게스트'}
+                                    </span>
+                                    <ChevronDown className="w-4 h-4" />
+                                </button>
+                                {isDropdownOpen && (
+                                    <UserDropdown
+                                        user={user}
+                                        isLogin={isLogin}
+                                        onClose={() => setIsDropdownOpen(false)}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </nav>
                 </div>
             </header>
 
-            {/* 모바일 사이드 메뉴 */}
             <div
                 className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-200 ${
                     isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -143,7 +162,6 @@ export const Header: React.FC = () => {
                     isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
-                {/* 모바일 메뉴 헤더 */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <span className="text-xl font-bold text-moya-primary">MOYA</span>
                     <button
@@ -155,8 +173,19 @@ export const Header: React.FC = () => {
                     </button>
                 </div>
 
-                {/* 모바일 메뉴 아이템 */}
                 <div className="py-4">
+                    {/* 모바일 메뉴에 스터디 만들기 버튼 추가 */}
+                    <button
+                        onClick={() => {
+                            handleCreateStudy();
+                            handleMobileMenuItemClick();
+                        }}
+                        className="flex items-center w-full px-4 py-3 text-emerald-500 hover:bg-gray-50"
+                    >
+                        <Book className="w-5 h-5 mr-3" />
+                        <span>팀원 모집하기</span>
+                    </button>
+
                     {navigationItems.map((item) => (
                         <Link
                             key={item.path}
