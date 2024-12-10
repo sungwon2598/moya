@@ -1,6 +1,7 @@
 package com.study.moya.oauth.controller;
 
 import com.google.common.net.HttpHeaders;
+import com.study.moya.global.config.security.SecurityHeadersConfig;
 import com.study.moya.oauth.dto.IdTokenRequestDto;
 import com.study.moya.oauth.dto.OAuthLogin.MemberAuthResult;
 import com.study.moya.oauth.dto.OAuthLogin.OAuthLoginResponse;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoginController {
 
     private final OauthService oauthService;
+    private final SecurityHeadersConfig securityHeadersConfig;
 
     @PostMapping("/login")
     public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody, HttpServletResponse response) {
@@ -37,7 +39,7 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember());
-        return ResponseEntity.ok(loginResponse);
+        return securityHeadersConfig.addSecurityHeaders(ResponseEntity.ok(loginResponse));
     }
 
 
