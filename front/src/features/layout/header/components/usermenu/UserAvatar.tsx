@@ -28,11 +28,11 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
     return (
         <div className={containerClassName}>
-            {user?.profileImage ? (
+            {user?.profileImageUrl ? (
                 <>
                     <img
-                        src={user.profileImage}
-                        alt={`${user.nickName}'s profile`}
+                        src={user.profileImageUrl}
+                        alt={`${user.nickname}'s profile`}
                         className="w-full h-full object-cover"
                         onError={handleImageError}
                     />

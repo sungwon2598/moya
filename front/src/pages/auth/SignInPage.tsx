@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 
 interface LoginFormData {
@@ -17,7 +16,6 @@ export const SignInPage: React.FC = () => {
     const [error, setError] = useState<string>('');
 
     const navigate = useNavigate();
-    const dispatch = useDispatch();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
