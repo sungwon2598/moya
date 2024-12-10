@@ -11,13 +11,20 @@ import com.study.moya.member.domain.Member;
 import com.study.moya.member.domain.MemberStatus;
 import com.study.moya.member.domain.Role;
 import com.study.moya.member.repository.MemberRepository;
+import com.study.moya.oauth.dto.OAuthLogin.GoogleAccessToken;
+import com.study.moya.oauth.dto.OAuthLogin.MemberAuthResult;
+import com.study.moya.oauth.dto.OAuthLogin.OAuthAccessToken;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -57,14 +64,16 @@ public class OauthService {
      * OAuth credential 토큰 검증
      */
     @Transactional
-    public String loginOAuthGoogle(IdTokenRequestDto requestBody) {
+    public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody) {
         Member verifiedMember = verifyIDToken(requestBody.getCredential());
+
         if (verifiedMember == null) {
             throw new IllegalArgumentException("Google ID 토큰 검증 실패");
         }
         Member savedMember = createOrUpdateMember(verifiedMember);
+        String token = jwtTokenProvider.createTokenForOAuth(savedMember.getEmail());
 
-        return jwtTokenProvider.createTokenForOAuth(savedMember.getEmail());
+        return new MemberAuthResult(token, savedMember);
     }
 
     /**
@@ -89,7 +98,7 @@ public class OauthService {
                         .nickname(defaultNickname)
                         .roles(Set.of(Role.USER))
                         .status(MemberStatus.ACTIVE)
-                        .providerId("NONE")  // 필수값이므로 기본값 설정
+                        .providerId(member.getProviderId())  // 필수값이므로 기본값 설정
                         .accessToken(member.getAccessToken())
                         .refreshToken(member.getRefreshToken())
                         .termsAgreed(true)
@@ -251,38 +260,35 @@ public class OauthService {
      * credential 토큰 검증 메서드
      */
 
-//    private OAuthAccessToken getPeopleApiAccessToken(String idToken) {
-//
-//        String decode = URLDecoder.decode(idToken, StandardCharsets.UTF_8);
-//        String tokenUrl = "https://oauth2.googleapis.com/token";
-//        MultiValueMap<String, String> tokenRequest = new LinkedMultiValueMap<>();
-//        tokenRequest.add("grant_type", "authorization_code");
-//        tokenRequest.add("code", decode);
-//        tokenRequest.add("client_id", clientId);
-//        tokenRequest.add("client_secret", clientSecret);
-//        tokenRequest.add("redirect_uri", redirectUri);
-//
-//        try {
-//            GoogleAccessToken googleAccessToken = webClient.post()
-//                    .uri(tokenUrl)
-//                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .bodyValue(tokenRequest)
-//                    .retrieve()
-//                    .bodyToMono(GoogleAccessToken.class)
-//                    .blockOptional()
-//                    .orElseThrow(() -> new RuntimeException("Access token retrieval failed"));
-//
-//
-//        log.info("Access token retrieved successfully: {}", googleAccessToken.getAccessToken());
-//        return googleAccessToken.toEntity();
-//
-//        } catch (WebClientResponseException ex) {
-//            log.error("Error response from token endpoint: {}", ex.getResponseBodyAsString());
-//            throw new RuntimeException("Access token retrieval failed", ex);
-//        } catch (Exception e) {
-//            log.error("Unexpected error during access token retrieval", e);
-//            throw new RuntimeException("Failed to get access token", e);
-//        }
-//    }
+    private OAuthAccessToken getPeopleApiAccessToken(String idToken) {
+        String tokenUrl = "https://oauth2.googleapis.com/token";
+
+        MultiValueMap<String, String> tokenRequest = new LinkedMultiValueMap<>();
+        tokenRequest.add("code", idToken);
+        tokenRequest.add("client_id", clientId);
+        tokenRequest.add("client_secret", clientSecret);
+        tokenRequest.add("redirect_uri", redirectUri);
+        tokenRequest.add("grant_type", "authorization_code");
+
+        try {
+            return webClient
+                    .post()
+                    .uri(tokenUrl)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .bodyValue(tokenRequest)
+                    .retrieve()
+                    .bodyToMono(GoogleAccessToken.class)
+                    .map(googleAccessToken -> {
+                        log.info("Access token retrieved successfully: {}", googleAccessToken.getAccessToken());
+                        return googleAccessToken.toEntity();
+                    })
+                    .block();
+        } catch (WebClientResponseException ex) {
+            log.error("Error response from token endpoint: {}", ex.getResponseBodyAsString());
+            throw new RuntimeException("Failed to get access token: " + ex.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during access token retrieval", e);
+            throw new RuntimeException("Failed to get access token", e);
+        }
+    }
 }
