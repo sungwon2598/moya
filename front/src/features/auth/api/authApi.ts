@@ -1,5 +1,31 @@
-import { User } from "../types/auth.types.ts"
-import { BASE_URL as API_URL } from "../../../core/config/apiConfig.ts";
+import axios from 'axios';
+import { User } from "../types/auth.types";
+import { BASE_URL as API_URL } from "../../../core/config/apiConfig";
+
+// axios 인스턴스 생성
+const axiosInstance = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Access-Control-Allow-Origin': import.meta.env.VITE_ALLOWED_ORIGIN || '*'
+    },
+    withCredentials: true
+});
+
+// 요청 인터셉터 설정
+axiosInstance.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 interface LoginResponse {
     success: boolean;
@@ -7,52 +33,43 @@ interface LoginResponse {
         user: User;
     };
 }
-export const getUserInfo = async (): Promise<User | false> => {
+export const getUserInfo = async (): Promise<User> => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/v1/oauth/user/info`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Access-Control-Allow-Origin': import.meta.env.VITE_ALLOWED_ORIGIN || '*',
-                ...(token && { 'Authorization': `Bearer ${token}` })
-            },
-            credentials: 'include',
-            mode: 'cors' // CORS 모드 명시적 설정
-        });
-
-        if (!response.ok) {
-            return false;
-        }
-
-        return response.json();
+        const response = await axiosInstance.get('/v1/oauth/user/info');
+        const userData: User = {
+            email: response.data.email,
+            nickname: response.data.nickname,
+            roles: response.data.roles,
+            status: response.data.status,
+            profileImageUrl: response.data.profileImageUrl
+        };
+        return userData;
     } catch (error) {
-        console.error('[API] Get user info failed:', error);
-        return false;
+        throw error;  // 에러 처리는 thunk에서 수행
     }
 };
 
 export const postLoginToken = async (credential: string): Promise<LoginResponse> => {
     try {
-        const response = await fetch(`${API_URL}/v1/oauth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Access-Control-Allow-Origin': import.meta.env.VITE_ALLOWED_ORIGIN || '*'
-            },
-            credentials: 'include',
-            mode: 'cors',
-            body: JSON.stringify({ credential })
+        const response = await axiosInstance.post('/v1/oauth/login', {
+            credential
         });
 
-        if (!response.ok) {
-            return { success: false };
-        }
+        // 응답에서 사용자 데이터 변환
+        const userData: User = {
+            email: response.data.email,
+            nickname: response.data.nickname,
+            roles: response.data.roles,
+            status: response.data.status,
+            profileImageUrl: response.data.profileImageUrl
+        };
 
-        const data = await response.json();
-        return { success: true, data };
+        return {
+            success: true,
+            data: {
+                user: userData
+            }
+        };
     } catch (error) {
         console.error('[API] Login token verification failed:', error);
         return { success: false };

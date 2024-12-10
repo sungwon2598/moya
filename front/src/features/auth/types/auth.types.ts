@@ -1,26 +1,14 @@
 export interface User {
     email: string;
-    firstName: string;
-    lastName: string;
+    nickname: string;
+    roles: string[];
+    status: 'ACTIVE' | 'INACTIVE';
+    profileImageUrl: string;
 }
 
 export interface AuthState {
     isLogin: boolean;
-    user: User | null;
+    user: User | null;  // User | false 대신 User | null 사용
     loading: boolean;
     error: string | null;
-}
-
-export interface AuthState {
-    isLogin: boolean;
-    user: User | null;
-    loading: boolean;
-    error: string | null;
-}
-
-export interface LoginResponse {
-    success: boolean;
-    data?: {
-        user: User;
-    };
 }
