@@ -5,24 +5,23 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.study.moya.oauth.dto.*;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.domain.MemberStatus;
 import com.study.moya.member.domain.Role;
 import com.study.moya.member.repository.MemberRepository;
-import com.study.moya.oauth.dto.IdTokenRequestDto;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 
 @Service

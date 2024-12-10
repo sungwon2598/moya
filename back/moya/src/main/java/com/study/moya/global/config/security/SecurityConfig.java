@@ -1,7 +1,5 @@
 package com.study.moya.global.config.security;
 
-import com.study.moya.oauth.handler.OAuth2AuthenticationSuccessHandler;
-import com.study.moya.oauth.service.CustomOAuth2UserService;
 import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
@@ -51,8 +49,7 @@ public class SecurityConfig {
 //    private long maxAge;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http
-                                                   ) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
