@@ -26,7 +26,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                 <>
                     {/* Profile Section */}
                     <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-800">{user.nickName}</p>
+                        <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                     </div>
 

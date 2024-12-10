@@ -133,7 +133,7 @@ export const Header: React.FC = () => {
                                 >
                                     <User className="w-5 h-5" />
                                     <span className="text-sm font-medium">
-                                        {isLogin ? user?.nickName : '게스트'}
+                                        {isLogin ? user?.nickname : '게스트'}
                                     </span>
                                     <ChevronDown className="w-4 h-4" />
                                 </button>
