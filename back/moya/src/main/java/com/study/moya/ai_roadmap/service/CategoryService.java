@@ -5,6 +5,7 @@ import com.study.moya.ai_roadmap.dto.request.BulkCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.BulkCategoryRequest.CategoryOperation;
 import com.study.moya.ai_roadmap.dto.request.CreateCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.UpdateCategoryRequest;
+import com.study.moya.ai_roadmap.dto.response.CategoryHierarchyResponse;
 import com.study.moya.ai_roadmap.dto.response.CategoryResponse;
 import com.study.moya.ai_roadmap.repository.CategoryRepository;
 import java.util.ArrayList;
@@ -154,5 +155,22 @@ public class CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryHierarchyResponse> getCategoryHierarchy() {
+        List<Category> mainCategories = categoryRepository.findAllMainCategories();
+        return mainCategories.stream()
+                .map(category -> buildCategoryHierarchy(category))
+                .collect(Collectors.toList());
+    }
+
+    private CategoryHierarchyResponse buildCategoryHierarchy(Category category) {
+        List<Category> subCategories = categoryRepository.findSubCategories(category.getId());
+        List<CategoryHierarchyResponse> subCategoryResponses = subCategories.stream()
+                .map(subCategory -> CategoryHierarchyResponse.from(subCategory, List.of()))
+                .collect(Collectors.toList());
+
+        return CategoryHierarchyResponse.from(category, subCategoryResponses);
     }
 }

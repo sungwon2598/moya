@@ -4,6 +4,7 @@ package com.study.moya.ai_roadmap.controller;
 import com.study.moya.ai_roadmap.dto.request.BulkCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.CreateCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.UpdateCategoryRequest;
+import com.study.moya.ai_roadmap.dto.response.CategoryHierarchyResponse;
 import com.study.moya.ai_roadmap.dto.response.CategoryResponse;
 import com.study.moya.ai_roadmap.service.CategoryService;
 import java.net.URI;
@@ -62,6 +63,11 @@ public class CategoryController {
     public ResponseEntity<Void> processBulkOperations(@RequestBody BulkCategoryRequest request) {
         categoryService.processBulkOperations(request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/hierarchy")
+    public ResponseEntity<List<CategoryHierarchyResponse>> getCategoryHierarchy() {
+        return ResponseEntity.ok(categoryService.getCategoryHierarchy());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
