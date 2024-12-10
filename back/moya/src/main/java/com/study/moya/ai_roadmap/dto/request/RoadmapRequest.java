@@ -18,9 +18,6 @@ public class RoadmapRequest {
     @NotBlank(message = "Subcategory is required")
     private String subCategory; // 중분류
 
-    @NotBlank(message = "Goal level is required")
-    private String goalLevel;
-
     private String currentLevel;
 
     @NotNull(message = "Duration is required")
@@ -35,7 +32,6 @@ public class RoadmapRequest {
     @Override
     public String toString() {
         return "RoadmapRequest{" +
-                "goalLevel='" + goalLevel + '\'' +
                 ", currentLevel='" + currentLevel + '\'' +
                 ", mainCategory='" + mainCategory + '\'' +
                 ", subCategory='" + subCategory + '\'' +
