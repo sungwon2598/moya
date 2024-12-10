@@ -1,18 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState, User } from '../types/auth.types.ts';
-import { getUserInfo, postLoginToken } from '../api/authApi.ts';
-
-// const testUser : User = {
-//     settings: {emailNotification: false, marketingConsent: false, pushNotification: false},
-//     status: "ACTIVE",
-//     updatedAt: "",
-//     id: 1,
-//     email: 'test@example.com',
-//     nickName: 'testuser',
-//     profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaezNYDTu-7tJ23cEoQ8WnsgoB09vMj0joPA&s',
-//     createdAt: '2022-01-01T00:00:00Z',
-//     role: 'ADMIN'
-// }
+import { AuthState, User } from '../types/auth.types';
+import { getUserInfo, postLoginToken } from '../api/authApi';
 
 const initialState: AuthState = {
     isLogin: false,
@@ -21,40 +9,36 @@ const initialState: AuthState = {
     error: null
 };
 
-// 사용자 정보 체크 thunk
-export const checkLoginStatus = createAsyncThunk<User | false>(
-    'auth/checkLoginStatus',
-    async (_, { rejectWithValue }) => {
-        try {
-            const userInfo = await getUserInfo();
-            return userInfo;
-        } catch (error) {
-            return rejectWithValue('Failed to fetch user info');
-        }
-    }
-);
-
-// Google 로그인 thunk
-export const loginWithGoogle = createAsyncThunk<User | false, string>(
+// Google 로그인 thunk의 반환 타입을 User로 변경
+export const loginWithGoogle = createAsyncThunk<User, string>(
     'auth/loginWithGoogle',
     async (credential, { rejectWithValue }) => {
         try {
             const loginResponse = await postLoginToken(credential);
-            if (!loginResponse.success) {
+            if (!loginResponse.success || !loginResponse.data) {
                 throw new Error('Login failed');
             }
-
-            // 로그인 성공 시 사용자 정보 조회
-            const userInfo = await getUserInfo();
-            if (!userInfo) {
-                throw new Error('Failed to fetch user info after login');
-            }
-
-            return userInfo;
+            return loginResponse.data.user;
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Google login failed'
             );
+        }
+    }
+);
+
+// checkLoginStatus의 반환 타입도 User로 변경
+export const checkLoginStatus = createAsyncThunk<User>(
+    'auth/checkLoginStatus',
+    async (_, { rejectWithValue }) => {
+        try {
+            const userInfo = await getUserInfo();
+            if (!userInfo) {
+                throw new Error('Failed to fetch user info');
+            }
+            return userInfo;
+        } catch (error) {
+            return rejectWithValue('Failed to fetch user info');
         }
     }
 );
@@ -74,37 +58,35 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // 초기 로그인 상태 체크
-            .addCase(checkLoginStatus.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(checkLoginStatus.fulfilled, (state, action) => {
-                state.loading = false;
-                state.isLogin = !!action.payload;
-                state.user = action.payload || null;
-            })
-            .addCase(checkLoginStatus.rejected, (state, action) => {
-                state.loading = false;
-                state.isLogin = false;
-                state.user = null;
-                state.error = action.payload as string || 'Failed to check login status';
-            })
-            // Google 로그인
             .addCase(loginWithGoogle.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(loginWithGoogle.fulfilled, (state, action) => {
                 state.loading = false;
-                state.isLogin = !!action.payload;
-                state.user = action.payload || null;
+                state.isLogin = true;
+                state.user = action.payload;  // User 타입
             })
             .addCase(loginWithGoogle.rejected, (state, action) => {
                 state.loading = false;
                 state.isLogin = false;
                 state.user = null;
-                state.error = action.payload as string || 'Google login failed';
+                state.error = action.payload as string;
+            })
+            .addCase(checkLoginStatus.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(checkLoginStatus.fulfilled, (state, action) => {
+                state.loading = false;
+                state.isLogin = true;
+                state.user = action.payload;  // User 타입
+            })
+            .addCase(checkLoginStatus.rejected, (state, action) => {
+                state.loading = false;
+                state.isLogin = false;
+                state.user = null;
+                state.error = action.payload as string;
             });
     }
 });
