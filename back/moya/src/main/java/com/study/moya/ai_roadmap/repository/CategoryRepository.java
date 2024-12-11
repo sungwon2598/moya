@@ -18,4 +18,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Category c WHERE c.parent.id = :categoryId")
     boolean hasSubCategories(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT c FROM Category c WHERE c.depth = :depth")
+    List<Category> findByDepth(@Param("depth") int depth);
 }

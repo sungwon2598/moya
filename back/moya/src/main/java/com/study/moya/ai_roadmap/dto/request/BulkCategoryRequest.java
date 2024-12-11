@@ -22,6 +22,7 @@ public class BulkCategoryRequest {
         private Long id;  // UPDATE, DELETE 시 사용
         private String name;  // CREATE, UPDATE 시 사용
         private Long parentId;  // CREATE 시 사용
+        private Integer targetDepth;
     }
 
     public enum OperationType {
