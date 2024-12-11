@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, MessageSquare } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
 import Dropdown from './Dropdown';
-import { mockStudyApiService as studyApiService } from './studyMockData';
-import studyApiConfig from "../../core/config/studyApiConfig.ts";
+import { studyApiService } from "@/core/config/studyApiConfig";
 
 // 카테고리 타입 정의
 interface Category {
@@ -214,8 +213,8 @@ const StudyList = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await studyApiConfig.getCategoriesHierarchy();
-            setCategories(response.data);
+            const response = await studyApiService.getCategoriesHierarchy();
+            setCategories(response);
         } catch (error) {
             console.error('카테고리 데이터를 불러오는데 실패했습니다:', error);
         }

@@ -3,6 +3,38 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Eye, MessageSquare, Heart, Calendar, Users, Clock, ArrowLeft } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
 import { mockStudyApiService as studyApiService } from './studyMockData';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.bubble.css';
+
+// Quill 에디터 스타일 설정
+const quillStyles = `
+.ql-editor {
+    padding: 0;
+    font-size: 16px;
+    line-height: 1.6;
+}
+.ql-editor p {
+    margin-bottom: 1em;
+}
+.ql-editor h1, .ql-editor h2, .ql-editor h3 {
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+.ql-editor ul, .ql-editor ol {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+}
+.ql-editor img {
+    max-width: 100%;
+    margin: 1em 0;
+}
+.ql-editor blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #6b7280;
+}
+`;
 
 const StudyPostDetail = () => {
     const { postId } = useParams();
@@ -11,6 +43,29 @@ const StudyPostDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState(false);
+
+    // Quill 설정
+    const modules = {
+        toolbar: false,
+    };
+
+    const formats = [
+        'header', 'bold', 'italic', 'underline', 'strike',
+        'list', 'bullet', 'link', 'image', 'align',
+        'color', 'background', 'code-block', 'blockquote'
+    ];
+
+    useEffect(() => {
+        // 스타일 주입
+        const styleSheet = document.createElement("style");
+        styleSheet.type = "text/css";
+        styleSheet.innerText = quillStyles;
+        document.head.appendChild(styleSheet);
+
+        return () => {
+            document.head.removeChild(styleSheet);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchPost = async () => {
@@ -32,7 +87,6 @@ const StudyPostDetail = () => {
 
     const handleLikeToggle = async () => {
         if (!post) return;
-
         try {
             if (isLiked) {
                 await studyApiService.removeLike(post.postId);
@@ -194,11 +248,15 @@ const StudyPostDetail = () => {
                     )}
                 </div>
 
-                {/* 본문 섹션 */}
+                {/* 본문 섹션 - Quill 에디터로 변경 */}
                 <div className="bg-white rounded-3xl border border-gray-200 p-10 mb-8 shadow-sm">
-                    <div className="prose max-w-none text-gray-700 leading-relaxed">
-                        <div className="whitespace-pre-wrap">{post.content}</div>
-                    </div>
+                    <ReactQuill
+                        value={post.content}
+                        readOnly={true}
+                        modules={modules}
+                        formats={formats}
+                        theme="bubble"
+                    />
                 </div>
 
                 {/* 하단 버튼 섹션 */}
