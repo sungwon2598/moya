@@ -1,13 +1,11 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@store/store';
 import { loginWithGoogle } from '../store/authSlice';
-import { useScript } from '../hooks/useScript';
-import {GoogleAuthResponse, GoogleCredentialResponse} from '../types/auth.types';
+import { GoogleAuthResponse, GoogleCredentialResponse } from '../types/auth.types';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
-
 const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 
 interface GoogleButtonProps {
@@ -18,6 +16,34 @@ interface GoogleButtonProps {
     onSuccess?: () => void;
     onError?: (error: Error) => void;
 }
+
+// useScript hook
+export const useScript = (src: string, onLoad?: () => void) => {
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+
+        const handleLoad = () => {
+            setLoaded(true);
+            if (onLoad) {
+                setTimeout(onLoad, 100); // Google API 초기화를 위한 약간의 지연
+            }
+        };
+
+        script.addEventListener('load', handleLoad);
+        document.body.appendChild(script);
+
+        return () => {
+            script.removeEventListener('load', handleLoad);
+            document.body.removeChild(script);
+        };
+    }, [src, onLoad]);
+
+    return loaded;
+};
 
 export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                                              text = 'signin_with',
@@ -31,15 +57,23 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
+    // 환경변수 체크
+    if (!GOOGLE_CLIENT_ID) {
+        console.error('Google Client ID is not defined');
+        return null;
+    }
+
     const handleCredentialResponse = async (response: GoogleCredentialResponse) => {
         try {
-            if (!response.credential || !response.code) {
-                throw new Error('Invalid Google response');
+            console.log('Google Response:', response);
+
+            if (!response.credential) {
+                throw new Error('Missing credential in Google response');
             }
 
             const authData: GoogleAuthResponse = {
                 idToken: response.credential,
-                authCode: response.code
+                authCode: response.code || ''
             };
 
             await dispatch(loginWithGoogle(authData)).unwrap();
@@ -51,54 +85,49 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
         }
     };
 
-    const initializeGoogleButton = () => {
-        if (!buttonRef.current || !window.google?.accounts?.id) return;
-
-        try {
-            const google = window.google;
-            google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse,
-                auto_select: false,
-                scope: 'email profile https://www.googleapis.com/auth/calendar.readonly',
-                ux_mode: 'popup',
-                response_type: 'code id_token'
-            });
-
-            google.accounts.oauth2.initCodeClient({
-                client_id: GOOGLE_CLIENT_ID,
-                scope: 'email profile https://www.googleapis.com/auth/calendar.readonly',
-                ux_mode: 'popup',
-                callback: (response: any) => {
-                    if (response.code) {
-                        handleCredentialResponse({
-                            credential: response.id_token || '',
-                            code: response.code
-                        });
-                    }
-                },
-            });
-
-            google.accounts.id.renderButton(buttonRef.current, {
-                type: 'standard',
-                theme,
-                size,
-                text,
-                width: width
-            });
-        } catch (error) {
-            console.error('[Google OAuth] Initialization error:', error);
-            onError?.(error instanceof Error ? error : new Error('Initialization failed'));
-        }
-    };
-
-    const scriptLoaded = useScript(GOOGLE_SCRIPT_URL, initializeGoogleButton);
+    const scriptLoaded = useScript(GOOGLE_SCRIPT_URL);
 
     useEffect(() => {
+        if (scriptLoaded && buttonRef.current && window.google?.accounts?.id) {
+            try {
+                console.log('Initializing Google Sign-In with:', {
+                    client_id: GOOGLE_CLIENT_ID,
+                    buttonRef: buttonRef.current
+                });
+
+                window.google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    scope: 'email profile',
+                    ux_mode: 'redirect'
+                });
+
+                window.google.accounts.id.renderButton(buttonRef.current, {
+                    type: 'standard',
+                    theme,
+                    size,
+                    text,
+                    width: parseInt(width)
+                });
+
+                // One tap prompt
+                window.google.accounts.id.prompt();
+
+            } catch (error) {
+                console.error('[Google OAuth] Initialization error:', {
+                    error,
+                    message: error instanceof Error ? error.message : 'Unknown error',
+                    stack: error instanceof Error ? error.stack : undefined
+                });
+                onError?.(error instanceof Error ? error : new Error('Initialization failed'));
+            }
+        }
+
         return () => {
             window.google?.accounts?.id?.cancel();
         };
-    }, []);
+    }, [scriptLoaded, buttonRef.current, theme, size, text, width]);
 
     if (!scriptLoaded) {
         return (
@@ -118,3 +147,19 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
         />
     );
 };
+
+// 타입 선언 추가
+declare global {
+    interface Window {
+        google?: {
+            accounts?: {
+                id?: {
+                    initialize: (config: any) => void;
+                    renderButton: (element: HTMLElement, options: any) => void;
+                    prompt: () => void;
+                    cancel: () => void;
+                };
+            };
+        };
+    }
+}
