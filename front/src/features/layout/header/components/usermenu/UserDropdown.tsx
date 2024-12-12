@@ -2,8 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, LogOut, UserPlus, LogIn } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { logout } from '@/features/auth/store/authSlice';
+import { logoutUser } from '@/features/auth/store/authSlice';
 import { User } from '@/features/auth/types/auth.types';
+import { AppDispatch } from '@/core/store/store'; // store.ts에서 AppDispatch 타입 임포트
 
 interface UserDropdownProps {
     user: User | null;
@@ -12,25 +13,28 @@ interface UserDropdownProps {
 }
 
 export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClose }) => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
 
-    const handleLogout = () => {
-        dispatch(logout());
-        onClose();
+    const handleLogout = async () => {
+        try {
+            const result = await dispatch(logoutUser()).unwrap();
+            if (result.success) {
+                onClose();
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
     };
 
     return (
         <div className="absolute right-0 top-[64px] w-56 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
             {isLogin && user ? (
-                // 로그인 상태 메뉴
                 <>
-                    {/* Profile Section */}
                     <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                     </div>
 
-                    {/* Menu Items */}
                     <div className="py-1">
                         <MenuItem
                             icon={Settings}
@@ -40,7 +44,6 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                         />
                     </div>
 
-                    {/* Logout Section */}
                     <div className="border-t border-gray-100">
                         <button
                             onClick={handleLogout}
@@ -52,7 +55,6 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                     </div>
                 </>
             ) : (
-                // 게스트 상태 메뉴
                 <div className="py-1">
                     <MenuItem
                         icon={LogIn}
