@@ -6,7 +6,8 @@ import { loginWithGoogle } from '../store/authSlice';
 import { useScript } from '../hooks/useScript';
 import {GoogleAuthResponse, GoogleCredentialResponse} from '../types/auth.types';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
+
 const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 
 interface GoogleButtonProps {
