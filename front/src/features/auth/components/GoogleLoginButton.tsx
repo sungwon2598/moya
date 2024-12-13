@@ -17,7 +17,6 @@ interface GoogleButtonProps {
     onError?: (error: Error) => void;
 }
 
-// useScript hook
 export const useScript = (src: string, onLoad?: () => void) => {
     const [loaded, setLoaded] = useState(false);
 
@@ -29,7 +28,7 @@ export const useScript = (src: string, onLoad?: () => void) => {
         const handleLoad = () => {
             setLoaded(true);
             if (onLoad) {
-                setTimeout(onLoad, 100); // Google API 초기화를 위한 약간의 지연
+                setTimeout(onLoad, 100);
             }
         };
 
@@ -57,7 +56,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
-    // 환경변수 체크
     if (!GOOGLE_CLIENT_ID) {
         console.error('Google Client ID is not defined');
         return null;
@@ -99,7 +97,7 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                     client_id: GOOGLE_CLIENT_ID,
                     callback: handleCredentialResponse,
                     auto_select: false,
-                    scope: 'email profile',
+                    scope: 'profile',
                     ux_mode: 'redirect'
                 });
 
@@ -111,7 +109,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                     width: parseInt(width)
                 });
 
-                // One tap prompt
                 window.google.accounts.id.prompt();
 
             } catch (error) {
@@ -148,7 +145,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
     );
 };
 
-// 타입 선언 추가
 declare global {
     interface Window {
         google?: {
