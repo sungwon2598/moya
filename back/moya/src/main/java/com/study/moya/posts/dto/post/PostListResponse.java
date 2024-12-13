@@ -17,7 +17,7 @@ public record PostListResponse(
         String expectedPeriod,
         @Schema(example = "시작 예정 일자")
         LocalDateTime startDate,
-        @Schema(example = "마감 일자")
+        @Schema(example = "모집 마감 일자")
         LocalDateTime endDate,
         @Schema(example = "대분류")
         Set<String> studies,
@@ -26,6 +26,7 @@ public record PostListResponse(
         String authorName,
         Integer views,
         Integer totalComments,
-        boolean isLiked
+        boolean isLiked,
+        Integer totalLikes
 ) {
 }
