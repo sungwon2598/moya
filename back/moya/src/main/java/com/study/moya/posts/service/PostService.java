@@ -4,6 +4,7 @@ import com.study.moya.global.api.ApiResponse;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.posts.domain.Comment;
+import com.study.moya.posts.domain.Like;
 import com.study.moya.posts.domain.Post;
 import com.study.moya.posts.dto.like.LikeResponse;
 import com.study.moya.posts.dto.post.PostCreateRequest;
@@ -34,6 +35,9 @@ public class PostService {
 
     @Transactional
     public Long createPost(PostCreateRequest request, Long authorId) {
+        if (authorId == null) {
+            throw new IllegalArgumentException("작성자의 아이디가 비어있습니다.");
+        }
 
         Member author = memberRepository.findById(authorId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
@@ -59,15 +63,16 @@ public class PostService {
     public ApiResponse<List<PostListResponse>> getPostList(int page, Long memberId) {
 
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by("createdAt").descending());
-        Page<Post> postPage = postRepository.findAll(pageRequest);
+        Page<Post> postPage = postRepository.findByIsDeletedFalse(pageRequest);
 
         List<PostListResponse> responseList = postPage.getContent().stream().map(post -> {
             int commentCount = post.getComments().size();
             String authorName = post.getAuthor().getNickname();
 
+            //좋아요 처리
+            int totalLikes = likeRepository.countByPostId(post.getId());
             boolean isLiked = false;
             if (memberId != null) {
-                // 좋아요 여부 확인: LikeRepository 활용
                 isLiked = likeRepository.findByMemberIdAndPostId(memberId, post.getId()).isPresent();
             }
 
@@ -84,7 +89,9 @@ public class PostService {
                     authorName,
                     post.getViews(),
                     commentCount,
-                    isLiked
+                    isLiked,
+                    totalLikes
+
             );
         }).toList();
 
@@ -97,9 +104,16 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
+        //조회수
+        post.incrementViews();
+        //사용자
         String authorName = post.getAuthor().getNickname();
+
         boolean isLiked = (currentUserId != null)
                 && likeRepository.findByMemberIdAndPostId(currentUserId, postId).isPresent();
+
+        int totalLikes = likeRepository.countByPostId(postId);
+
 
         Set<Comment> allComments = post.getComments();
         // 루트 댓글만 필터
@@ -129,7 +143,8 @@ public class PostService {
                 post.getViews(),
                 commentDetails,
                 totalComments,
-                isLiked
+                isLiked,
+                totalLikes
         );
 
         return ApiResponse.of(detailResponse);
@@ -161,20 +176,95 @@ public class PostService {
         );
     }
 
-    public void updatePost(Long postId, PostUpdateRequest request, Long currentUserId) {
+    public void updatePost(Long postId, PostUpdateRequest request, Long authorId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
+        if (!post.getAuthor().getId().equals(authorId)) {
+            throw new IllegalArgumentException("해당 게시글의 작성자가 아닙니다.");
+        }
+
+        post.updatePost(
+                request.title(),
+                request.content(),
+                request.recruits(),
+                request.expectedPeriod(),
+                request.studies(),
+                request.studyDetails(),
+                request.startDate(),
+                request.endDate()
+        );
     }
 
+    @Transactional
     public void deletePost(Long postId, Long currentUserId) {
+        if (currentUserId == null) {
+            throw new IllegalArgumentException("잘못된 접근입니다.");
+        }
 
+        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+        if (!post.getAuthor().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("해당 글의 작성자가 아닙니다.");
+        }
+
+        post.markAsDeleted();
     }
 
+    @Transactional
+    public void deletePostAsAdmin(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+        post.markAsDeleted();
+    }
+
+    /**
+     * 좋아요 추가
+     */
+    @Transactional
     public LikeResponse addLike(Long postId, Long currentUserId) {
-        return null;
+        if (currentUserId == null) {
+            throw new IllegalArgumentException("잘못된 접근입니다.");
+        }
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+        Member member = memberRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        boolean alreadyLiked = likeRepository.findByMemberIdAndPostId(currentUserId, postId).isPresent();
+
+        if (alreadyLiked) {
+            throw new IllegalStateException("이미 좋아요를 눌렀습니다.");
+        }
+
+        Like like = Like.builder()
+                .member(member)
+                .post(post)
+                .build();
+        likeRepository.save(like);
+
+        int totalLikes = likeRepository.countByPostId(postId);
+
+        return new LikeResponse(true, totalLikes);
     }
 
+    /**
+     * 좋아요 취소
+     */
+    @Transactional
     public LikeResponse removeLike(Long postId, Long currentUserId) {
+        if (currentUserId == null) {
+            throw new IllegalArgumentException("잘못된 접근입니다.");
+        }
 
-        return null;
+        Like like = likeRepository.findByMemberIdAndPostId(currentUserId, postId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 게시글에 대해 좋아요를 누른 적이 없습니다."));
+
+        likeRepository.delete(like);
+
+        int totalLikes = likeRepository.countByPostId(postId);
+
+        return new LikeResponse(false, totalLikes);
     }
 }
