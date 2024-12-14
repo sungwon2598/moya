@@ -110,8 +110,12 @@ const MainContent: React.FC = () => {
 
                     {/* Google 로그인 버튼 */}
                     <div className="w-full flex justify-center items-center">
-                        <GoogleLoginButton />
-                    </div>
+                        <GoogleLoginButton
+                            theme="filled_blue"
+                            size="large"
+                            onSuccess={() => console.log('로그인 성공')}
+                            onError={(error) => console.error('로그인 실패:', error)}
+                        />                    </div>
 
                     <p className="text-sm text-gray-500 text-center max-w-sm px-4">
                         계속 진행하면 MOYA의{' '}

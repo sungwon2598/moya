@@ -26,5 +26,5 @@ export interface GoogleAuthResponse {
 export interface GoogleCredentialResponse {
     credential: string;
     select_by?: string;
-    code?: string;
+    code: string;  // code를 필수값으로 변경
 }

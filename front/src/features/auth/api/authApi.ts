@@ -2,6 +2,14 @@ import { AxiosError } from 'axios';
 import { axiosInstance } from '@/core/config/apiConfig';
 import { GoogleAuthResponse, User } from '../types/auth.types';
 
+// API Base URL 설정
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000'
+    : 'https://www.moyastudy.com';
+
+// axiosInstance baseURL 설정
+axiosInstance.defaults.baseURL = API_BASE_URL;
+
 // API Response Types
 interface ApiResponse<T> {
     success: boolean;

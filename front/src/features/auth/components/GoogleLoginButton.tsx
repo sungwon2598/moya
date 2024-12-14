@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@store/store';
 import { loginWithGoogle } from '../store/authSlice';
-import { GoogleAuthResponse, GoogleCredentialResponse } from '../types/auth.types';
+import { GoogleAuthResponse } from '../types/auth.types';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
 const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
@@ -17,31 +17,23 @@ interface GoogleButtonProps {
     onError?: (error: Error) => void;
 }
 
-export const useScript = (src: string, onLoad?: () => void) => {
-    const [loaded, setLoaded] = useState(false);
+const useGoogleScript = () => {
+    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = src;
+        script.src = GOOGLE_SCRIPT_URL;
         script.async = true;
+        script.onload = () => setIsLoaded(true);
 
-        const handleLoad = () => {
-            setLoaded(true);
-            if (onLoad) {
-                setTimeout(onLoad, 100);
-            }
-        };
-
-        script.addEventListener('load', handleLoad);
         document.body.appendChild(script);
 
         return () => {
-            script.removeEventListener('load', handleLoad);
             document.body.removeChild(script);
         };
-    }, [src, onLoad]);
+    }, []);
 
-    return loaded;
+    return isLoaded;
 };
 
 export const GoogleLoginButton: FC<GoogleButtonProps> = ({
@@ -55,81 +47,70 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
     const buttonRef = useRef<HTMLDivElement>(null);
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
-
-    if (!GOOGLE_CLIENT_ID) {
-        console.error('Google Client ID is not defined');
-        return null;
-    }
-
-    const handleCredentialResponse = async (response: GoogleCredentialResponse) => {
-        try {
-            console.log('Google Response:', response);
-
-            if (!response.credential) {
-                throw new Error('Missing credential in Google response');
-            }
-
-            const authData: GoogleAuthResponse = {
-                idToken: response.credential,
-                authCode: response.code || ''
-            };
-
-            await dispatch(loginWithGoogle(authData)).unwrap();
-            onSuccess?.();
-            navigate('/');
-        } catch (error) {
-            console.error('[Google OAuth] Login failed:', error);
-            onError?.(error instanceof Error ? error : new Error('Login failed'));
-        }
-    };
-
-    const scriptLoaded = useScript(GOOGLE_SCRIPT_URL);
+    const isScriptLoaded = useGoogleScript();
+    const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
-        if (scriptLoaded && buttonRef.current && window.google?.accounts?.id) {
-            try {
-                console.log('Initializing Google Sign-In with:', {
-                    client_id: GOOGLE_CLIENT_ID,
-                    buttonRef: buttonRef.current
-                });
-
-                window.google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: handleCredentialResponse,
-                    auto_select: false,
-                    scope: 'profile',
-                    ux_mode: 'redirect'
-                });
-
-                window.google.accounts.id.renderButton(buttonRef.current, {
-                    type: 'standard',
-                    theme,
-                    size,
-                    text,
-                    width: parseInt(width)
-                });
-
-                window.google.accounts.id.prompt();
-
-            } catch (error) {
-                console.error('[Google OAuth] Initialization error:', {
-                    error,
-                    message: error instanceof Error ? error.message : 'Unknown error',
-                    stack: error instanceof Error ? error.stack : undefined
-                });
-                onError?.(error instanceof Error ? error : new Error('Initialization failed'));
-            }
+        if (!isScriptLoaded || !window.google?.accounts?.id || isInitialized) {
+            return;
         }
 
-        return () => {
-            window.google?.accounts?.id?.cancel();
-        };
-    }, [scriptLoaded, buttonRef.current, theme, size, text, width]);
+        try {
+            window.google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: async (response) => {
+                    try {
+                        if (!response.credential) {
+                            throw new Error('No credentials received');
+                        }
 
-    if (!scriptLoaded) {
+                        const authData: GoogleAuthResponse = {
+                            idToken: response.credential,
+                            authCode: ''
+                        };
+
+                        await dispatch(loginWithGoogle(authData)).unwrap();
+                        onSuccess?.();
+                        navigate('/');
+                    } catch (error) {
+                        console.error('Login failed:', error);
+                        onError?.(error instanceof Error ? error : new Error('Login failed'));
+                    }
+                }
+            });
+
+            setIsInitialized(true);
+        } catch (error) {
+            console.error('Failed to initialize Google Sign-In:', error);
+            onError?.(error instanceof Error ? error : new Error('Initialization failed'));
+        }
+    }, [isScriptLoaded, dispatch, navigate, onSuccess, onError, isInitialized]);
+
+    useEffect(() => {
+        if (!isInitialized || !buttonRef.current || !window.google?.accounts?.id) {
+            return;
+        }
+
+        try {
+            window.google.accounts.id.renderButton(buttonRef.current, {
+                type: 'standard',
+                theme,
+                size,
+                text,
+                width: parseInt(width)
+            });
+
+            console.log('Google Sign-In button rendered');
+        } catch (error) {
+            console.error('Failed to render button:', error);
+            onError?.(error instanceof Error ? error : new Error('Failed to render button'));
+        }
+    }, [isInitialized, theme, size, text, width, onError]);
+
+    if (!isScriptLoaded || !isInitialized) {
         return (
             <div
-                className="w-[250px] h-[40px] bg-gray-100 rounded animate-pulse"
+                className="w-64 h-10 bg-gray-100 rounded animate-pulse"
                 aria-label="Loading Google Sign-In"
             />
         );
@@ -145,17 +126,4 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
     );
 };
 
-declare global {
-    interface Window {
-        google?: {
-            accounts?: {
-                id?: {
-                    initialize: (config: any) => void;
-                    renderButton: (element: HTMLElement, options: any) => void;
-                    prompt: () => void;
-                    cancel: () => void;
-                };
-            };
-        };
-    }
-}
+export default GoogleLoginButton;
