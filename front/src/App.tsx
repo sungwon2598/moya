@@ -10,45 +10,47 @@ import {Provider} from "react-redux";
 import SignInPage from "./pages/auth/SignInPage.tsx";
 import SignUpPage from "./pages/auth/SignUpPage.tsx";
 import StudyList from "./pages/study/StudyList.tsx";
+import StudyPostDetail from "./pages/study/StudyPostDetail.tsx";
 
 const App: React.FC = () => {
     return (
         <Provider store={store}>
             <ModalProvider>
-                    <BrowserRouter>
-                        <Routes>
-                            <Route path="/" element={<RootLayout />}>
-                                {/* 메인 페이지 */}
-                                <Route index element={<Main />} />
-                                <Route path="signin" element={<SignInPage />} />
-                                <Route path="signup" element={<SignUpPage /> } />
+                <BrowserRouter>
+                    <Routes>
+                        <Route path="/" element={<RootLayout />}>
+                            {/* 메인 페이지 */}
+                            <Route index element={<Main />} />
+                            <Route path="signin" element={<SignInPage />} />
+                            <Route path="signup" element={<SignUpPage /> } />
 
-                                {/* 로드맵 관련 라우트 */}
-                                <Route path="roadmap">
-                                    <Route path="preview" element={<RoadmapPreview />} />
-                                </Route>
-
-                                <Route path="study" element={<StudyList />} />
-
-                                {/* 404 페이지 처리 */}
-                                <Route
-                                    path="*"
-                                    element={
-                                        <div className="flex min-h-screen items-center justify-center">
-                                            <h1 className="text-2xl font-bold text-gray-800">
-                                                페이지를 찾을 수 없습니다
-                                            </h1>
-                                        </div>
-                                    }
-                                />
-
-                                <Route path="settings/profile" element={<EditProfile />} />
-
-                                {/* 404 페이지 처리 */}
-                                <Route path="*" element={<div>Page Not Found</div>} />
+                            {/* 로드맵 관련 라우트 */}
+                            <Route path="roadmap">
+                                <Route path="preview" element={<RoadmapPreview />} />
                             </Route>
-                        </Routes>
-                    </BrowserRouter>
+
+                            {/* 스터디 관련 라우트 */}
+                            <Route path="study">
+                                <Route index element={<StudyList />} />
+                                <Route path=":postId" element={<StudyPostDetail />} />
+                            </Route>
+
+                            <Route path="settings/profile" element={<EditProfile />} />
+
+                            {/* 404 페이지 처리 */}
+                            <Route
+                                path="*"
+                                element={
+                                    <div className="flex min-h-screen items-center justify-center">
+                                        <h1 className="text-2xl font-bold text-gray-800">
+                                            페이지를 찾을 수 없습니다
+                                        </h1>
+                                    </div>
+                                }
+                            />
+                        </Route>
+                    </Routes>
+                </BrowserRouter>
             </ModalProvider>
         </Provider>
     );

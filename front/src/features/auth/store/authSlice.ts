@@ -1,44 +1,79 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState, User } from '../types/auth.types';
-import { getUserInfo, postLoginToken } from '../api/authApi';
+import { createSlice, createAsyncThunk, PayloadAction, Reducer } from '@reduxjs/toolkit';
+import { AuthState, GoogleAuthResponse, User } from '../types/auth.types';
+import { getUserInfo, postGoogleAuth, refreshAccessToken, logout } from '../api/authApi';
+import type { AuthResponseData } from '../api/authApi';
 
+// Initial state
 const initialState: AuthState = {
     isLogin: false,
     user: null,
     loading: false,
-    error: null
+    error: null,
+    tokens: undefined
 };
 
-// Google 로그인 thunk의 반환 타입을 User로 변경
-export const loginWithGoogle = createAsyncThunk<User, string>(
-    'auth/loginWithGoogle',
-    async (credential, { rejectWithValue }) => {
+// Google login thunk
+export const authenticateWithGoogleThunk = createAsyncThunk<AuthResponseData, GoogleAuthResponse>(
+    'auth/authenticateWithGoogle',
+    async (authData, { rejectWithValue }) => {
         try {
-            const loginResponse = await postLoginToken(credential);
-            if (!loginResponse.success || !loginResponse.data) {
-                throw new Error('Login failed');
+            const response = await postGoogleAuth(authData);
+
+            if (!response.success || !response.data) {
+                throw new Error(response.message || 'Authentication failed');
             }
-            return loginResponse.data.user;
+
+            return response.data;
         } catch (error) {
             return rejectWithValue(
-                error instanceof Error ? error.message : 'Google login failed'
+                error instanceof Error ? error.message : 'Authentication failed'
             );
         }
     }
 );
 
-// checkLoginStatus의 반환 타입도 User로 변경
 export const checkLoginStatus = createAsyncThunk<User>(
     'auth/checkLoginStatus',
     async (_, { rejectWithValue }) => {
         try {
-            const userInfo = await getUserInfo();
-            if (!userInfo) {
-                throw new Error('Failed to fetch user info');
-            }
-            return userInfo;
+            return await getUserInfo();
         } catch (error) {
-            return rejectWithValue('Failed to fetch user info');
+            return rejectWithValue(
+                error instanceof Error ? error.message : 'Failed to fetch user info'
+            );
+        }
+    }
+);
+
+export const refreshAuthToken = createAsyncThunk(
+    'auth/refreshToken',
+    async (_, { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as { auth: AuthState };
+            const currentRefreshToken = state.auth.tokens?.refreshToken;
+
+            if (!currentRefreshToken) {
+                throw new Error('No refresh token available');
+            }
+
+            return await refreshAccessToken(currentRefreshToken);
+        } catch (error) {
+            return rejectWithValue(
+                error instanceof Error ? error.message : 'Token refresh failed'
+            );
+        }
+    }
+);
+
+export const logoutUser = createAsyncThunk<void, void>(
+    'auth/logout',
+    async (_, { rejectWithValue }) => {
+        try {
+            await logout();
+        } catch (error) {
+            return rejectWithValue(
+                error instanceof Error ? error.message : 'Logout failed'
+            );
         }
     }
 );
@@ -47,32 +82,44 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        logout: (state) => {
-            state.isLogin = false;
-            state.user = null;
-            state.error = null;
-        },
         clearError: (state) => {
             state.error = null;
+        },
+        updateTokens: (state, action: PayloadAction<AuthResponseData>) => {
+            state.tokens = {
+                accessToken: action.payload.accessToken,
+                refreshToken: action.payload.refreshToken
+            };
+        },
+        resetAuth: () => {
+            return initialState;
         }
     },
     extraReducers: (builder) => {
         builder
-            .addCase(loginWithGoogle.pending, (state) => {
+            // Google Authentication
+            .addCase(authenticateWithGoogleThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(loginWithGoogle.fulfilled, (state, action) => {
+            .addCase(authenticateWithGoogleThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isLogin = true;
-                state.user = action.payload;  // User 타입
+                state.user = action.payload.user;
+                state.tokens = {
+                    accessToken: action.payload.accessToken,
+                    refreshToken: action.payload.refreshToken
+                };
+                state.error = null;
             })
-            .addCase(loginWithGoogle.rejected, (state, action) => {
+            .addCase(authenticateWithGoogleThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.isLogin = false;
                 state.user = null;
+                state.tokens = undefined;
                 state.error = action.payload as string;
             })
+            // Check Login Status
             .addCase(checkLoginStatus.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -80,16 +127,49 @@ const authSlice = createSlice({
             .addCase(checkLoginStatus.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isLogin = true;
-                state.user = action.payload;  // User 타입
+                state.user = action.payload;
+                state.error = null;
             })
             .addCase(checkLoginStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.isLogin = false;
                 state.user = null;
+                state.tokens = undefined;
                 state.error = action.payload as string;
+            })
+            // Refresh Token
+            .addCase(refreshAuthToken.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.tokens = {
+                        accessToken: action.payload.accessToken,
+                        refreshToken: action.payload.refreshToken
+                    };
+                }
+                state.error = null;
+            })
+            .addCase(refreshAuthToken.rejected, (state, action) => {
+                state.isLogin = false;
+                state.user = null;
+                state.tokens = undefined;
+                state.error = action.payload as string;
+            })
+            // Logout
+            .addCase(logoutUser.fulfilled, () => {
+                return initialState;
+            })
+            .addCase(logoutUser.rejected, () => {
+                return initialState;
             });
     }
 });
 
-export const { logout, clearError } = authSlice.actions;
-export default authSlice.reducer;
+export const { clearError, updateTokens, resetAuth } = authSlice.actions;
+
+export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isLogin;
+export const selectUser = (state: { auth: AuthState }) => state.auth.user;
+export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
+export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
+export const selectAuthTokens = (state: { auth: AuthState }) => state.auth.tokens;
+
+const authReducer: Reducer<AuthState> = authSlice.reducer;
+export default authReducer;
