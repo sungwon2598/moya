@@ -1,35 +1,26 @@
-import { AxiosError } from 'axios';
-import { axiosInstance } from '@/core/config/apiConfig';
-import { GoogleAuthResponse, User } from '../types/auth.types';
+import axios, { AxiosInstance, AxiosError } from 'axios';
+import { createBrowserHistory } from 'history';
+import type { User, GoogleAuthResponse } from '../types/auth.types';
 
-// API Base URL 설정
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-    ? 'http://localhost:3000'
-    : 'https://www.moyastudy.com';
+const history = createBrowserHistory();
 
-// axiosInstance baseURL 설정
-axiosInstance.defaults.baseURL = API_BASE_URL;
+export const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.moyastudy.com';
 
-// API Response Types
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
     success: boolean;
     data?: T;
     message?: string;
+    errorCode?: string;
 }
 
-interface AuthResponseData {
+export interface AuthResponseData {
     user: User;
     accessToken: string;
     refreshToken?: string;
 }
 
-interface TokenRefreshResponse {
-    accessToken: string;
-    refreshToken?: string;
-}
-
-// Error Handling
-class AuthApiError extends Error {
+// API Error class
+export class AuthApiError extends Error {
     constructor(
         message: string,
         public statusCode?: number,
@@ -40,8 +31,8 @@ class AuthApiError extends Error {
     }
 }
 
-// Token Management
-const TOKEN_STORAGE = {
+// Token management
+export const TokenStorage = {
     getAccessToken: () => localStorage.getItem('accessToken'),
     getRefreshToken: () => localStorage.getItem('refreshToken'),
     setTokens: (accessToken: string, refreshToken?: string) => {
@@ -56,7 +47,7 @@ const TOKEN_STORAGE = {
     }
 };
 
-// API Error Handler
+// Error handler
 const handleApiError = (error: unknown): never => {
     if (error instanceof AxiosError) {
         const statusCode = error.response?.status;
@@ -73,11 +64,64 @@ const handleApiError = (error: unknown): never => {
     throw new AuthApiError('An unexpected error occurred');
 };
 
-/**
- * Google OAuth Login
- * @param authData Google authentication data
- * @returns API response with user data and tokens
- */
+// Create axios instance
+export const createAxiosInstance = (): AxiosInstance => {
+    const instance = axios.create({
+        baseURL: BASE_URL,
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        withCredentials: true
+    });
+
+    instance.interceptors.request.use(
+        (config) => {
+            const accessToken = TokenStorage.getAccessToken();
+            if (accessToken) {
+                config.headers.Authorization = `Bearer ${accessToken}`;
+            }
+            return config;
+        },
+        (error) => Promise.reject(error)
+    );
+
+    instance.interceptors.response.use(
+        (response) => response,
+        async (error: AxiosError) => {
+            const originalRequest = error.config;
+
+            if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+                originalRequest._retry = true;
+
+                try {
+                    const refreshToken = TokenStorage.getRefreshToken();
+                    if (!refreshToken) throw new Error('No refresh token available');
+
+                    const response = await instance.post<AuthResponseData>('/api/auth/refresh', { refreshToken });
+                    const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+                    TokenStorage.setTokens(accessToken, newRefreshToken);
+                    if (originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                    }
+                    return instance(originalRequest);
+                } catch (refreshError) {
+                    TokenStorage.clearTokens();
+                    history.replace('/login');
+                    return Promise.reject(refreshError);
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+
+    return instance;
+};
+
+export const axiosInstance = createAxiosInstance();
+
+// Google OAuth Login
 export const postGoogleAuth = async (
     authData: GoogleAuthResponse
 ): Promise<ApiResponse<AuthResponseData>> => {
@@ -87,8 +131,8 @@ export const postGoogleAuth = async (
             authData
         );
 
-        const { accessToken, refreshToken} = response.data;
-        TOKEN_STORAGE.setTokens(accessToken, refreshToken);
+        const { accessToken, refreshToken } = response.data;
+        TokenStorage.setTokens(accessToken, refreshToken);
 
         return {
             success: true,
@@ -111,79 +155,43 @@ export const postGoogleAuth = async (
     }
 };
 
-/**
- * Get current user information
- * @returns User information
- * @throws AuthApiError if request fails
- */
+export const logout = async (): Promise<void> => {
+    try {
+        await axiosInstance.post('/api/auth/logout');
+        TokenStorage.clearTokens();
+    } catch (error) {
+        console.error('[Auth API] Logout failed:', error);
+        TokenStorage.clearTokens();
+        throw handleApiError(error);
+    }
+};
+
+export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponseData> => {
+    try {
+        const response = await axiosInstance.post<AuthResponseData>(
+            '/api/auth/refresh',
+            { refreshToken }
+        );
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        TokenStorage.setTokens(accessToken, newRefreshToken);
+
+        return response.data;
+    } catch (error) {
+        console.error('[Auth API] Token refresh failed:', error);
+        TokenStorage.clearTokens();
+        throw handleApiError(error);
+    }
+};
+
 export const getUserInfo = async (): Promise<User> => {
     try {
-        const response = await axiosInstance.get<{ user: User }>(
-            '/v1/oauth/user/info'
+        const response = await axiosInstance.get<ApiResponse<User>>(
+            '/api/auth/user/info'
         );
-        return response.data.user;
+        return response.data.data!;
     } catch (error) {
         console.error('[Auth API] Get user info failed:', error);
         throw handleApiError(error);
     }
 };
-
-/**
- * Refresh access token
- * @param refreshToken Current refresh token
- * @returns New access token
- * @throws AuthApiError if refresh fails
- */
-export const refreshToken = async (refreshToken: string): Promise<string> => {
-    try {
-        const response = await axiosInstance.post<TokenRefreshResponse>(
-            '/v1/oauth/refresh',
-            { refreshToken }
-        );
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        TOKEN_STORAGE.setTokens(accessToken, newRefreshToken);
-
-        return accessToken;
-    } catch (error) {
-        console.error('[Auth API] Token refresh failed:', error);
-        TOKEN_STORAGE.clearTokens();
-        throw handleApiError(error);
-    }
-};
-
-/**
- * Logout user
- * @throws AuthApiError if logout fails
- */
-export const logout = async (): Promise<void> => {
-    try {
-        await axiosInstance.post('/v1/oauth/logout');
-        TOKEN_STORAGE.clearTokens();
-    } catch (error) {
-        console.error('[Auth API] Logout failed:', error);
-        TOKEN_STORAGE.clearTokens(); // Always clear tokens even if API call fails
-        throw handleApiError(error);
-    }
-};
-
-/**
- * Check if access token exists and is not expired
- * @returns boolean indicating if user is likely logged in
- */
-export const hasValidSession = (): boolean => {
-    const accessToken = TOKEN_STORAGE.getAccessToken();
-    if (!accessToken) return false;
-
-    // Optional: Add JWT expiration check if tokens are JWTs
-    try {
-        const tokenData = JSON.parse(atob(accessToken.split('.')[1]));
-        const expirationTime = tokenData.exp * 1000; // Convert to milliseconds
-        return Date.now() < expirationTime;
-    } catch {
-        return false; // If token can't be decoded, assume session is invalid
-    }
-};
-
-// Export token management utilities
-export const TokenStorage = TOKEN_STORAGE;
