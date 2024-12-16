@@ -92,6 +92,7 @@ export const createAxiosInstance = (): AxiosInstance => {
             const originalRequest = error.config;
 
             if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+                // @ts-ignore
                 originalRequest._retry = true;
 
                 try {

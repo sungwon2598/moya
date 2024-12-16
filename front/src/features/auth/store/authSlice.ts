@@ -91,7 +91,7 @@ const authSlice = createSlice({
                 refreshToken: action.payload.refreshToken
             };
         },
-        resetAuth: (state) => {
+        resetAuth: () => {
             return initialState;
         }
     },
@@ -154,10 +154,10 @@ const authSlice = createSlice({
                 state.error = action.payload as string;
             })
             // Logout
-            .addCase(logoutUser.fulfilled, (state) => {
+            .addCase(logoutUser.fulfilled, () => {
                 return initialState;
             })
-            .addCase(logoutUser.rejected, (state) => {
+            .addCase(logoutUser.rejected, () => {
                 return initialState;
             });
     }
