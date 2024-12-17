@@ -41,6 +41,7 @@ export const Header: React.FC = () => {
     const navigate = useNavigate();
     const modalContext = useContext(ModalContext);
 
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {

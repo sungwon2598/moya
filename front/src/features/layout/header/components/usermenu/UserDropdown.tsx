@@ -1,10 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Settings, LogOut, UserPlus, LogIn } from 'lucide-react';
+import {Link, useNavigate} from 'react-router-dom';
+import { Settings, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logoutUser } from '@/features/auth/store/authSlice';
 import { User } from '@/features/auth/types/auth.types';
-import { AppDispatch } from '@/core/store/store'; // store.ts에서 AppDispatch 타입 임포트
+import { AppDispatch } from '@/core/store/store';
+import GoogleLoginButton from "../../../../auth/components/GoogleLoginButton.tsx";
+import { useAuth} from '../../../../auth/hooks/useAuth.ts'
 
 interface UserDropdownProps {
     user: User | null;
@@ -12,8 +14,12 @@ interface UserDropdownProps {
     onClose: () => void;
 }
 
-export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClose }) => {
+export const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
     const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
+    const navigate = useNavigate(); // useNavigate hook
+
+    const { isAuthenticated, handleGoogleLogin } = useAuth();
+
 
     const handleLogout = async () => {
         try {
@@ -26,9 +32,19 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
         }
     };
 
+    const handleLoginSuccess = async (authData: any) => {
+        try {
+            await handleGoogleLogin(authData);
+            navigate('/');
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    };
+
+
     return (
         <div className="absolute right-0 top-[64px] w-56 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
-            {isLogin && user ? (
+            {isAuthenticated && user ? (
                 <>
                     <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
@@ -56,17 +72,11 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                 </>
             ) : (
                 <div className="py-1">
-                    <MenuItem
-                        icon={LogIn}
-                        text="로그인"
-                        href="/signin"
-                        onClick={onClose}
-                    />
-                    <MenuItem
-                        icon={UserPlus}
-                        text="회원가입"
-                        href="/signup"
-                        onClick={onClose}
+                    <GoogleLoginButton
+                        theme="filled_blue"
+                        size="large"
+                        onSuccess={handleLoginSuccess}
+                        onError={(error) => console.error('로그인 실패:', error)}
                     />
                 </div>
             )}
