@@ -24,7 +24,8 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => 
     const handleLogout = async () => {
         try {
             const result = await dispatch(logoutUser()).unwrap();
-            if (result.success) {
+            // @ts-ignore
+            if (result.result) {
                 onClose();
             }
         } catch (error) {
