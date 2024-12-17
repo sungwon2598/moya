@@ -8,6 +8,7 @@ import com.study.moya.auth.exception.TokenProcessingException;
 import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.service.MemberService;
+import com.study.moya.redis.RedisService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -40,6 +41,7 @@ public class JwtTokenProvider {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final ObjectProvider<MemberService> memberServiceProvider;
+    private final RedisService redisService;
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -93,12 +95,12 @@ public class JwtTokenProvider {
     }
 
     @Transactional
-    protected String createRefreshToken(String username) {
+    public String createRefreshToken(String uniqueIdentifier) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
 
         String refreshToken = Jwts.builder()
-                .subject(username)
+                .subject(uniqueIdentifier)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(key, Jwts.SIG.HS256)
@@ -106,18 +108,18 @@ public class JwtTokenProvider {
 
         try {
             // 기존 리프레시 토큰이 있다면 삭제
-            refreshTokenRepository.deleteByMemberEmail(username);
+            refreshTokenRepository.deleteByMemberEmail(uniqueIdentifier);
 
             // 새로운 리프레시 토큰 저장
             refreshTokenRepository.save(new RefreshToken(
                     refreshToken,
-                    username,
+                    uniqueIdentifier,
                     LocalDateTime.now().plusSeconds(refreshTokenValidityInMilliseconds / 1000)
             ));
 
-            log.debug("리프레시 토큰 생성 및 저장 완료 - 사용자: {}", username);
+            log.debug("리프레시 토큰 생성 및 저장 완료 - 사용자: {}", uniqueIdentifier);
         } catch (Exception e) {
-            log.error("리프레시 토큰 처리 중 오류 발생 - 사용자: {}, 오류: {}", username, e.getMessage());
+            log.error("리프레시 토큰 처리 중 오류 발생 - 사용자: {}, 오류: {}", uniqueIdentifier, e.getMessage());
             throw new TokenProcessingException("리프레시 토큰 처리 중 오류가 발생했습니다.", e);
         }
 
@@ -158,26 +160,26 @@ public class JwtTokenProvider {
         return new TokenInfo(newAccessToken, newRefreshToken);
     }
 
-    public String createTokenForOAuth(String email) {
-        log.info("Creating OAuth temporary token for email: {}", email);
+    public String createTokenForOAuth(String uniqueIdentifier) {
+        log.info("Creating OAuth temporary token for email: {}", uniqueIdentifier);
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + 1800000);// 임시 토큰의 유효기간은 30분
 
         try {
             String token = Jwts.builder()
-                    .subject(email)
+                    .subject(uniqueIdentifier)
                     .claim("type", "OAUTH_SIGNUP")
                     .issuedAt(now)
                     .expiration(validity)
                     .signWith(key, Jwts.SIG.HS256)
                     .compact();
-
-            log.info("Successfully created OAuth temporary token for email: {}", email);
+            log.info("jwtToken : {}", token);
+            log.info("Successfully created OAuth temporary token for uniqueIdentifier: {}", uniqueIdentifier);
             return token;
 
         } catch (Exception e) {
-            log.error("Error creating OAuth token for email: {}", email, e);
+            log.error("Error creating OAuth token for email: {}", uniqueIdentifier, e);
             throw new TokenProcessingException("OAuth 토큰 생성 중 오류가 발생했습니다.", e);
         }
     }
@@ -203,11 +205,15 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
+            // 토큰이 블랙리스트에 있는지 확인
+            if (redisService.isBlacklisted(token)) {
+                log.warn("Token is blacklisted");
+                return false;
+            }
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            log.debug("토큰이 성공적으로 검증되었습니다");
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.error("유효하지 않은 JWT 토큰: {}", e.getMessage());
+            log.error("Invalid JWT token: {}", e.getMessage());
             return false;
         }
     }
@@ -236,7 +242,6 @@ public class JwtTokenProvider {
         }
     }
 
-
     /**
      * OAuth 임시 토큰 검증
      */
@@ -255,6 +260,19 @@ public class JwtTokenProvider {
             log.error("Invalid OAuth token: {}", e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 토큰의 만료 시간을 반환
+     */
+    public long getExpirationTime(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.getExpiration().getTime();
     }
 
 
