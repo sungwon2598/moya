@@ -31,6 +31,10 @@ public class RoadMap extends BaseEntity {
 
     private String topic;
 
+    private int goalLevel;
+
+    private int duration;
+
     @Column(columnDefinition = "TEXT")
     private String evaluation;
 
@@ -44,7 +48,9 @@ public class RoadMap extends BaseEntity {
     private List<String> overallTips = new ArrayList<>();
 
     @Builder
-    private RoadMap(String topic, String evaluation, List<String> overallTips, Category category) {
+    private RoadMap(int goalLevel, String topic, int duration, String evaluation, List<String> overallTips, Category category) {
+        this.duration = duration;
+        this.goalLevel = goalLevel;
         this.topic = topic;
         this.evaluation = evaluation;
         this.category = category;
