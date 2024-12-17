@@ -4,20 +4,10 @@ import com.study.moya.BaseEntity;
 import com.study.moya.member.constants.MemberConstants;
 import com.study.moya.member.constants.MemberErrorCode;
 import com.study.moya.member.exception.MemberException;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import com.study.moya.member.util.AESConverter;
+import com.study.moya.member.util.StringCryptoConverter;
+import jakarta.persistence.*;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,8 +38,8 @@ public class Member extends BaseEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //    @Convert(converter = StringCryptoConverter.class)
-    @Column(nullable = false, length = 100)
+    @Convert(converter = AESConverter.class)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
     @Column(nullable = true, length = 100)

@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class MemberAuthResult {
-    private String token;
+    private String jwtToken;
+    private String refreshToken;
     private Member member;
 }
