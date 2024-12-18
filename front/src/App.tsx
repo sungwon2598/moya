@@ -19,7 +19,6 @@ const App: React.FC = () => {
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<RootLayout />}>
-                            {/* 메인 페이지 */}
                             <Route index element={<Main />} />
                             <Route path="signin" element={<SignInPage />} />
                             <Route path="signup" element={<SignUpPage /> } />
