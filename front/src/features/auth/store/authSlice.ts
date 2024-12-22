@@ -12,7 +12,6 @@ const initialState: AuthState = {
     tokens: undefined
 };
 
-// Google login thunk
 export const authenticateWithGoogleThunk = createAsyncThunk<AuthResponseData, GoogleAuthResponse>(
     'auth/authenticateWithGoogle',
     async (authData, { rejectWithValue }) => {
