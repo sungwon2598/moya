@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { GoogleLoginButton } from '../../features/auth/components/GoogleLoginButton';
+import { useNavigate } from 'react-router-dom';
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -11,7 +12,8 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 const MainContent: React.FC = () => {
-    const { isLogin, loading } = useAuth();
+    const { isAuthenticated, loading, handleGoogleLogin } = useAuth();
+    const navigate = useNavigate();
 
     const actionButtons = [
         {
@@ -36,6 +38,15 @@ const MainContent: React.FC = () => {
             iconColor: 'text-purple-600'
         }
     ];
+
+    const handleLoginSuccess = async (authData: any) => {
+        try {
+            await handleGoogleLogin(authData);
+            navigate('/');
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    };
 
     if (loading) {
         return (
@@ -74,7 +85,7 @@ const MainContent: React.FC = () => {
             </div>
 
             {/* 액션 버튼 그리드 - 로그인 시에만 표시 */}
-            {isLogin && (
+            {isAuthenticated && (
                 <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                     {actionButtons.map((button, index) => (
                         <button
@@ -97,7 +108,7 @@ const MainContent: React.FC = () => {
             )}
 
             {/* 비로그인 시 구글 로그인 섹션 */}
-            {!isLogin && (
+            {!isAuthenticated && (
                 <div className="w-full max-w-md flex flex-col items-center gap-6 mb-12">
                     <div className="text-center mb-2">
                         <h2 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -110,7 +121,12 @@ const MainContent: React.FC = () => {
 
                     {/* Google 로그인 버튼 */}
                     <div className="w-full flex justify-center items-center">
-                        <GoogleLoginButton />
+                        <GoogleLoginButton
+                            theme="filled_blue"
+                            size="large"
+                            onSuccess={handleLoginSuccess}
+                            onError={(error) => console.error('로그인 실패:', error)}
+                        />
                     </div>
 
                     <p className="text-sm text-gray-500 text-center max-w-sm px-4">

@@ -4,7 +4,7 @@ import  ProfileForm  from '@shared/components/profile/ProfileForm';
 import type { ProfileFormData } from '@core/types/profile';
 
 const EditProfile: React.FC = () => {
-    const { isLogin: isLoggedIn } = useAuth(); // isLogin을 isLoggedIn으로 alias
+    const { isAuthenticated: isLoggedIn } = useAuth(); // isLogin을 isLoggedIn으로 alias
 
     const handleSubmit = async (data: ProfileFormData) => {
         try {

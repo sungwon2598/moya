@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Settings, LogOut, UserPlus, LogIn } from 'lucide-react';
+import {Link, useNavigate} from 'react-router-dom';
+import { Settings, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { logout } from '@/features/auth/store/authSlice';
+import { logoutUser } from '@/features/auth/store/authSlice';
 import { User } from '@/features/auth/types/auth.types';
+import { AppDispatch } from '@/core/store/store';
+import GoogleLoginButton from "../../../../auth/components/GoogleLoginButton.tsx";
+import { useAuth} from '../../../../auth/hooks/useAuth.ts'
 
 interface UserDropdownProps {
     user: User | null;
@@ -11,26 +14,44 @@ interface UserDropdownProps {
     onClose: () => void;
 }
 
-export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClose }) => {
-    const dispatch = useDispatch();
+export const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
+    const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
+    const navigate = useNavigate(); // useNavigate hook
 
-    const handleLogout = () => {
-        dispatch(logout());
-        onClose();
+    const { isAuthenticated, handleGoogleLogin } = useAuth();
+
+
+    const handleLogout = async () => {
+        try {
+            const result = await dispatch(logoutUser()).unwrap();
+            // @ts-ignore
+            if (result.result) {
+                onClose();
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
     };
+
+    const handleLoginSuccess = async (authData: any) => {
+        try {
+            await handleGoogleLogin(authData);
+            navigate('/');
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    };
+
 
     return (
         <div className="absolute right-0 top-[64px] w-56 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
-            {isLogin && user ? (
-                // 로그인 상태 메뉴
+            {isAuthenticated && user ? (
                 <>
-                    {/* Profile Section */}
                     <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                     </div>
 
-                    {/* Menu Items */}
                     <div className="py-1">
                         <MenuItem
                             icon={Settings}
@@ -40,7 +61,6 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                         />
                     </div>
 
-                    {/* Logout Section */}
                     <div className="border-t border-gray-100">
                         <button
                             onClick={handleLogout}
@@ -52,19 +72,12 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, isLogin, onClo
                     </div>
                 </>
             ) : (
-                // 게스트 상태 메뉴
                 <div className="py-1">
-                    <MenuItem
-                        icon={LogIn}
-                        text="로그인"
-                        href="/signin"
-                        onClick={onClose}
-                    />
-                    <MenuItem
-                        icon={UserPlus}
-                        text="회원가입"
-                        href="/signup"
-                        onClick={onClose}
+                    <GoogleLoginButton
+                        theme="filled_blue"
+                        size="large"
+                        onSuccess={handleLoginSuccess}
+                        onError={(error) => console.error('로그인 실패:', error)}
                     />
                 </div>
             )}
