@@ -21,14 +21,14 @@ public class CommentService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public Long addComment(Long postId, CommentCreateRequest request, Long authorId) {
-        if (authorId == null) {
+    public Long addComment(Long postId, CommentCreateRequest request, String email) {
+        if (email == null) {
             throw new IllegalArgumentException("잘못된 접근입니다.");
         }
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post Not Found"));
-        Member author = memberRepository.findById(authorId)
+        Member author = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Member Not Found"));
 
         Comment parentComment = null;
@@ -50,16 +50,20 @@ public class CommentService {
     }
 
     @Transactional
-    public void updateComment(Long postId, Long commentId, CommentUpdateRequest request, Long authorId) {
-        if (authorId == null) {
+    public void updateComment(Long postId, Long commentId, CommentUpdateRequest request, String email) {
+        if (email == null) {
             throw new IllegalArgumentException("잘못된 접근입니다.");
+        }
+
+        if (postRepository.existsById(postId)) {
+            throw new IllegalArgumentException("존재하는 게시글이 아닙니다.");
         }
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
 
         // 권한 체크: 작성자 또는 관리자
-        if (!comment.getAuthor().getId().equals(authorId)) {
+        if (!comment.getAuthor().getEmail().equals(email)) {
             throw new IllegalArgumentException("작성자만 수정 가능합니다.");
         }
 
@@ -67,12 +71,12 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteComment(Long postId, Long commentId, Long authorId) {
-        if (authorId == null) {
+    public void deleteComment(Long postId, Long commentId, String email) {
+        if (email == null) {
             throw new IllegalArgumentException("잘못된 접근입니다.");
         }
 
-        if (postId == null) {
+        if (postRepository.existsById(postId)) {
             throw new IllegalArgumentException("존재하는 게시글이 아닙니다.");
         }
 
@@ -80,7 +84,7 @@ public class CommentService {
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
 
         // 권한 체크
-        if (!comment.getAuthor().getId().equals(authorId)) {
+        if (!comment.getAuthor().getEmail().equals(email)) {
             throw new IllegalArgumentException("작성자만 삭제 가능합니다.");
         }
 
@@ -88,12 +92,12 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteCommentAsAdmin(Long postId, Long commentId, Long authorId) {
-        if (authorId == null) {
+    public void deleteCommentAsAdmin(Long postId, Long commentId, String email) {
+        if (email == null) {
             throw new IllegalArgumentException("잘못된 접근입니다.");
         }
 
-        if (postId == null) {
+        if (postRepository.existsById(postId)) {
             throw new IllegalArgumentException("존재하는 게시글이 아닙니다.");
         }
 
