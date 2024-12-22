@@ -2,6 +2,7 @@ package com.study.moya.posts.controller;
 
 import com.study.moya.global.api.ApiResponse;
 import com.study.moya.member.domain.Member;
+import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.posts.dto.like.LikeResponse;
 import com.study.moya.posts.dto.post.PostCreateRequest;
 import com.study.moya.posts.dto.post.PostDetailResponse;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,15 +25,15 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final MemberRepository memberRepository;
 
     /**
      * 게시글 생성
      */
     @PostMapping
     public ResponseEntity<Long> createPost(@RequestBody PostCreateRequest request,
-                                                        @AuthenticationPrincipal Member member) {
-        Long authorId = MemberCheckUtils.getMemberId(member);
-        Long postId = postService.createPost(request, authorId);
+                                                        @AuthenticationPrincipal String email) {
+        Long postId = postService.createPost(request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(postId);
     }
 
@@ -41,9 +43,8 @@ public class PostController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostListResponse>>> getPostList(
             @RequestParam(defaultValue = "0") int page,
-            @AuthenticationPrincipal Member member) {
-        Long currentUserId = MemberCheckUtils.getMemberId(member);
-        ApiResponse<List<PostListResponse>> response = postService.getPostList(page, currentUserId);
+            @AuthenticationPrincipal String email) {
+        ApiResponse<List<PostListResponse>> response = postService.getPostList(page, email);
         return ResponseEntity.ok(response);
     }
 
@@ -52,9 +53,8 @@ public class PostController {
      */
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> getPostDetail(@PathVariable Long postId,
-                                                                         @AuthenticationPrincipal Member member) {
-        Long currentUserId = MemberCheckUtils.getMemberId(member);
-        ApiResponse<PostDetailResponse> response = postService.getPostDetail(postId, currentUserId);
+                                                                         @AuthenticationPrincipal String email) {
+        ApiResponse<PostDetailResponse> response = postService.getPostDetail(postId, email);
         return ResponseEntity.ok(response);
     }
 
@@ -64,9 +64,8 @@ public class PostController {
     @PostMapping("/{postId}")
     public ResponseEntity<ApiResponse<Void>> updatePost(@PathVariable Long postId,
                                                         @RequestBody PostUpdateRequest request,
-                                                        @AuthenticationPrincipal Member member) {
-        Long authorId = MemberCheckUtils.getMemberId(member);
-        postService.updatePost(postId, request, authorId);
+                                                        @AuthenticationPrincipal String email) {
+        postService.updatePost(postId, request, email);
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -75,16 +74,13 @@ public class PostController {
      */
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(@PathVariable Long postId,
-                                           @AuthenticationPrincipal Member member) {
-        Long authorId = MemberCheckUtils.getMemberId(member);
-        boolean isAdmin = MemberCheckUtils.isAdmin(member);
+                                           @AuthenticationPrincipal String email) {
 
-        if (isAdmin) {
-            // 관리자가 삭제 요청한 경우
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             postService.deletePostAsAdmin(postId);
         } else {
-            // 일반 사용자가 삭제 요청한 경우
-            postService.deletePost(postId, authorId);
+            postService.deletePost(postId, email);
         }
 
         return ResponseEntity.noContent().build();
@@ -95,9 +91,8 @@ public class PostController {
      */
     @PostMapping("/{postId}/like")
     public ResponseEntity<ApiResponse<LikeResponse>> addLike(@PathVariable Long postId,
-                                                             @AuthenticationPrincipal Member member) {
-        Long currentUserId = MemberCheckUtils.getMemberId(member);
-        LikeResponse likeResponse = postService.addLike(postId, currentUserId);
+                                                             @AuthenticationPrincipal String email) {
+        LikeResponse likeResponse = postService.addLike(postId, email);
         return ResponseEntity.ok(ApiResponse.of(likeResponse));
     }
 
@@ -106,9 +101,8 @@ public class PostController {
      */
     @DeleteMapping("/{postId}/like")
     public ResponseEntity<ApiResponse<LikeResponse>> removeLike(@PathVariable Long postId,
-                                                                @AuthenticationPrincipal Member member) {
-        Long currentUserId = MemberCheckUtils.getMemberId(member);
-        LikeResponse likeResponse = postService.removeLike(postId, currentUserId);
+                                                                @AuthenticationPrincipal String email) {
+        LikeResponse likeResponse = postService.removeLike(postId, email);
         return ResponseEntity.ok(ApiResponse.of(likeResponse));
     }
 }

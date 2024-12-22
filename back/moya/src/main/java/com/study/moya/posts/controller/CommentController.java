@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,9 +26,8 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> addComment(@PathVariable Long postId,
                                                         @RequestBody CommentCreateRequest request,
-                                                        @AuthenticationPrincipal Member member) {
-        Long authorId = MemberCheckUtils.getMemberId(member);
-        Long commentId = commentService.addComment(postId, request, authorId);
+                                                        @AuthenticationPrincipal String email) {
+        Long commentId = commentService.addComment(postId, request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(commentId));
     }
 
@@ -38,9 +38,8 @@ public class CommentController {
     public ResponseEntity<ApiResponse<Void>> updateComment(@PathVariable Long postId,
                                                            @PathVariable Long commentId,
                                                            @RequestBody CommentUpdateRequest request,
-                                                           @AuthenticationPrincipal Member member) {
-        Long currentUserId = MemberCheckUtils.getMemberId(member);
-        commentService.updateComment(postId, commentId, request, currentUserId);
+                                                           @AuthenticationPrincipal String email) {
+        commentService.updateComment(postId, commentId, request, email);
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -50,15 +49,13 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long postId,
                                               @PathVariable Long commentId,
-                                              @AuthenticationPrincipal Member member) {
-        Long currentUserId = MemberCheckUtils.getMemberId(member);
+                                              @AuthenticationPrincipal String email) {
 
-        boolean isAdmin = MemberCheckUtils.isAdmin(member);
-
-        if (isAdmin) {
-            commentService.deleteCommentAsAdmin(postId, commentId, currentUserId);
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            commentService.deleteCommentAsAdmin(postId, commentId, email);
         } else {
-            commentService.deleteComment(postId, commentId, currentUserId);
+            commentService.deleteComment(postId, commentId, email);
         }
 
         return ResponseEntity.noContent().build();
