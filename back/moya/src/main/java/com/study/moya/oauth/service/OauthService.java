@@ -127,7 +127,7 @@ public class OauthService {
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
         formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", redirectUri);
+        formData.add("redirect_uri", "https://api.moyastudy.com");
         formData.add("grant_type", "authorization_code");
 
         return webClient.post()
