@@ -127,7 +127,7 @@ public class OauthService {
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
         formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", "https://www.moyastudy.com/auth/google/callback");
+        formData.add("redirect_uri", "https://www.moyastudy.com");
         formData.add("grant_type", "authorization_code");
         //https://www.moyastudy.com/auth/google/callback
         return webClient.post()
