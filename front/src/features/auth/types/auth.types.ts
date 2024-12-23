@@ -34,18 +34,32 @@ export interface GoogleCodeResponse {
     code: string;
 }
 
-// window.google 타입 확장
+
+export interface GoogleAuthResponse {
+    credential: string;
+    authCode: string;
+}
+
+export interface GoogleCredentialResponse {
+    credential: string;
+}
+
+export interface GoogleCodeResponse {
+    code: string;
+}
+
+// types/google.d.ts
 declare global {
     interface Window {
         google?: {
             accounts: {
                 id: {
                     initialize: (config: GoogleInitializeConfig) => void;
-                    prompt: () => void;
                     renderButton: (
                         element: HTMLElement,
                         config: GoogleButtonConfig
                     ) => void;
+                    prompt: () => void;
                 };
                 oauth2: {
                     initCodeClient: (config: GoogleOAuthConfig) => {
@@ -57,24 +71,25 @@ declare global {
     }
 }
 
-export interface GoogleInitializeConfig {
+interface GoogleInitializeConfig {
     client_id: string;
     callback: (response: GoogleCredentialResponse) => void;
     auto_select?: boolean;
 }
 
-export interface GoogleOAuthConfig {
+interface GoogleButtonConfig {
+    type: 'standard';
+    theme: 'outline' | 'filled_blue' | 'filled_black';
+    size: 'large' | 'medium' | 'small';
+    text: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+    width: number;
+}
+
+interface GoogleOAuthConfig {
     client_id: string;
     scope: string;
     callback: (response: GoogleCodeResponse) => void;
-    ux_mode?: 'popup' | 'redirect';
-    access_type?: string;
-}
-
-export interface GoogleButtonConfig {
-    type?: 'standard' | 'icon';
-    theme?: 'outline' | 'filled_blue' | 'filled_black';
-    size?: 'large' | 'medium' | 'small';
-    text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-    width?: number;
+    ux_mode: 'popup';
+    access_type: 'offline';
+    redirect_uri: string;
 }

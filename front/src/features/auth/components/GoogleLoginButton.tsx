@@ -52,7 +52,7 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                                              onError
                                                          }) => {
     const buttonRef = useRef<HTMLDivElement>(null);
-    useNavigate();
+    const navigate = useNavigate();
     const isScriptLoaded = useGoogleScript();
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -62,7 +62,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
         }
 
         try {
-            // ID 클라이언트 초기화
             window.google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: async (credentialResponse: GoogleCredentialResponse) => {
@@ -71,8 +70,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                             throw new Error('No credential received');
                         }
 
-                        // OAuth2 클라이언트 초기화 및 코드 요청
-                        // @ts-ignore
                         const oauth2Client = window.google.accounts.oauth2.initCodeClient({
                             client_id: GOOGLE_CLIENT_ID,
                             scope: 'email profile openid',
@@ -89,7 +86,8 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                 onSuccess(authData);
                             },
                             ux_mode: 'popup',
-                            access_type: 'offline'
+                            access_type: 'offline',
+                            redirect_uri: `${window.location.origin}/auth/google/callback`
                         });
 
                         oauth2Client.requestCode();
@@ -122,7 +120,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                 width: parseInt(width)
             });
 
-            // One Tap 프롬프트 활성화
             window.google.accounts.id.prompt();
         } catch (error) {
             console.error('Failed to render button:', error);
