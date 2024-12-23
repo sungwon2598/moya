@@ -1,5 +1,4 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { GoogleAuthResponse, GoogleCredentialResponse, GoogleCodeResponse } from '../types/auth.types';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
@@ -52,7 +51,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                                              onError
                                                          }) => {
     const buttonRef = useRef<HTMLDivElement>(null);
-    const navigate = useNavigate();
     const isScriptLoaded = useGoogleScript();
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -62,7 +60,13 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
         }
 
         try {
-            window.google.accounts.id.initialize({
+            const google = window.google;
+
+            if (!google?.accounts) {
+                throw new Error('Google accounts not available');
+            }
+
+            google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: async (credentialResponse: GoogleCredentialResponse) => {
                     try {
@@ -70,7 +74,7 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                             throw new Error('No credential received');
                         }
 
-                        const oauth2Client = window.google.accounts.oauth2.initCodeClient({
+                        const oauth2Client = google.accounts.oauth2.initCodeClient({
                             client_id: GOOGLE_CLIENT_ID,
                             scope: 'email profile openid',
                             callback: async (codeResponse: GoogleCodeResponse) => {
