@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Users, Wrench } from 'lucide-react';
+import { MapPin, Users, Wrench, LogOut } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { GoogleLoginButton } from '../../features/auth/components/GoogleLoginButton';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 const MainContent: React.FC = () => {
-    const { isAuthenticated, loading, handleGoogleLogin } = useAuth();
+    const { isAuthenticated, loading, handleGoogleLogin, handleLogout } = useAuth();
     const navigate = useNavigate();
 
     const actionButtons = [
@@ -48,6 +48,24 @@ const MainContent: React.FC = () => {
         }
     };
 
+    const handleLogoutClick = async () => {
+        try {
+            const response = await fetch('https://api.moyastudy.com/v1/oauth/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (response.ok) {
+                await handleLogout();
+                navigate('/');
+            } else {
+                console.error('Logout failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -58,6 +76,19 @@ const MainContent: React.FC = () => {
 
     return (
         <main className="bg-gray-50 flex flex-col items-center justify-center px-4 min-h-screen py-16">
+            {/* 로그아웃 버튼 - 인증된 상태에서만 표시 */}
+            {isAuthenticated && (
+                <div className="absolute top-4 right-4">
+                    <button
+                        onClick={handleLogoutClick}
+                        className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-gray-900"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span>로그아웃</span>
+                    </button>
+                </div>
+            )}
+
             {/* 메인 포스터 섹션 */}
             <div className="w-full max-w-5xl mb-16">
                 <div className="relative aspect-video bg-white rounded-2xl shadow-lg overflow-hidden">
