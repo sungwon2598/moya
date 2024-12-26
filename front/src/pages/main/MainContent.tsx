@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Users, Wrench, LogOut } from 'lucide-react';
+import { MapPin, Users, Wrench, LogOut, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { GoogleLoginButton } from '../../features/auth/components/GoogleLoginButton';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 const MainContent: React.FC = () => {
-    const { isAuthenticated, loading, handleGoogleLogin, handleLogout } = useAuth();
+    const { isAuthenticated, loading, handleGoogleLogin, handleLogout, refreshToken } = useAuth();
     const navigate = useNavigate();
 
     const actionButtons = [
@@ -50,17 +50,8 @@ const MainContent: React.FC = () => {
 
     const handleLogoutClick = async () => {
         try {
-            const response = await fetch('https://api.moyastudy.com/v1/oauth/logout', {
-                method: 'POST',
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                await handleLogout();
-                navigate('/');
-            } else {
-                console.error('Logout failed:', response.statusText);
-            }
+            await handleLogout();
+            navigate('/');
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -76,8 +67,6 @@ const MainContent: React.FC = () => {
 
     return (
         <main className="bg-gray-50 flex flex-col items-center justify-center px-4 min-h-screen py-16">
-
-
             {/* 메인 포스터 섹션 */}
             <div className="w-full max-w-5xl mb-16">
                 <div className="relative aspect-video bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -97,13 +86,29 @@ const MainContent: React.FC = () => {
                                 변경 완료
                             </h1>
                             {isAuthenticated && (
-                                <button
-                                    onClick={handleLogoutClick}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-gray-900"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    <span>로그아웃</span>
-                                </button>
+                                <>
+                                    <button
+                                        onClick={handleLogoutClick}
+                                        className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-gray-900"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span>로그아웃</span>
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await refreshToken();
+                                                console.log('Token refreshed successfully');
+                                            } catch (error) {
+                                                console.error('Token refresh failed:', error);
+                                            }
+                                        }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-gray-900"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                        <span>리프레시</span>
+                                    </button>
+                                </>
                             )}
                         </div>
                         <p className="text-lg md:text-xl text-gray-600 max-w-lg mb-8 px-4">

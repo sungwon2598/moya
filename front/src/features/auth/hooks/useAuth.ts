@@ -4,6 +4,7 @@ import {
     authenticateWithGoogleThunk,
     logoutUser,
     checkLoginStatus,
+    refreshAuthToken,
     selectIsAuthenticated,
     selectUser,
     selectAuthLoading,
@@ -19,6 +20,7 @@ export interface UseAuthReturn {
     handleGoogleLogin: (authData: GoogleAuthResponse) => Promise<void>;
     handleLogout: () => Promise<void>;
     checkAuth: () => Promise<void>;
+    refreshToken: () => Promise<void>;
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -55,6 +57,15 @@ export const useAuth = (): UseAuthReturn => {
         }
     };
 
+    const refreshToken = async () => {
+        try {
+            await dispatch(refreshAuthToken()).unwrap();
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            throw error;
+        }
+    };
+
     return {
         isAuthenticated,
         user,
@@ -62,6 +73,7 @@ export const useAuth = (): UseAuthReturn => {
         error,
         handleGoogleLogin,
         handleLogout,
-        checkAuth
+        checkAuth,
+        refreshToken
     };
 };
