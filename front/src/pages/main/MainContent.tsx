@@ -76,18 +76,7 @@ const MainContent: React.FC = () => {
 
     return (
         <main className="bg-gray-50 flex flex-col items-center justify-center px-4 min-h-screen py-16">
-            {/* 로그아웃 버튼 - 인증된 상태에서만 표시 */}
-            {isAuthenticated && (
-                <div className="absolute top-4 right-4">
-                    <button
-                        onClick={handleLogoutClick}
-                        className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-gray-900"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span>로그아웃</span>
-                    </button>
-                </div>
-            )}
+
 
             {/* 메인 포스터 섹션 */}
             <div className="w-full max-w-5xl mb-16">
@@ -103,9 +92,20 @@ const MainContent: React.FC = () => {
 
                     {/* 중앙 텍스트 */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <h1 className="text-4xl md:text-6xl font-bold text-blue-600 mb-4">
-                            MOYA
-                        </h1>
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-4xl md:text-6xl font-bold text-blue-600">
+                                변경 완료
+                            </h1>
+                            {isAuthenticated && (
+                                <button
+                                    onClick={handleLogoutClick}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-gray-900"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>로그아웃</span>
+                                </button>
+                            )}
+                        </div>
                         <p className="text-lg md:text-xl text-gray-600 max-w-lg mb-8 px-4">
                             학습 성장을 위한 최적의 스터디 플랫폼,
                             <br />
