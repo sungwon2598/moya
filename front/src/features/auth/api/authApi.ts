@@ -32,28 +32,18 @@ export class AuthApiError extends Error {
 }
 
 // Token management
-// export const TokenStorage = {
-//     getAccessToken: () => localStorage.getItem('accessToken'),
-//     getRefreshToken: () => localStorage.getItem('refreshToken'),
-//     setTokens: (accessToken: string, refreshToken?: string) => {
-//         localStorage.setItem('accessToken', accessToken);
-//         if (refreshToken) {
-//             localStorage.setItem('refreshToken', refreshToken);
-//         }
-//     },
-//     clearTokens: () => {
-//         localStorage.removeItem('accessToken');
-//         localStorage.removeItem('refreshToken');
-//     }
-// };
-
 export const TokenStorage = {
     getAccessToken: () => localStorage.getItem('accessToken'),
-    setAccessToken: (accessToken: string) => {
+    getRefreshToken: () => localStorage.getItem('refreshToken'),
+    setTokens: (accessToken: string, refreshToken?: string) => {
         localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+        }
     },
     clearTokens: () => {
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
     }
 };
 
