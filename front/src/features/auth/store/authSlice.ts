@@ -72,13 +72,14 @@ export const checkLoginStatus = createAsyncThunk<User>(
 //             );
 //         }
 //     }
-// ); 이전꺼
+// ); //이전꺼
 
-export const refreshAuthToken = createAsyncThunk<AuthResponseData>(
+export const refreshAuthToken = createAsyncThunk(
     'auth/refreshToken',
     async (_, { rejectWithValue }) => {
         try {
-            return await refreshAccessToken();
+            await refreshAccessToken();
+            return {}; // 성공만 반환
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Token refresh failed'
@@ -160,15 +161,20 @@ const authSlice = createSlice({
                 state.error = action.payload as string;
             })
             // Refresh Token
-            .addCase(refreshAuthToken.fulfilled, (state, action) => {
-                if (action.payload) {
-                    state.tokens = {
-                        accessToken: action.payload.accessToken,
-                        refreshToken: action.payload.refreshToken
-                    };
-                }
+            // .addCase(refreshAuthToken.fulfilled, (state, action) => {
+            //     if (action.payload) {
+            //         state.tokens = {
+            //             accessToken: action.payload.accessToken,
+            //             refreshToken: action.payload.refreshToken
+            //         };
+            //     }
+            //     state.error = null;
+            // })
+
+            .addCase(refreshAuthToken.fulfilled, (state) => {
                 state.error = null;
             })
+
             .addCase(refreshAuthToken.rejected, (state, action) => {
                 state.isLogin = false;
                 state.user = null;

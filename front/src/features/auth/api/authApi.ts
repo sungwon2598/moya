@@ -185,34 +185,17 @@ export const logout = async (): Promise<void> => {
 //     }
 // };
 
-// export const refreshAccessToken = async (): Promise<AuthResponseData> => {
-//     try {
-//         const response = await axiosInstance.post<AuthResponseData>(
-//             '/v1/oauth/refresh',
-//             {},  // body는 비움
-//             { withCredentials: true }  // 쿠키 포함
-//         );
-//
-//         const { accessToken, refreshToken: newRefreshToken } = response.data;
-//         TokenStorage.setTokens(accessToken, newRefreshToken);
-//
-//         return response.data;
-//     } catch (error) {
-//         console.error('[Auth API] Token refresh failed:', error);
-//         TokenStorage.clearTokens();
-//         throw handleApiError(error);
-//     }
-// }; 잘되던 거
-
 export const refreshAccessToken = async (): Promise<AuthResponseData> => {
     try {
         const response = await axiosInstance.post<AuthResponseData>(
             '/v1/oauth/refresh',
-            {},
-            { withCredentials: true }
+            {},  // body는 비움
+            { withCredentials: true }  // 쿠키 포함
         );
-        // refreshToken은 쿠키에 저장되므로 TokenStorage에는 accessToken만 저장
-        TokenStorage.setAccessToken(response.data.accessToken);
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        TokenStorage.setTokens(accessToken, newRefreshToken);
+
         return response.data;
     } catch (error) {
         console.error('[Auth API] Token refresh failed:', error);
