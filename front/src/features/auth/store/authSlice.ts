@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk, PayloadAction, Reducer } from '@reduxjs/
 import { AuthState, GoogleAuthResponse, User } from '../types/auth.types';
 import { getUserInfo, postGoogleAuth, refreshAccessToken, logout } from '../api/authApi';
 import type { AuthResponseData } from '../api/authApi';
+import { TokenStorage } from '../api/authApi';
 
-// Initial state
 const initialState: AuthState = {
     isLogin: false,
     user: null,
@@ -46,16 +46,13 @@ export const checkLoginStatus = createAsyncThunk<User>(
 
 export const refreshAuthToken = createAsyncThunk(
     'auth/refreshToken',
-    async (_, { getState, rejectWithValue }) => {
+    async (_, { rejectWithValue }) => {
         try {
-            const state = getState() as { auth: AuthState };
-            const currentRefreshToken = state.auth.tokens?.refreshToken;
-
-            if (!currentRefreshToken) {
+            const refreshToken = TokenStorage.getRefreshToken();
+            if (!refreshToken) {
                 throw new Error('No refresh token available');
             }
-
-            return await refreshAccessToken(currentRefreshToken);
+            return await refreshAccessToken(refreshToken);
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Token refresh failed'
