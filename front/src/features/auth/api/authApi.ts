@@ -170,7 +170,7 @@ export const logout = async (): Promise<void> => {
 export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponseData> => {
     try {
         const response = await axiosInstance.post<AuthResponseData>(
-            '/api/auth/refresh',
+            '/v1/oauth/refresh',
             { refreshToken }
         );
 
