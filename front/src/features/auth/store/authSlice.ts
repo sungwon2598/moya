@@ -61,11 +61,24 @@ export const checkLoginStatus = createAsyncThunk<User>(
 //     }
 // );
 
-export const refreshAuthToken = createAsyncThunk(
+// export const refreshAuthToken = createAsyncThunk(
+//     'auth/refreshToken',
+//     async (_, { rejectWithValue }) => {
+//         try {
+//             return await refreshAccessToken();  // refreshToken 파라미터 제거
+//         } catch (error) {
+//             return rejectWithValue(
+//                 error instanceof Error ? error.message : 'Token refresh failed'
+//             );
+//         }
+//     }
+// ); 이전꺼
+
+export const refreshAuthToken = createAsyncThunk<AuthResponseData>(
     'auth/refreshToken',
     async (_, { rejectWithValue }) => {
         try {
-            return await refreshAccessToken();  // refreshToken 파라미터 제거
+            return await refreshAccessToken();
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Token refresh failed'

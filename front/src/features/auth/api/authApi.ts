@@ -32,18 +32,28 @@ export class AuthApiError extends Error {
 }
 
 // Token management
+// export const TokenStorage = {
+//     getAccessToken: () => localStorage.getItem('accessToken'),
+//     getRefreshToken: () => localStorage.getItem('refreshToken'),
+//     setTokens: (accessToken: string, refreshToken?: string) => {
+//         localStorage.setItem('accessToken', accessToken);
+//         if (refreshToken) {
+//             localStorage.setItem('refreshToken', refreshToken);
+//         }
+//     },
+//     clearTokens: () => {
+//         localStorage.removeItem('accessToken');
+//         localStorage.removeItem('refreshToken');
+//     }
+// };
+
 export const TokenStorage = {
     getAccessToken: () => localStorage.getItem('accessToken'),
-    getRefreshToken: () => localStorage.getItem('refreshToken'),
-    setTokens: (accessToken: string, refreshToken?: string) => {
+    setAccessToken: (accessToken: string) => {
         localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
-        }
     },
     clearTokens: () => {
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
     }
 };
 
@@ -202,16 +212,21 @@ export const logout = async (): Promise<void> => {
 //         TokenStorage.clearTokens();
 //         throw handleApiError(error);
 //     }
-// }; 이건 잘되는 거임
+// }; 잘되던 거
 
-export const refreshAccessToken = async (): Promise<void> => {
+export const refreshAccessToken = async (): Promise<AuthResponseData> => {
     try {
-        await axiosInstance.post('/v1/oauth/refresh', {},
+        const response = await axiosInstance.post<AuthResponseData>(
+            '/v1/oauth/refresh',
+            {},
             { withCredentials: true }
         );
-        // 쿠키는 자동으로 설정되므로 추가 처리 불필요
+        // refreshToken은 쿠키에 저장되므로 TokenStorage에는 accessToken만 저장
+        TokenStorage.setAccessToken(response.data.accessToken);
+        return response.data;
     } catch (error) {
         console.error('[Auth API] Token refresh failed:', error);
+        TokenStorage.clearTokens();
         throw handleApiError(error);
     }
 };
