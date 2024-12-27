@@ -99,7 +99,7 @@ export const createAxiosInstance = (): AxiosInstance => {
                     const refreshToken = TokenStorage.getRefreshToken();
                     if (!refreshToken) throw new Error('No refresh token available');
 
-                    const response = await instance.post<AuthResponseData>('/api/auth/refresh', { refreshToken });
+                    const response = await instance.post<AuthResponseData>('/v1/auth/refresh', { refreshToken });
                     const { accessToken, refreshToken: newRefreshToken } = response.data;
 
                     TokenStorage.setTokens(accessToken, newRefreshToken);
