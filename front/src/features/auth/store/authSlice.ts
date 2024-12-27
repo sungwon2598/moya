@@ -161,21 +161,17 @@ const authSlice = createSlice({
                 state.error = action.payload as string;
             })
             // Refresh Token
-            // .addCase(refreshAuthToken.fulfilled, (state, action) => {
-            //     if (action.payload) {
-            //         state.tokens = {
-            //             accessToken: action.payload.accessToken,
-            //             refreshToken: action.payload.refreshToken
-            //         };
-            //     }
-            //     state.error = null;
-            // })
-
-            .addCase(refreshAuthToken.fulfilled, (state) => {
+            .addCase(refreshAuthToken.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.tokens = {
+                        accessToken: action.payload.accessToken,
+                        refreshToken: action.payload.refreshToken
+                    };
+                }
                 state.error = null;
             })
-
             .addCase(refreshAuthToken.rejected, (state, action) => {
+                console.error('RefreshToken Rejected: 로그인 상태가 초기화됩니다.');
                 state.isLogin = false;
                 state.user = null;
                 state.tokens = undefined;
