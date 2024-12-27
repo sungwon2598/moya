@@ -167,11 +167,30 @@ export const logout = async (): Promise<void> => {
     }
 };
 
-export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponseData> => {
+// export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponseData> => {
+//     try {
+//         const response = await axiosInstance.post<AuthResponseData>(
+//             '/v1/oauth/refresh',
+//             { refreshToken }
+//         );
+//
+//         const { accessToken, refreshToken: newRefreshToken } = response.data;
+//         TokenStorage.setTokens(accessToken, newRefreshToken);
+//
+//         return response.data;
+//     } catch (error) {
+//         console.error('[Auth API] Token refresh failed:', error);
+//         TokenStorage.clearTokens();
+//         throw handleApiError(error);
+//     }
+// };
+
+export const refreshAccessToken = async (): Promise<AuthResponseData> => {
     try {
         const response = await axiosInstance.post<AuthResponseData>(
             '/v1/oauth/refresh',
-            { refreshToken }
+            {},  // body는 비움
+            { withCredentials: true }  // 쿠키 포함
         );
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;

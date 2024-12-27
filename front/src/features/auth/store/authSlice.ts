@@ -44,15 +44,28 @@ export const checkLoginStatus = createAsyncThunk<User>(
     }
 );
 
+// export const refreshAuthToken = createAsyncThunk(
+//     'auth/refreshToken',
+//     async (_, { rejectWithValue }) => {
+//         try {
+//             const refreshToken = TokenStorage.getRefreshToken();
+//             if (!refreshToken) {
+//                 throw new Error('No refresh token available');
+//             }
+//             return await refreshAccessToken(refreshToken);
+//         } catch (error) {
+//             return rejectWithValue(
+//                 error instanceof Error ? error.message : 'Token refresh failed'
+//             );
+//         }
+//     }
+// );
+
 export const refreshAuthToken = createAsyncThunk(
     'auth/refreshToken',
     async (_, { rejectWithValue }) => {
         try {
-            const refreshToken = TokenStorage.getRefreshToken();
-            if (!refreshToken) {
-                throw new Error('No refresh token available');
-            }
-            return await refreshAccessToken(refreshToken);
+            return await refreshAccessToken();  // refreshToken 파라미터 제거
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Token refresh failed'
