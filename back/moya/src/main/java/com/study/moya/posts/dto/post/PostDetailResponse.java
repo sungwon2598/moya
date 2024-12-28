@@ -14,7 +14,7 @@ public record PostDetailResponse(
         String expectedPeriod,
         @Schema(example = "시작 예정 일자")
         LocalDateTime startDate,
-        @Schema(example = "마감 일자")
+        @Schema(example = "모집 마감 일자")
         LocalDateTime endDate,
         Set<String> studies,
         Set<String> studyDetails,
@@ -22,7 +22,8 @@ public record PostDetailResponse(
         Integer views,
         List<CommentDetail> comments,
         Integer totalComments,
-        boolean isLiked
+        boolean isLiked,
+        Integer totalLikes
 ) {
     public record CommentDetail(
          Long commentId,
