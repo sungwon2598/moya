@@ -1,9 +1,9 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { GoogleAuthResponse, GoogleCredentialResponse, GoogleCodeResponse } from '../types/auth.types';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
 const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
+const ALLOWED_ORIGIN = import.meta.env.VITE_ALLOWED_ORIGIN;
 
 interface GoogleButtonProps {
     text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
@@ -52,7 +52,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                                              onError
                                                          }) => {
     const buttonRef = useRef<HTMLDivElement>(null);
-    useNavigate();
     const isScriptLoaded = useGoogleScript();
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -62,8 +61,13 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
         }
 
         try {
-            // ID 클라이언트 초기화
-            window.google.accounts.id.initialize({
+            const google = window.google;
+
+            if (!google?.accounts) {
+                throw new Error('Google accounts not available');
+            }
+
+            google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: async (credentialResponse: GoogleCredentialResponse) => {
                     try {
@@ -71,9 +75,7 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                             throw new Error('No credential received');
                         }
 
-                        // OAuth2 클라이언트 초기화 및 코드 요청
-                        // @ts-ignore
-                        const oauth2Client = window.google.accounts.oauth2.initCodeClient({
+                        const oauth2Client = google.accounts.oauth2.initCodeClient({
                             client_id: GOOGLE_CLIENT_ID,
                             scope: 'email profile openid',
                             callback: async (codeResponse: GoogleCodeResponse) => {
@@ -89,7 +91,8 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                 onSuccess(authData);
                             },
                             ux_mode: 'popup',
-                            access_type: 'offline'
+                            access_type: 'offline',
+                            redirect_uri: `${ALLOWED_ORIGIN}/auth/google/callback`
                         });
 
                         oauth2Client.requestCode();
@@ -122,7 +125,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                 width: parseInt(width)
             });
 
-            // One Tap 프롬프트 활성화
             window.google.accounts.id.prompt();
         } catch (error) {
             console.error('Failed to render button:', error);

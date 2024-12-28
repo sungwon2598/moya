@@ -1,5 +1,3 @@
-// src/types/google.d.ts
-
 declare global {
     interface Window {
         google?: {
@@ -111,7 +109,6 @@ declare global {
     }
 }
 
-// Type guard functions
 export const isGoogleScriptLoaded = (): boolean => {
     return typeof window !== 'undefined' &&
         typeof window.google !== 'undefined' &&
