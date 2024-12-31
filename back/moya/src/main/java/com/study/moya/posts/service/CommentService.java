@@ -6,6 +6,8 @@ import com.study.moya.posts.domain.Comment;
 import com.study.moya.posts.domain.Post;
 import com.study.moya.posts.dto.comment.CommentCreateRequest;
 import com.study.moya.posts.dto.comment.CommentUpdateRequest;
+import com.study.moya.posts.exception.PostErrorCode;
+import com.study.moya.posts.exception.PostException;
 import com.study.moya.posts.repository.CommentRepository;
 import com.study.moya.posts.repository.PostRepository;
 import jakarta.transaction.Transactional;
@@ -23,18 +25,18 @@ public class CommentService {
     @Transactional
     public Long addComment(Long postId, CommentCreateRequest request, String email) {
         if (email == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post Not Found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
         Member author = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Member Not Found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
 
         Comment parentComment = null;
         if (request.parentCommentId() != null) {
             parentComment = commentRepository.findById(request.parentCommentId())
-                    .orElseThrow(() -> new IllegalArgumentException("대댓글을 생성할 타겟 댓글이 존재하지않습니다."));
+                    .orElseThrow(() -> PostException.of(PostErrorCode.CANT_REPLY));
         }
 
         Comment comment = Comment.builder()
@@ -52,19 +54,19 @@ public class CommentService {
     @Transactional
     public void updateComment(Long postId, Long commentId, CommentUpdateRequest request, String email) {
         if (email == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
         if (postRepository.existsById(postId)) {
-            throw new IllegalArgumentException("존재하는 게시글이 아닙니다.");
+            throw PostException.of(PostErrorCode.POST_NOT_FOUND);
         }
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.NO_COMMENT));
 
         // 권한 체크: 작성자 또는 관리자
         if (!comment.getAuthor().getEmail().equals(email)) {
-            throw new IllegalArgumentException("작성자만 수정 가능합니다.");
+            throw PostException.of(PostErrorCode.INVALID_AUTHOR);
         }
 
         comment.changeContent(request.content());
@@ -73,19 +75,19 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long postId, Long commentId, String email) {
         if (email == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
         if (postRepository.existsById(postId)) {
-            throw new IllegalArgumentException("존재하는 게시글이 아닙니다.");
+            throw PostException.of(PostErrorCode.POST_NOT_FOUND);
         }
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.NO_COMMENT));
 
         // 권한 체크
         if (!comment.getAuthor().getEmail().equals(email)) {
-            throw new IllegalArgumentException("작성자만 삭제 가능합니다.");
+            throw PostException.of(PostErrorCode.INVALID_AUTHOR);
         }
 
         commentRepository.delete(comment);
