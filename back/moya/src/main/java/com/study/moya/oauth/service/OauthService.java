@@ -116,7 +116,8 @@ public class OauthService {
         String jwtAccessToken = jwtTokenProvider.createTokenForOAuth(encryptedEmail);
         String jwtRefreshToken = jwtTokenProvider.createRefreshToken(encryptedEmail);
 
-        redisWrapper.saveTokens(savedMember.getEmail(), tokenResponse.getAccessToken());
+//        redisWrapper.saveTokens(savedMember.getEmail(), tokenResponse.getAccessToken());
+        redisWrapper.saveTokens(savedMember.getEmail(), jwtRefreshToken);
 
         return new MemberAuthResult(jwtAccessToken, jwtRefreshToken, savedMember);
     }
@@ -127,7 +128,7 @@ public class OauthService {
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
         formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", "https://www.moyastudy.com");
+        formData.add("redirect_uri", "http://localhost:3000");
         formData.add("grant_type", "authorization_code");
         //https://www.moyastudy.com/auth/google/callback
         return webClient.post()
@@ -246,9 +247,14 @@ public class OauthService {
      */
     @Transactional
     public TokenRefreshResult refreshToken(String refreshToken) {
+        log.info(refreshToken);
         String currentIdentifier = jwtTokenProvider.getEmailFromOAuthToken(refreshToken);
+        log.info(currentIdentifier);
         String storedRefreshToken = redisService.getRefreshToken(currentIdentifier);
-        String storedEmail = redisService.getEmailByIdentifier(currentIdentifier);
+        log.info(storedRefreshToken);
+//        String storedEmail = redisService.getEmailByIdentifier(currentIdentifier);
+        String storedEmail = aesConverter.convertToEntityAttribute(currentIdentifier);
+        log.info(storedEmail);
 
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
@@ -286,7 +292,9 @@ public class OauthService {
     public void logout(String accessToken, String refreshToken) {
         try {
             // 리프레시 토큰에서 이메일 추출
+            log.info("ac, rf : {}, {}", accessToken, refreshToken);
             String userEmail = jwtTokenProvider.getEmailFromOAuthToken(refreshToken);
+            log.info("userEmail : {}", userEmail);
 
             SecurityContextHolder.clearContext();
 
