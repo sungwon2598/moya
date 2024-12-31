@@ -1,10 +1,23 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError,  } from 'axios';
 import { createBrowserHistory } from 'history';
 import type { User, GoogleAuthResponse } from '../types/auth.types';
+
+declare module 'axios' {
+    export interface AxiosRequestConfig {
+        _retry?: number;
+    }
+}
 
 const history = createBrowserHistory();
 
 export const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.moyastudy.com';
+
+export const OAUTH_ENDPOINTS = {
+    LOGIN: '/v1/oauth/login',
+    REFRESH: '/v1/oauth/refresh',
+    LOGOUT: '/v1/oauth/logout',
+    USER_INFO: '/v1/oauth/user/info'
+} as const;
 
 export interface ApiResponse<T> {
     success: boolean;
@@ -19,7 +32,6 @@ export interface AuthResponseData {
     refreshToken?: string;
 }
 
-// API Error class
 export class AuthApiError extends Error {
     constructor(
         message: string,
@@ -31,40 +43,50 @@ export class AuthApiError extends Error {
     }
 }
 
-// Token management
 export const TokenStorage = {
     getAccessToken: () => localStorage.getItem('accessToken'),
     getRefreshToken: () => localStorage.getItem('refreshToken'),
     setTokens: (accessToken: string, refreshToken?: string) => {
+        if (!accessToken) {
+            throw new Error('Access token is required');
+        }
         localStorage.setItem('accessToken', accessToken);
         if (refreshToken) {
             localStorage.setItem('refreshToken', refreshToken);
         }
+        console.log('Tokens stored successfully');
     },
     clearTokens: () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        console.log('Tokens cleared');
     }
 };
 
-// Error handler
 const handleApiError = (error: unknown): never => {
     if (error instanceof AxiosError) {
         const statusCode = error.response?.status;
         const errorMessage = error.response?.data?.message || error.message;
         const errorCode = error.response?.data?.errorCode;
 
+        console.error('API Error:', {
+            statusCode,
+            errorMessage,
+            errorCode,
+            response: error.response?.data
+        });
+
         throw new AuthApiError(errorMessage, statusCode, errorCode);
     }
 
     if (error instanceof Error) {
+        console.error('General Error:', error);
         throw new AuthApiError(error.message);
     }
 
     throw new AuthApiError('An unexpected error occurred');
 };
 
-// Create axios instance
 export const createAxiosInstance = (): AxiosInstance => {
     const instance = axios.create({
         baseURL: BASE_URL,
@@ -80,6 +102,7 @@ export const createAxiosInstance = (): AxiosInstance => {
             const accessToken = TokenStorage.getAccessToken();
             if (accessToken) {
                 config.headers.Authorization = `Bearer ${accessToken}`;
+                console.log('Request with token:', accessToken);
             }
             return config;
         },
@@ -91,23 +114,30 @@ export const createAxiosInstance = (): AxiosInstance => {
         async (error: AxiosError) => {
             const originalRequest = error.config;
 
-            if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-                // @ts-ignore
-                originalRequest._retry = true;
+            if (error.response?.status === 401 && originalRequest && (!originalRequest._retry || originalRequest._retry < 1)) {
+                console.log('Token refresh required');
+                originalRequest._retry = 1;
 
                 try {
                     const refreshToken = TokenStorage.getRefreshToken();
-                    if (!refreshToken) throw new Error('No refresh token available');
+                    if (!refreshToken) {
+                        throw new Error('No refresh token available');
+                    }
 
-                    const response = await instance.post<AuthResponseData>('/api/auth/refresh', { refreshToken });
+                    const response = await instance.post<AuthResponseData>(
+                        OAUTH_ENDPOINTS.REFRESH,
+                        { refreshToken }
+                    );
+
                     const { accessToken, refreshToken: newRefreshToken } = response.data;
-
                     TokenStorage.setTokens(accessToken, newRefreshToken);
+
                     if (originalRequest.headers) {
                         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     }
                     return instance(originalRequest);
                 } catch (refreshError) {
+                    console.error('Token refresh failed:', refreshError);
                     TokenStorage.clearTokens();
                     history.replace('/login');
                     return Promise.reject(refreshError);
@@ -122,18 +152,27 @@ export const createAxiosInstance = (): AxiosInstance => {
 
 export const axiosInstance = createAxiosInstance();
 
-// Google OAuth Login
 export const postGoogleAuth = async (
     authData: GoogleAuthResponse
 ): Promise<ApiResponse<AuthResponseData>> => {
     try {
+        console.log('Posting Google auth data:', authData);
+
         const response = await axiosInstance.post<AuthResponseData>(
-            '/v1/oauth/login',
+            OAUTH_ENDPOINTS.LOGIN,
             authData
         );
 
-        const { accessToken, refreshToken } = response.data;
-        TokenStorage.setTokens(accessToken, refreshToken);
+        console.log('Auth response:', response.data);
+
+        if (!response.data.accessToken) {
+            throw new Error('No access token received');
+        }
+
+        TokenStorage.setTokens(
+            response.data.accessToken,
+            response.data.refreshToken
+        );
 
         return {
             success: true,
@@ -141,6 +180,7 @@ export const postGoogleAuth = async (
         };
     } catch (error) {
         console.error('[Auth API] Google auth failed:', error);
+        TokenStorage.clearTokens();
 
         if (error instanceof AxiosError && error.response) {
             return {
@@ -158,7 +198,7 @@ export const postGoogleAuth = async (
 
 export const logout = async (): Promise<void> => {
     try {
-        await axiosInstance.post('v1/oauth/logout');
+        await axiosInstance.post(OAUTH_ENDPOINTS.LOGOUT);
         TokenStorage.clearTokens();
     } catch (error) {
         console.error('[Auth API] Logout failed:', error);
@@ -169,10 +209,14 @@ export const logout = async (): Promise<void> => {
 
 export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponseData> => {
     try {
+        console.log('Refreshing token with:', refreshToken);
+
         const response = await axiosInstance.post<AuthResponseData>(
-            'v1/oauth/refresh',
+            OAUTH_ENDPOINTS.REFRESH,
             { refreshToken }
         );
+
+        console.log('Refresh response:', response.data);
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
         TokenStorage.setTokens(accessToken, newRefreshToken);
@@ -188,9 +232,14 @@ export const refreshAccessToken = async (refreshToken: string): Promise<AuthResp
 export const getUserInfo = async (): Promise<User> => {
     try {
         const response = await axiosInstance.get<ApiResponse<User>>(
-            '/api/auth/user/info'
+            OAUTH_ENDPOINTS.USER_INFO
         );
-        return response.data.data!;
+
+        if (!response.data.success || !response.data.data) {
+            throw new Error('Failed to get user info');
+        }
+
+        return response.data.data;
     } catch (error) {
         console.error('[Auth API] Get user info failed:', error);
         throw handleApiError(error);
