@@ -8,6 +8,7 @@ import com.study.moya.oauth.dto.OAuthLogin.MemberAuthResult;
 import com.study.moya.oauth.dto.OAuthLogin.OAuthLoginResponse;
 import com.study.moya.oauth.dto.token.TokenRefreshResult;
 import com.study.moya.oauth.service.OauthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/oauth")
 @RequiredArgsConstructor
+@Tag(name = "OAuth", description = "OAuth 인증")
 public class LoginController {
 
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
@@ -60,6 +62,7 @@ public class LoginController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@CookieValue(name = "REFRESH-TOKEN", required = true) String refreshToken,
                                           HttpServletResponse response) {
+        log.info("refresh 시작-------");
         TokenRefreshResult refreshResult = oauthService.refreshToken(refreshToken);
 
         // 새로운 액세스 토큰을 쿠키에 설정
@@ -90,7 +93,9 @@ public class LoginController {
             @CookieValue(name = "REFRESH-TOKEN", required = false) String refreshToken,
             HttpServletResponse response) {
 
+        log.info("logout요청 받음==========================");
         if (refreshToken != null || accessToken != null) {
+            log.info("ac, rf : {}, {}", accessToken, refreshToken);
             oauthService.logout(accessToken, refreshToken);
         }
 
