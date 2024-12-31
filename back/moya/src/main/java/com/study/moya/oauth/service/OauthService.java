@@ -23,6 +23,7 @@ import com.study.moya.redis.RedisService;
 import com.study.moya.redis.RedisWrapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.support.collections.RedisMap;
@@ -56,8 +57,16 @@ public class OauthService {
     private String clientSecret;
 
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String redirectUri;
+    private String defaultRedirectUri;
 
+    @Value("${oauth2.redirect-uris.local}")
+    private String localRedirectUri;
+
+    @Value("${oauth2.redirect-uris.domain}")
+    private String domainRedirectUri;
+
+    @Value("${oauth2.redirect-uris.www-domain}")
+    private String wwwDomainRedirectUri;
 
     private GoogleIdTokenVerifier verifier; // final 제거
 
@@ -68,6 +77,29 @@ public class OauthService {
                 .setAudience(Collections.singletonList(clientId))
                 .setIssuer("https://accounts.google.com") // Google의 issuer 추가
                 .build();
+    }
+
+    /**
+     * 요청 출처에 따라 적절한 리다이렉트 URI 설정
+     */
+
+    private String determineRedirectUri(String origin) {
+        log.info("Determining redirect URI for origin: {}", origin);
+
+        if (origin == null) {
+            log.info("No origin provided, using default redirect URI: {}", defaultRedirectUri);
+            return defaultRedirectUri;
+        }
+
+        String redirectUri = switch (origin) {
+            case "http://localhost:3000" -> localRedirectUri;
+            case "https://moyastudy.com" -> domainRedirectUri;
+            case "https://www.moyastudy.com" -> wwwDomainRedirectUri;
+            default -> defaultRedirectUri;
+        };
+
+        log.info("Selected redirect URI: {}", redirectUri);
+        return redirectUri;
     }
 
     private final MemberRepository memberRepository;
@@ -82,9 +114,11 @@ public class OauthService {
      * OAuth credential 토큰 검증
      */
     @Transactional
-    public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody) {
-        log.info("Authorization Code : {}", requestBody.getAuthCode());
-        GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode());
+    public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody, String origin) {
+        log.info("Authorization Code: {}, Origin: {}", requestBody.getAuthCode(), origin);
+
+        String redirectUri = determineRedirectUri(origin);
+        GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode(), redirectUri);
 
         GoogleIdToken.Payload idTokenPayload = verifyAndGetIdToken(tokenResponse.getIdToken());
 
@@ -103,7 +137,6 @@ public class OauthService {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         String existingIdentifier = redisService.findIdentifierByEmail(savedMember.getEmail());
 
         if (existingIdentifier != null) {
@@ -112,7 +145,6 @@ public class OauthService {
 
 //        String uniqueIdentifier = generateUniqueIdentifier();
         String encryptedEmail = aesConverter.convertToDatabaseColumn(userInfo.getEmail());
-
         String jwtAccessToken = jwtTokenProvider.createTokenForOAuth(encryptedEmail);
         String jwtRefreshToken = jwtTokenProvider.createRefreshToken(encryptedEmail);
 
@@ -123,14 +155,14 @@ public class OauthService {
     }
 
 
-    private GoogleIdTokenResponse getGoogleTokens(String authorizationCode) {
+    private GoogleIdTokenResponse getGoogleTokens(String authorizationCode, String requestOrigin) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
         formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", "http://localhost:3000");
+        formData.add("redirect_uri", requestOrigin);
         formData.add("grant_type", "authorization_code");
-        //https://www.moyastudy.com/auth/google/callback
+
         return webClient.post()
                 .uri("https://oauth2.googleapis.com/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -310,6 +342,30 @@ public class OauthService {
             log.info("User logged out successfully: {}", userEmail);
         } catch (Exception e) {
             log.error("Error during logout process", e);
+        }
+    }
+
+    /**
+     * 탈퇴 기능 메서드
+     */
+    public void withdraw(String accessToken){
+        try{
+            log.info("accessToken for withdraw: {}", accessToken);
+            String AESUserEmail = jwtTokenProvider.getEmailFromOAuthToken(accessToken);
+            String userEmail = aesConverter.convertToEntityAttribute(AESUserEmail);
+            log.info("Start withdraw Account for {}", userEmail);
+            // 회원 조회
+            Member member = memberRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+            // 회원 삭제
+            memberRepository.delete(member);
+            redisService.deleteRefreshToken(AESUserEmail);
+            log.info("Successfully withdrew account for {}", userEmail);
+
+        } catch (Exception e) {
+            log.error("Error during withdrawal process for email", e);
+            throw new RuntimeException("회원 탈퇴 처리 중 오류가 발생했습니다.", e);
         }
     }
 
