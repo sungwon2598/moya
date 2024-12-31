@@ -3,14 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-    body {
-        @apply pt-16; /* padding-top: 64px 대신 Tailwind 클래스 사용 */
-    }
-}
-
-@layer base {
-    /* Theme - 전역 색상 설정 */
-    body {
-        @apply bg-gray-50;
+    body:not(.adminator-body) {
+        @apply pt-16 bg-gray-50;
     }
 }

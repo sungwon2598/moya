@@ -10,6 +10,8 @@ import {Provider} from "react-redux";
 import SignInPage from "./pages/auth/SignInPage.tsx";
 import SignUpPage from "./pages/auth/SignUpPage.tsx";
 import StudyList from "./pages/study/StudyList.tsx";
+import AdminLayout from "@pages/adminator/layout/AdminLayout.tsx";
+import CategoryManagement from "@pages/category/CategoryManagement.tsx";
 
 const App: React.FC = () => {
     return (
@@ -26,6 +28,10 @@ const App: React.FC = () => {
                                 {/* 로드맵 관련 라우트 */}
                                 <Route path="roadmap">
                                     <Route path="preview" element={<RoadmapPreview />} />
+                                </Route>
+
+                                <Route path="admin">
+                                    <Route path="categorys" element={<CategoryManagement />} />
                                 </Route>
 
                                 <Route path="study" element={<StudyList />} />
@@ -46,6 +52,20 @@ const App: React.FC = () => {
 
                                 {/* 404 페이지 처리 */}
                                 <Route path="*" element={<div>Page Not Found</div>} />
+                            </Route>
+
+                            <Route path="admin" element={<AdminLayout />}>
+                                <Route path="categories" element={<CategoryManagement />} />
+                                <Route
+                                    path="*"
+                                    element={
+                                        <div className="flex min-h-screen items-center justify-center">
+                                            <h1 className="text-2xl font-bold text-gray-800">
+                                                관리자 페이지를 찾을 수 없습니다
+                                            </h1>
+                                        </div>
+                                    }
+                                />
                             </Route>
                         </Routes>
                     </BrowserRouter>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://aip.moyastudy.com';
+const BASE_URL = 'https://api.moyastudy.com';
 
 // 스터디 관련 엔드포인트 정의
 export const STUDY_ENDPOINTS = {
@@ -11,6 +11,9 @@ export const STUDY_ENDPOINTS = {
     DELETE: (postId: number) => `${BASE_URL}/posts/${postId}`,
     LIKE: (postId: number) => `${BASE_URL}/posts/${postId}/like`,
     CATEGORIES_HIERARCHY: `${BASE_URL}/api/categories/hierarchy`,
+    CREATE_CATEGORY: `${BASE_URL}/api/categories`,
+    DELETE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
+    UPDATE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`
 } as const;
 
 // 카테고리 관련 타입 정의
@@ -19,6 +22,18 @@ export interface Category {
     name: string;
     subCategories: Category[];
 }
+
+//카테고리 생성 dto 인터페이스
+export interface CreateCategoryRequest {
+    name: string;
+    parentId?: number;  // Long -> number, optional로 설정
+}
+
+//카테고리 수정 dto 인터페이스
+export interface UpdateCategoryRequest {
+    name: string;
+}
+
 
 // 스터디 게시글 관련 타입 정의
 export interface StudyPost {
@@ -79,6 +94,32 @@ export const studyApiService = {
     getCategoriesHierarchy: async () => {
         const response = await axios.get<StudyApiResponse<Category[]>>(
             STUDY_ENDPOINTS.CATEGORIES_HIERARCHY
+        );
+        return response.data;
+    },
+
+    //카테고리 생성
+    createCategory: async (data: CreateCategoryRequest) => {
+        const response = await axios.post<StudyApiResponse<void>>(
+            STUDY_ENDPOINTS.CREATE_CATEGORY,
+            data
+        );
+        return response.data;
+    },
+
+    //카테고리 삭제
+    deleteCategory: async (categoryId: number) => {
+        const response = await axios.delete<StudyApiResponse<void>>(
+            STUDY_ENDPOINTS.DELETE_CATEGORY(categoryId)
+        );
+        return response.data;
+    },
+
+    //카테고리 수정
+    updateCategory: async (categoryId: number, data: UpdateCategoryRequest) => {
+        const response = await axios.put(
+            STUDY_ENDPOINTS.UPDATE_CATEGORY(categoryId),
+            data
         );
         return response.data;
     },
