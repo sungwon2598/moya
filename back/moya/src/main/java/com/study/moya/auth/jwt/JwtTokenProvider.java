@@ -223,24 +223,47 @@ public class JwtTokenProvider {
      */
     public String getEmailFromOAuthToken(String token) {
         try {
+            if (token == null || token.trim().isEmpty()) {
+                throw new InvalidTokenException("토큰이 비어있습니다.");
+            }
+
             Claims claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
 
-            // 토큰 타입 확인
-            String tokenType = claims.get("type", String.class);
-            if (!"OAUTH_SIGNUP".equals(tokenType)) {
-                throw new InvalidTokenException("유효하지 않은 OAuth 토큰입니다.");
+            String subject = claims.getSubject();
+            if (subject == null || subject.trim().isEmpty()) {
+                throw new InvalidTokenException("토큰에서 사용자 정보를 찾을 수 없습니다.");
             }
 
-            return claims.getSubject();
-        } catch (JwtException | IllegalArgumentException e) {
-            log.error("Invalid OAuth token: {}", e.getMessage());
-            throw new InvalidTokenException("유효하지 않은 OAuth 토큰입니다.", e);
+            return subject;
+        } catch (JwtException e) {
+            log.error("JWT 토큰 처리 중 오류 발생: {}", e.getMessage());
+            throw new InvalidTokenException("토큰 처리 중 오류가 발생했습니다.", e);
         }
     }
+//    public String getEmailFromOAuthToken(String token) {
+//        try {
+//            Claims claims = Jwts.parser()
+//                    .verifyWith(key)
+//                    .build()
+//                    .parseSignedClaims(token)
+//                    .getPayload();
+//
+//            // 토큰 타입 확인
+//            String tokenType = claims.get("type", String.class);
+//            if (!"OAUTH_SIGNUP".equals(tokenType)) {
+//                throw new InvalidTokenException("유효하지 않은 OAuth 토큰입니다.");
+//            }
+//
+//            return claims.getSubject();
+//        } catch (JwtException | IllegalArgumentException e) {
+//            log.error("Invalid OAuth token: {}", e.getMessage());
+//            throw new InvalidTokenException("유효하지 않은 OAuth 토큰입니다.", e);
+//        }
+//    }
 
     /**
      * OAuth 임시 토큰 검증
