@@ -167,6 +167,33 @@ export const studyApiService = {
         return response.data;  // 직접 Category[] 반환
     },
 
+    createPost: async (postData: CreateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
+        try {
+            // Create a mock response instead of making an API call
+            const mockPost: StudyPost = {
+                postId: MOCK_STUDY_POSTS.length + 1, // Generate new ID
+                ...postData,
+                authorName: "테스트 유저",  // Mock user
+                views: 0,
+                totalComments: 0,
+                isLiked: false,
+                tags: []  // Initialize empty tags
+            };
+
+            // Add to mock posts array
+            MOCK_STUDY_POSTS.push(mockPost);
+
+            // Return mock response
+            return {
+                data: mockPost,
+                meta: { status: 200 }
+            };
+        } catch (error) {
+            console.error('Error creating post:', error);
+            throw error;
+        }
+    },
+
     // 스터디 목록 조회 (Mock 데이터 사용)
     getStudyList: async (page = 0, size = 10, filters?: Record<string, any>): Promise<StudyApiResponse<StudyPost[]>> => {
         let filteredPosts = [...MOCK_STUDY_POSTS];
