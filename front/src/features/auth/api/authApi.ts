@@ -158,7 +158,7 @@ export const postGoogleAuth = async (
 
 export const logout = async (): Promise<void> => {
     try {
-        await axiosInstance.post('/api/auth/logout');
+        await axiosInstance.post('v1/oauth/logout');
         TokenStorage.clearTokens();
     } catch (error) {
         console.error('[Auth API] Logout failed:', error);
@@ -170,7 +170,7 @@ export const logout = async (): Promise<void> => {
 export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponseData> => {
     try {
         const response = await axiosInstance.post<AuthResponseData>(
-            '/api/auth/refresh',
+            'v1/oauth/refresh',
             { refreshToken }
         );
 
