@@ -1,8 +1,10 @@
 package com.study.moya.ai_roadmap.controller;
 
 
+import com.study.moya.ai_roadmap.domain.Category;
 import com.study.moya.ai_roadmap.dto.request.BulkCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.CreateCategoryRequest;
+import com.study.moya.ai_roadmap.dto.request.CreateSubCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.UpdateCategoryRequest;
 import com.study.moya.ai_roadmap.dto.response.CategoryHierarchyResponse;
 import com.study.moya.ai_roadmap.dto.response.CategoryResponse;
@@ -34,7 +36,7 @@ public class CategoryController {
         return ResponseEntity.created(URI.create("/api/categories/" + id)).build();
     }
 
-    @GetMapping("/main")
+    @GetMapping("/main") // 대분류 카테고리 전체 조회
     public ResponseEntity<List<CategoryResponse>> getMainCategories() {
         return ResponseEntity.ok(categoryService.getMainCategories());
     }
@@ -65,7 +67,7 @@ public class CategoryController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/hierarchy")
+    @GetMapping("/hierarchy") // 대분류, 중분류 전체
     public ResponseEntity<List<CategoryHierarchyResponse>> getCategoryHierarchy() {
         return ResponseEntity.ok(categoryService.getCategoryHierarchy());
     }
@@ -73,5 +75,36 @@ public class CategoryController {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @GetMapping("/{parentId}/sub-sub") //최하위 카테고리 조회
+    public ResponseEntity<List<CategoryResponse>> getSubSubCategories(@PathVariable Long parentId) {
+        return ResponseEntity.ok(categoryService.getSubSubCategories(parentId));
+    }
+
+    // 서브 카테고리(2단계) 생성
+    @PostMapping("/sub")
+    public ResponseEntity<Void> createSubCategory(@RequestBody CreateSubCategoryRequest request) {
+        CreateCategoryRequest categoryRequest = new CreateCategoryRequest(request.getName(), request.getParentId());
+        Long id = categoryService.createCategory(categoryRequest);
+        return ResponseEntity.created(URI.create("/api/categories/" + id)).build();
+    }
+
+    // 서브-서브 카테고리(3단계) 생성
+    @PostMapping("/sub/sub")
+    public ResponseEntity<Void> createSubSubCategory(@RequestBody CreateSubCategoryRequest request) {
+        CreateCategoryRequest categoryRequest = new CreateCategoryRequest(request.getName(), request.getParentId());
+        Long id = categoryService.createCategory(categoryRequest);
+        return ResponseEntity.created(URI.create("/api/categories/" + id)).build();
+    }
+
+    // 특정 depth의 카테고리 조회
+    @GetMapping("/depth/{depth}")
+    public ResponseEntity<List<CategoryResponse>> getCategoriesByDepth(@PathVariable int depth) {
+        if (depth < 0 || depth >= Category.MAX_DEPTH) {
+            throw new IllegalArgumentException("Invalid depth");
+        }
+        List<CategoryResponse> categories = categoryService.getCategoriesByDepth(depth);
+        return ResponseEntity.ok(categories);
     }
 }

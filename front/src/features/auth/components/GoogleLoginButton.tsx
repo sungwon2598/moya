@@ -1,82 +1,154 @@
-import { FC, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '@store/store.ts';
-import { loginWithGoogle } from '../store/authSlice.ts';
-import { useScript } from '../hooks/useScript.ts';
+import { FC, useEffect, useRef, useState } from 'react';
+import { GoogleAuthResponse, GoogleCredentialResponse, GoogleCodeResponse } from '../types/auth.types';
 
-interface GoogleCredentialResponse {
-    credential: string;
-    select_by: string;
-    clientId?: string;
-}
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
+const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
+const ALLOWED_ORIGIN = import.meta.env.VITE_ALLOWED_ORIGIN;
 
 interface GoogleButtonProps {
     text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
     theme?: 'outline' | 'filled_blue' | 'filled_black';
     size?: 'large' | 'medium' | 'small';
     width?: string;
+    onSuccess: (authData: GoogleAuthResponse) => void;
+    onError?: (error: Error) => void;
 }
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID!;
+const useGoogleScript = () => {
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (window.google?.accounts) {
+            setIsLoaded(true);
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = GOOGLE_SCRIPT_URL;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setIsLoaded(true);
+        script.onerror = () => {
+            console.error('Failed to load Google script');
+            setIsLoaded(false);
+        };
+
+        document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, []);
+
+    return isLoaded;
+};
 
 export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                                                              text = 'signin_with',
                                                              theme = 'filled_blue',
                                                              size = 'large',
-                                                             width = '250'
+                                                             width = '250',
+                                                             onSuccess,
+                                                             onError
                                                          }) => {
     const buttonRef = useRef<HTMLDivElement>(null);
-    const dispatch = useDispatch<AppDispatch>();
-    const navigate = useNavigate();
+    const isScriptLoaded = useGoogleScript();
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    const handleCredentialResponse = async (response: GoogleCredentialResponse) => {
-        try {
-            console.log('[Google OAuth] Received credential response');
-            const result = await dispatch(loginWithGoogle(response.credential)).unwrap();
-
-            if (result) {
-                console.log('[Google OAuth] Login successful, redirecting to main page');
-                navigate('/');
-            } else {
-                console.error('[Google OAuth] Login failed: No user data received');
-            }
-        } catch (error) {
-            console.error('[Google OAuth] Login failed:', error);
+    useEffect(() => {
+        if (!isScriptLoaded || isInitialized || !window.google?.accounts) {
+            return;
         }
-    };
 
-    const scriptLoaded = useScript('https://accounts.google.com/gsi/client', () => {
-        if (buttonRef.current) {
-            console.log('[Google OAuth] Script loaded, initializing...');
+        try {
+            const google = window.google;
 
-            window.google.accounts.id.initialize({
+            if (!google?.accounts) {
+                throw new Error('Google accounts not available');
+            }
+
+            google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse,
+                callback: async (credentialResponse: GoogleCredentialResponse) => {
+                    try {
+                        if (!credentialResponse.credential) {
+                            throw new Error('No credential received');
+                        }
+
+                        const oauth2Client = google.accounts.oauth2.initCodeClient({
+                            client_id: GOOGLE_CLIENT_ID,
+                            scope: 'email profile openid',
+                            callback: async (codeResponse: GoogleCodeResponse) => {
+                                if (!codeResponse.code) {
+                                    throw new Error('No authorization code received');
+                                }
+
+                                const authData: GoogleAuthResponse = {
+                                    credential: credentialResponse.credential,
+                                    authCode: codeResponse.code
+                                };
+
+                                onSuccess(authData);
+                            },
+                            ux_mode: 'popup',
+                            access_type: 'offline',
+                            redirect_uri: `${ALLOWED_ORIGIN}/auth/google/callback`
+                        });
+
+                        oauth2Client.requestCode();
+                    } catch (error) {
+                        console.error('Login failed:', error);
+                        onError?.(error instanceof Error ? error : new Error('Login failed'));
+                    }
+                },
+                auto_select: false
             });
 
+            setIsInitialized(true);
+        } catch (error) {
+            console.error('Failed to initialize Google Sign-In:', error);
+            onError?.(error instanceof Error ? error : new Error('Initialization failed'));
+        }
+    }, [isScriptLoaded, onSuccess, onError, isInitialized]);
+
+    useEffect(() => {
+        if (!isInitialized || !buttonRef.current || !window.google?.accounts?.id) {
+            return;
+        }
+
+        try {
             window.google.accounts.id.renderButton(buttonRef.current, {
                 type: 'standard',
                 theme,
                 size,
                 text,
-                width
+                width: parseInt(width)
             });
 
-            console.log('[Google OAuth] Button rendered');
+            window.google.accounts.id.prompt();
+        } catch (error) {
+            console.error('Failed to render button:', error);
+            onError?.(error instanceof Error ? error : new Error('Failed to render button'));
         }
-    });
+    }, [isInitialized, theme, size, text, width, onError]);
 
-    useEffect(() => {
-        return () => {
-            // 컴포넌트 언마운트 시 Google 클라이언트 정리
-            window.google?.accounts?.id?.cancel();
-        };
-    }, []);
-
-    if (!scriptLoaded) {
-        return <div className="w-[250px] h-[40px] bg-gray-100 rounded animate-pulse" />;
+    if (!isScriptLoaded || !isInitialized) {
+        return (
+            <div
+                className="w-64 h-10 bg-gray-100 rounded animate-pulse"
+                aria-label="Loading Google Sign-In"
+            />
+        );
     }
 
-    return <div ref={buttonRef} className="google-login-button" />;
+    return (
+        <div
+            ref={buttonRef}
+            className="google-login-button"
+            role="button"
+            aria-label="Sign in with Google"
+        />
+    );
 };
+
+export default GoogleLoginButton;

@@ -13,12 +13,12 @@ import lombok.Setter;
 public class RoadmapRequest {
 
     @NotBlank(message = "Main category is required")
-    private String mainCategory; // 대분류
+    private String mainCategory; // 중분류
 
     @NotBlank(message = "Subcategory is required")
-    private String subCategory; // 중분류
+    private String subCategory; // 주제
 
-    private String currentLevel;
+    private String currentLevel; // 1(초급) 2(중급) 3(고급)
 
     @NotNull(message = "Duration is required")
     @Min(value = 1, message = "Duration must be at least 1 week")

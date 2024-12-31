@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 //tes
@@ -22,6 +24,7 @@ public class RedisService {
     private static final String REDIS_KEY_PREFIX = "oauth:temp:";
     private static final String TOKEN_ACCESS_PREFIX = "token:access:";
     private static final String TOKEN_REFRESH_PREFIX = "token:refresh:";
+    private static final String BLACKLIST_PREFIX = "blacklist:";
 
     public OAuthTempMemberInfo getTempMemberInfo(String token) {
         String key = REDIS_KEY_PREFIX + token;
@@ -78,32 +81,36 @@ public class RedisService {
     /**
      * Access Token과 Refresh Token 저장
      */
-    public void saveTokens(String email, String accessToken, String refreshToken) {
-        String accessKey = TOKEN_ACCESS_PREFIX + email;
-        String refreshKey = TOKEN_REFRESH_PREFIX + email;
+    public void saveTokens(String encryptedEmail, String refreshToken) {
+//        String accessKey = TOKEN_ACCESS_PREFIX + uniqueIdentifier;
+        String refreshKey = TOKEN_REFRESH_PREFIX + encryptedEmail;
 
         try {
-            redisTemplate.opsForValue().set(accessKey, accessToken);
-            redisTemplate.expire(accessKey, 1, TimeUnit.HOURS);
-            log.info("Access Token saved for email: {}", email);
+//            redisTemplate.opsForValue().set(accessKey, accessToken);
+//            redisTemplate.expire(accessKey, 1, TimeUnit.HOURS);
+//            log.info("Access Token saved for email: {}", email)
 
-            redisTemplate.opsForValue().set(refreshKey, refreshToken);
-            redisTemplate.expire(refreshKey, 14, TimeUnit.DAYS);
-            log.info("Refresh Token saved for email: {}", email);
+            Map<String, String> tokenInfo = new HashMap<>();
+            tokenInfo.put("refreshToken", refreshToken);
+
+            redisTemplate.opsForHash().putAll(refreshKey, tokenInfo);
+            redisTemplate.expire(refreshKey, 7, TimeUnit.DAYS);
+            log.info("Token info saved for identifier: {}", encryptedEmail);
+
         } catch (Exception e) {
-            log.error("Failed to save tokens for email: {}", email, e);
-            throw new RuntimeException("토큰 저장 중 오류가 발생했습니다.", e);
+            log.error("Failed to save tokens and email for identifier: {}", encryptedEmail, e);
+            throw new RuntimeException("토큰과 이메일 저장 중 오류가 발생했습니다.", e);
         }
     }
 
     /**
      * Access Token 조회
      */
-    public String getAccessToken(String email) {
-        String key = TOKEN_ACCESS_PREFIX + email;
+    public String getAccessToken(String uniqueIdentifier) {
+        String key = TOKEN_ACCESS_PREFIX + uniqueIdentifier;
         Object token = redisTemplate.opsForValue().get(key);
         if (token == null) {
-            log.warn("Access Token not found for email: {}", email);
+            log.warn("Access Token not found for email: {}", uniqueIdentifier);
             return null;
         }
         return token.toString();
@@ -112,14 +119,27 @@ public class RedisService {
     /**
      * Refresh Token 조회
      */
-    public String getRefreshToken(String email) {
-        String key = TOKEN_REFRESH_PREFIX + email;
-        Object token = redisTemplate.opsForValue().get(key);
-        if (token == null) {
-            log.warn("Refresh Token not found for email: {}", email);
-            return null;
+    public String getRefreshToken(String uniqueIdentifier) {
+        String key = TOKEN_REFRESH_PREFIX + uniqueIdentifier;
+        String refreshToken = (String) redisTemplate.opsForHash().get(key, "refreshToken");
+
+        if (refreshToken == null) {
+            throw new RuntimeException("Refresh token not found");
         }
-        return token.toString();
+        return refreshToken;
+    }
+
+    /**
+     * RefreshToken의 Email 조회
+     */
+    public String getEmailByIdentifier(String uniqueIdentifier) {
+        String key = TOKEN_REFRESH_PREFIX + uniqueIdentifier;
+        String email = (String) redisTemplate.opsForHash().get(key, "email");
+
+        if (email == null) {
+            throw new RuntimeException("Email not found");
+        }
+        return email;
     }
 
     /**
@@ -183,4 +203,58 @@ public class RedisService {
             log.error("Failed to debug Redis keys", e);
         }
     }
+
+    /**
+     * 액세스 토큰을 블랙리스트에 추가
+     * 토큰의 남은 유효시간만큼 블랙리스트에 보관
+     */
+    public void addToBlacklist(String accessToken, long expirationTime) {
+        String key = BLACKLIST_PREFIX + accessToken;
+        try {
+            long ttl = expirationTime - System.currentTimeMillis();
+            if (ttl > 0) {
+                redisTemplate.opsForValue().set(key, "blacklisted", ttl, TimeUnit.MILLISECONDS);
+                log.info("Access token added to blacklist with TTL: {} ms", ttl);
+            }
+        } catch (Exception e) {
+            log.error("Failed to add token to blacklist", e);
+            throw new RuntimeException("Failed to process blacklist", e);
+        }
+    }
+
+    /**
+     * 주어진 토큰이 블랙리스트에 있는지 확인
+     */
+    public boolean isBlacklisted(String accessToken) {
+        String key = BLACKLIST_PREFIX + accessToken;
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        } catch (Exception e) {
+            log.error("Failed to check blacklist", e);
+            return false;
+        }
+    }
+
+
+    public boolean hasIdentifier(String identifier) {
+        String key = TOKEN_REFRESH_PREFIX + identifier;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    }
+
+    /**
+     * 로그인 시에 redis에 refreshToken이 존재하는지 확인
+     */
+    public String findIdentifierByEmail(String email) {
+        Set<String> keys = redisTemplate.keys(TOKEN_REFRESH_PREFIX + "*");
+        if (keys != null) {
+            for (String key : keys) {
+                String storedEmail = (String) redisTemplate.opsForHash().get(key, "email");
+                if (email.equals(storedEmail)) {
+                    return key.substring(TOKEN_REFRESH_PREFIX.length());
+                }
+            }
+        }
+        return null;
+    }
+
 }

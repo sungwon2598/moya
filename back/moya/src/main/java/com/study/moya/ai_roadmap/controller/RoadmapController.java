@@ -1,14 +1,18 @@
 package com.study.moya.ai_roadmap.controller;
 
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
+import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
+import com.study.moya.ai_roadmap.service.CategoryService;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import com.study.moya.ai_roadmap.service.WorksheetService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,15 +25,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class RoadmapController {
 
-    private final RoadmapService roadmapService;
+    private final RoadmapService roadMapService;
     private final WorksheetService worksheetService;
+
+    @PostMapping("/generatge2")
+    public void generateRoadmap(@RequestBody @Valid RoadmapRequest roadmapRequest) {}
 
     @PostMapping("/generate")
     public CompletableFuture<ResponseEntity<WeeklyRoadmapResponse>> generateWeeklyRoadmap(
             @Valid @RequestBody RoadmapRequest request
     ) {
         log.info("작동해버리기~============================");
-        return roadmapService.generateWeeklyRoadmapAsync(request)
+        return roadMapService.generateWeeklyRoadmapAsync(request)
                 .thenApply(response -> ResponseEntity.ok(response))
                 .exceptionally(ex -> {
                     // 예외 발생 시 처리
@@ -49,5 +56,10 @@ public class RoadmapController {
                     return null;
                 });
         return ResponseEntity.accepted().build();
+    }
+
+    @GetMapping("/categories/{categoryId}/roadmaps")
+    public List<RoadMapSimpleDto> getRoadMaps(@PathVariable Long categoryId) {
+        return roadMapService.getRoadMapsByCategory(categoryId);
     }
 }

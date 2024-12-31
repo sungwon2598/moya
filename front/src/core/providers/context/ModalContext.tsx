@@ -30,7 +30,6 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [isOpen, modalContent, modalProps]);
 
     const hideModal = useCallback(() => {
-        // 히스토리에서 이전 모달이 있는지 확인
         const previousModal = modalHistoryRef.current.pop();
 
         if (previousModal) {

@@ -1,34 +1,31 @@
 import { FC, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '@store/store.ts';
-import { checkLoginStatus } from '../store/authSlice.ts';
+import { useAuth } from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
 }
 
 export const ProtectedRoute: FC<ProtectedRouteProps> = ({ children }) => {
-    const dispatch = useDispatch<AppDispatch>();
+    const { isAuthenticated, loading, checkAuth } = useAuth();
     const navigate = useNavigate();
-    const { isLogin, loading } = useSelector((state: RootState) => state.auth);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            await dispatch(checkLoginStatus());
-        };
-        checkAuth();
-    }, [dispatch]);
+        checkAuth().catch(() => {
+            // Error handling is already done in the hook
+            navigate('/');
+        });
+    }, [checkAuth, navigate]);
 
     useEffect(() => {
-        if (!loading && !isLogin) {
+        if (!loading && !isAuthenticated) {
             navigate('/');
         }
-    }, [isLogin, loading, navigate]);
+    }, [isAuthenticated, loading, navigate]);
 
     if (loading) {
         return <div>Loading...</div>;
     }
 
-    return isLogin ? <>{children}</> : <Navigate to="/" />;
+    return isAuthenticated ? <>{children}</> : <Navigate to="/" />;
 };
