@@ -1,15 +1,13 @@
-import { createSlice, createAsyncThunk, PayloadAction, Reducer } from '@reduxjs/toolkit';
-import { AuthState, GoogleAuthResponse, User } from '../types/auth.types';
-import { getUserInfo, postGoogleAuth, refreshAccessToken, logout } from '../api/authApi';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import {AuthState, GoogleAuthResponse, User} from '../types/auth.types';
+import { getUserInfo, postGoogleAuth, logout } from '../api/authApi';
 import type { AuthResponseData } from '../api/authApi';
 
-// Initial state
 const initialState: AuthState = {
     isLogin: false,
     user: null,
     loading: false,
-    error: null,
-    tokens: undefined
+    error: null
 };
 
 export const authenticateWithGoogleThunk = createAsyncThunk<AuthResponseData, GoogleAuthResponse>(
@@ -17,11 +15,9 @@ export const authenticateWithGoogleThunk = createAsyncThunk<AuthResponseData, Go
     async (authData, { rejectWithValue }) => {
         try {
             const response = await postGoogleAuth(authData);
-
             if (!response.success || !response.data) {
                 throw new Error(response.message || 'Authentication failed');
             }
-
             return response.data;
         } catch (error) {
             return rejectWithValue(
@@ -39,26 +35,6 @@ export const checkLoginStatus = createAsyncThunk<User>(
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Failed to fetch user info'
-            );
-        }
-    }
-);
-
-export const refreshAuthToken = createAsyncThunk(
-    'auth/refreshToken',
-    async (_, { getState, rejectWithValue }) => {
-        try {
-            const state = getState() as { auth: AuthState };
-            const currentRefreshToken = state.auth.tokens?.refreshToken;
-
-            if (!currentRefreshToken) {
-                throw new Error('No refresh token available');
-            }
-
-            return await refreshAccessToken(currentRefreshToken);
-        } catch (error) {
-            return rejectWithValue(
-                error instanceof Error ? error.message : 'Token refresh failed'
             );
         }
     }
@@ -84,19 +60,12 @@ const authSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
-        updateTokens: (state, action: PayloadAction<AuthResponseData>) => {
-            state.tokens = {
-                accessToken: action.payload.accessToken,
-                refreshToken: action.payload.refreshToken
-            };
-        },
         resetAuth: () => {
             return initialState;
         }
     },
     extraReducers: (builder) => {
         builder
-            // Google Authentication
             .addCase(authenticateWithGoogleThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -105,20 +74,14 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.isLogin = true;
                 state.user = action.payload.user;
-                state.tokens = {
-                    accessToken: action.payload.accessToken,
-                    refreshToken: action.payload.refreshToken
-                };
                 state.error = null;
             })
             .addCase(authenticateWithGoogleThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.isLogin = false;
                 state.user = null;
-                state.tokens = undefined;
                 state.error = action.payload as string;
             })
-            // Check Login Status
             .addCase(checkLoginStatus.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -133,26 +96,8 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.isLogin = false;
                 state.user = null;
-                state.tokens = undefined;
                 state.error = action.payload as string;
             })
-            // Refresh Token
-            .addCase(refreshAuthToken.fulfilled, (state, action) => {
-                if (action.payload) {
-                    state.tokens = {
-                        accessToken: action.payload.accessToken,
-                        refreshToken: action.payload.refreshToken
-                    };
-                }
-                state.error = null;
-            })
-            .addCase(refreshAuthToken.rejected, (state, action) => {
-                state.isLogin = false;
-                state.user = null;
-                state.tokens = undefined;
-                state.error = action.payload as string;
-            })
-            // Logout
             .addCase(logoutUser.fulfilled, () => {
                 return initialState;
             })
@@ -162,13 +107,11 @@ const authSlice = createSlice({
     }
 });
 
-export const { clearError, updateTokens, resetAuth } = authSlice.actions;
+export const { clearError, resetAuth } = authSlice.actions;
 
 export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isLogin;
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
-export const selectAuthTokens = (state: { auth: AuthState }) => state.auth.tokens;
 
-const authReducer: Reducer<AuthState> = authSlice.reducer;
-export default authReducer;
+export default authSlice.reducer;

@@ -3,7 +3,6 @@ import { GoogleAuthResponse, GoogleCredentialResponse, GoogleCodeResponse } from
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_CLIENT_ID;
 const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
-const ALLOWED_ORIGIN = import.meta.env.VITE_ALLOWED_ORIGIN;
 
 interface GoogleButtonProps {
     text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
@@ -92,7 +91,6 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
                             },
                             ux_mode: 'popup',
                             access_type: 'offline',
-                            redirect_uri: `${ALLOWED_ORIGIN}/auth/google/callback`
                         });
 
                         oauth2Client.requestCode();
