@@ -13,6 +13,8 @@ import StudyList from "./pages/study/StudyList.tsx";
 import StudyPostDetail from "./pages/study/StudyPostDetail.tsx";
 import AdminLayout from "@pages/adminator/layout/AdminLayout.tsx";
 import CategoryManagement from "@pages/category/CategoryManagement.tsx";
+import {ProtectedRoute} from "@features/auth/components/ProtectedRoute.tsx";
+import {AdminRoute} from "@features/auth/components/AdminRoute.tsx";
 
 const App: React.FC = () => {
     return (
@@ -36,9 +38,15 @@ const App: React.FC = () => {
                                     <Route path=":postId" element={<StudyPostDetail />} />
                                 </Route>
 
-                                <Route path="admin">
-                                    <Route path="categorys" element={<CategoryManagement />} />
-                                </Route>
+                            <Route path="admin">
+                                <Route path="categorys" element={
+                                    <ProtectedRoute>
+                                        <AdminRoute>
+                                            <CategoryManagement />
+                                        </AdminRoute>
+                                    </ProtectedRoute>
+                                } />
+                            </Route>
 
                             <Route path="settings/profile" element={<EditProfile />} />
 
