@@ -12,6 +12,20 @@ const initialState: AuthState = {
     tokens: undefined
 };
 
+// 목업 데이터임, 로컬환경에서 사용시 app에서 ProtectedRoute 태그 제거 후 사용
+// const initialState: AuthState = {
+//     isLogin: true,  // 기본적으로 로그인된 상태로 시작
+//     user: {         // 목업 유저 데이터
+//         email: 'test@test.com',
+//         nickname: 'TestAdmin',
+//         roles: ['ADMIN'],
+//         status: 'ACTIVE' as const
+//     },
+//     loading: false,
+//     error: null,
+//     tokens: undefined
+// };
+
 export const authenticateWithGoogleThunk = createAsyncThunk<AuthResponseData, GoogleAuthResponse>(
     'auth/authenticateWithGoogle',
     async (authData, { rejectWithValue }) => {
