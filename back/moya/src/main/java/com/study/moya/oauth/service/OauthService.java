@@ -56,15 +56,6 @@ public class OauthService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uris.local}")
-    private String localRedirectUri;
-
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uris.domain}")
-    private String domainRedirectUri;
-
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uris.www-domain}")
-    private String wwwDomainRedirectUri;
-
     private GoogleIdTokenVerifier verifier; // final 제거
 
     @PostConstruct
@@ -101,11 +92,10 @@ public class OauthService {
      * OAuth credential 토큰 검증
      */
     @Transactional
-    public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody, String origin) {
-        log.info("Authorization Code: {}, Origin: {}", requestBody.getAuthCode(), origin);
+    public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody) {
+        log.info("Authorization Code: {}", requestBody.getAuthCode());
 
-        String redirectUri = determineRedirectUri(origin);
-        GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode(), redirectUri);
+        GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode());
 
         GoogleIdToken.Payload idTokenPayload = verifyAndGetIdToken(tokenResponse.getIdToken());
 
@@ -142,7 +132,7 @@ public class OauthService {
     }
 
 
-    private GoogleIdTokenResponse getGoogleTokens(String authorizationCode, String requestOrigin) {
+    private GoogleIdTokenResponse getGoogleTokens(String authorizationCode) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
@@ -305,7 +295,7 @@ public class OauthService {
     }
 
 
-    /**
+    /**                          
      * 로그아웃 메서드
      */
     public void logout(String accessToken, String refreshToken) {

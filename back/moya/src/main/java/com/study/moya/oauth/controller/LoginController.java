@@ -32,16 +32,14 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody,
-                                                   @RequestHeader(value = "Origin", required = false) String origin,
                                                    HttpServletResponse response) {
         log.info("authCode : {}, credential: {}, origin: {}",
                 requestBody.getAuthCode(),
-                requestBody.getCredential(),
-                origin);
+                requestBody.getCredential());
         if (requestBody == null || requestBody.getAuthCode() == null) {
             throw new IllegalArgumentException("ID Token is required");
         }
-        MemberAuthResult authResult = oauthService.loginOAuthGoogle(requestBody, origin);
+        MemberAuthResult authResult = oauthService.loginOAuthGoogle(requestBody);
 
         // Access Token 쿠키 설정
         final ResponseCookie jwtTokenCookie = ResponseCookie.from("AUTH-TOKEN", authResult.getJwtToken())
