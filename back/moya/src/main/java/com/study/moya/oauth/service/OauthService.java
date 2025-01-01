@@ -56,16 +56,13 @@ public class OauthService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String defaultRedirectUri;
-
-    @Value("${oauth2.redirect-uris.local}")
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uris.local}")
     private String localRedirectUri;
 
-    @Value("${oauth2.redirect-uris.domain}")
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uris.domain}")
     private String domainRedirectUri;
 
-    @Value("${oauth2.redirect-uris.www-domain}")
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uris.www-domain}")
     private String wwwDomainRedirectUri;
 
     private GoogleIdTokenVerifier verifier; // final 제거
@@ -83,31 +80,21 @@ public class OauthService {
      * 요청 출처에 따라 적절한 리다이렉트 URI 설정
      */
 
-    private String determineRedirectUri(String origin) {
-        log.info("Determining redirect URI for origin: {}", origin);
+   private String determineRedirectUri(String origin) {
+       log.info("Determining redirect URI for origin: {}", origin);
 
-        if (origin == null) {
-            log.info("No origin provided, using default redirect URI: {}", defaultRedirectUri);
-            return defaultRedirectUri;
-        }
+       if (origin == null) {
+           return "https://moyastudy.com";
+       }
+       return origin;
+   }
 
-        String redirectUri = switch (origin) {
-            case "http://localhost:3000" -> localRedirectUri;
-            case "https://moyastudy.com" -> domainRedirectUri;
-            case "https://www.moyastudy.com" -> wwwDomainRedirectUri;
-            default -> defaultRedirectUri;
-        };
-
-        log.info("Selected redirect URI: {}", redirectUri);
-        return redirectUri;
-    }
-
-    private final MemberRepository memberRepository;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final WebClient webClient;
-    private final RedisService redisService;
-    private final AESConverter aesConverter;
-    private final RedisWrapper redisWrapper;
+   private final MemberRepository memberRepository;
+   private final JwtTokenProvider jwtTokenProvider;
+   private final WebClient webClient;
+   private final RedisService redisService;
+   private final AESConverter aesConverter;
+   private final RedisWrapper redisWrapper;
 
 
     /**
