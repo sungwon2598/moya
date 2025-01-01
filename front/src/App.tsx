@@ -63,7 +63,7 @@ const App: React.FC = () => {
                             />
                         </Route>
 
-                        <Route path="admin" element={<AdminLayout />}>
+                        <Route path="adminn" element={<AdminLayout />}>
                             <Route path="categories" element={<CategoryManagement />} />
                             <Route
                                 path="*"
