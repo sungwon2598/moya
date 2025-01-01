@@ -52,7 +52,12 @@ export const postGoogleAuth = async (
     try {
         const response = await axiosInstance.post<User>(
             OAUTH_ENDPOINTS.LOGIN,
-            authData
+            authData,
+            {
+                headers: {
+                    'Origin': window.location.origin // Add Origin header with current domain
+                }
+            }
         );
 
         if (!response.data) {
