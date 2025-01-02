@@ -3,16 +3,15 @@ package com.study.moya.posts.controller;
 import com.study.moya.global.api.ApiResponse;
 import com.study.moya.member.domain.Member;
 import com.study.moya.posts.dto.comment.CommentCreateRequest;
-import com.study.moya.posts.dto.comment.CommentResponse;
 import com.study.moya.posts.dto.comment.CommentUpdateRequest;
 import com.study.moya.posts.service.CommentService;
+import com.study.moya.posts.util.MemberCheckUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts/{postId}/comments")
@@ -27,22 +26,20 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> addComment(@PathVariable Long postId,
                                                         @RequestBody CommentCreateRequest request,
-                                                        @AuthenticationPrincipal Member member) {
-        Long authorId = (member != null) ? member.getId() : null;
-        Long commentId = commentService.addComment(postId, request, authorId);
+                                                        @AuthenticationPrincipal String email) {
+        Long commentId = commentService.addComment(postId, request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(commentId));
     }
 
     /**
      * 댓글 수정
      */
-    @PutMapping("/{commentId}")
+    @PostMapping("/{commentId}")
     public ResponseEntity<ApiResponse<Void>> updateComment(@PathVariable Long postId,
                                                            @PathVariable Long commentId,
                                                            @RequestBody CommentUpdateRequest request,
-                                                           @AuthenticationPrincipal Member member) {
-        Long currentUserId = (member != null) ? member.getId() : null;
-        commentService.updateComment(postId, commentId, request, currentUserId);
+                                                           @AuthenticationPrincipal String email) {
+        commentService.updateComment(postId, commentId, request, email);
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -52,19 +49,16 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long postId,
                                               @PathVariable Long commentId,
-                                              @AuthenticationPrincipal Member member) {
-        Long currentUserId = (member != null) ? member.getId() : null;
-        commentService.deleteComment(postId, commentId, currentUserId);
+                                              @AuthenticationPrincipal String email) {
+
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            commentService.deleteCommentAsAdmin(postId, commentId, email);
+        } else {
+            commentService.deleteComment(postId, commentId, email);
+        }
+
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 댓글 목록 조회
-     * 게시글 상세 조회 시 함께 내려줄 수도 있지만 별도 API도 고민 중이다..
-     */
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(@PathVariable Long postId) {
-        List<CommentResponse> comments = commentService.getCommentsByPostId(postId);
-        return ResponseEntity.ok(ApiResponse.of(comments));
-    }
 }

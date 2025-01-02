@@ -23,6 +23,7 @@ import com.study.moya.redis.RedisService;
 import com.study.moya.redis.RedisWrapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.support.collections.RedisMap;
@@ -55,10 +56,6 @@ public class OauthService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String redirectUri;
-
-
     private GoogleIdTokenVerifier verifier; // final 제거
 
     @PostConstruct
@@ -70,12 +67,25 @@ public class OauthService {
                 .build();
     }
 
-    private final MemberRepository memberRepository;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final WebClient webClient;
-    private final RedisService redisService;
-    private final AESConverter aesConverter;
-    private final RedisWrapper redisWrapper;
+    /**
+     * 요청 출처에 따라 적절한 리다이렉트 URI 설정
+     */
+
+   private String determineRedirectUri(String origin) {
+       log.info("Determining redirect URI for origin: {}", origin);
+
+       if (origin == null) {
+           return "https://moyastudy.com";
+       }
+       return origin;
+   }
+
+   private final MemberRepository memberRepository;
+   private final JwtTokenProvider jwtTokenProvider;
+   private final WebClient webClient;
+   private final RedisService redisService;
+   private final AESConverter aesConverter;
+   private final RedisWrapper redisWrapper;
 
 
     /**
@@ -83,7 +93,8 @@ public class OauthService {
      */
     @Transactional
     public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody) {
-        log.info("Authorization Code : {}", requestBody.getAuthCode());
+        log.info("Authorization Code: {}", requestBody.getAuthCode());
+
         GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode());
 
         GoogleIdToken.Payload idTokenPayload = verifyAndGetIdToken(tokenResponse.getIdToken());
@@ -103,7 +114,6 @@ public class OauthService {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         String existingIdentifier = redisService.findIdentifierByEmail(savedMember.getEmail());
 
         if (existingIdentifier != null) {
@@ -112,11 +122,11 @@ public class OauthService {
 
 //        String uniqueIdentifier = generateUniqueIdentifier();
         String encryptedEmail = aesConverter.convertToDatabaseColumn(userInfo.getEmail());
-
         String jwtAccessToken = jwtTokenProvider.createTokenForOAuth(encryptedEmail);
         String jwtRefreshToken = jwtTokenProvider.createRefreshToken(encryptedEmail);
 
-        redisWrapper.saveTokens(savedMember.getEmail(), tokenResponse.getAccessToken());
+//        redisWrapper.saveTokens(savedMember.getEmail(), tokenResponse.getAccessToken());
+        redisWrapper.saveTokens(savedMember.getEmail(), jwtRefreshToken);
 
         return new MemberAuthResult(jwtAccessToken, jwtRefreshToken, savedMember);
     }
@@ -127,7 +137,7 @@ public class OauthService {
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
         formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", redirectUri);
+        formData.add("redirect_uri", "https://moyastudy.com");
         formData.add("grant_type", "authorization_code");
 
         return webClient.post()
@@ -246,9 +256,14 @@ public class OauthService {
      */
     @Transactional
     public TokenRefreshResult refreshToken(String refreshToken) {
+        log.info(refreshToken);
         String currentIdentifier = jwtTokenProvider.getEmailFromOAuthToken(refreshToken);
+        log.info(currentIdentifier);
         String storedRefreshToken = redisService.getRefreshToken(currentIdentifier);
-        String storedEmail = redisService.getEmailByIdentifier(currentIdentifier);
+        log.info(storedRefreshToken);
+//        String storedEmail = redisService.getEmailByIdentifier(currentIdentifier);
+        String storedEmail = aesConverter.convertToEntityAttribute(currentIdentifier);
+        log.info(storedEmail);
 
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
@@ -280,13 +295,15 @@ public class OauthService {
     }
 
 
-    /**
+    /**                          
      * 로그아웃 메서드
      */
     public void logout(String accessToken, String refreshToken) {
         try {
             // 리프레시 토큰에서 이메일 추출
+            log.info("ac, rf : {}, {}", accessToken, refreshToken);
             String userEmail = jwtTokenProvider.getEmailFromOAuthToken(refreshToken);
+            log.info("userEmail : {}", userEmail);
 
             SecurityContextHolder.clearContext();
 
@@ -302,6 +319,30 @@ public class OauthService {
             log.info("User logged out successfully: {}", userEmail);
         } catch (Exception e) {
             log.error("Error during logout process", e);
+        }
+    }
+
+    /**
+     * 탈퇴 기능 메서드
+     */
+    public void withdraw(String accessToken){
+        try{
+            log.info("accessToken for withdraw: {}", accessToken);
+            String AESUserEmail = jwtTokenProvider.getEmailFromOAuthToken(accessToken);
+            String userEmail = aesConverter.convertToEntityAttribute(AESUserEmail);
+            log.info("Start withdraw Account for {}", userEmail);
+            // 회원 조회
+            Member member = memberRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+            // 회원 삭제
+            memberRepository.delete(member);
+            redisService.deleteRefreshToken(AESUserEmail);
+            log.info("Successfully withdrew account for {}", userEmail);
+
+        } catch (Exception e) {
+            log.error("Error during withdrawal process for email", e);
+            throw new RuntimeException("회원 탈퇴 처리 중 오류가 발생했습니다.", e);
         }
     }
 

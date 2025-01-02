@@ -93,18 +93,47 @@ public class Post extends BaseEntity {
     private LocalDateTime deleteDate;
 
     @Builder
-    public Post(String title, String content, Set<String> studies, Integer recruits,
-                String expectedPeriod, Set<String> studyDetails, Member author,
+    public Post(String title, String content, Integer recruits,
+                String expectedPeriod, Set<String> studies, Set<String> studyDetails, Member author,
                 LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.content = content;
-        this.studies = studies;
         this.recruits = recruits;
         this.expectedPeriod = expectedPeriod;
+        this.studies = studies;
         this.studyDetails = studyDetails;
         this.author = author;
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    public void updatePost(String title, String content, Integer recruits,
+                           String expectedPeriod, Set<String> studies, Set<String> studyDetails,
+                           LocalDateTime startDate, LocalDateTime endDate) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (studies != null) {
+            this.studies = studies;
+        }
+        if (recruits != null) {
+            this.recruits = recruits;
+        }
+        if (expectedPeriod != null) {
+            this.expectedPeriod = expectedPeriod;
+        }
+        if (studyDetails != null) {
+            this.studyDetails = studyDetails;
+        }
+        if (startDate != null) {
+            this.startDate = startDate;
+        }
+        if (endDate != null) {
+            this.endDate = endDate;
+        }
     }
 
     public void incrementViews() {
@@ -117,6 +146,12 @@ public class Post extends BaseEntity {
 
     public void removeLike(Like like) {
         this.likes.remove(like);
+    }
+
+    //Soft Delete
+    public void markAsDeleted() {
+        this.isDeleted = true;
+        this.deleteDate = LocalDateTime.now();
     }
 
 }

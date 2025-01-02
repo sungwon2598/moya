@@ -8,18 +8,22 @@ import com.study.moya.oauth.dto.OAuthLogin.MemberAuthResult;
 import com.study.moya.oauth.dto.OAuthLogin.OAuthLoginResponse;
 import com.study.moya.oauth.dto.token.TokenRefreshResult;
 import com.study.moya.oauth.service.OauthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v1/oauth")
 @RequiredArgsConstructor
+@Tag(name = "OAuth", description = "OAuth 인증")
 public class LoginController {
 
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
@@ -27,8 +31,11 @@ public class LoginController {
     private final SecurityHeadersConfig securityHeadersConfig;
 
     @PostMapping("/login")
-    public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody, HttpServletResponse response) {
-        log.info("authCode : {}, {}", requestBody.getAuthCode(), requestBody.getCredential());
+    public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody,
+                                                   HttpServletResponse response) {
+        log.info("authCode : {}, credential: {}, origin: {}",
+                requestBody.getAuthCode(),
+                requestBody.getCredential());
         if (requestBody == null || requestBody.getAuthCode() == null) {
             throw new IllegalArgumentException("ID Token is required");
         }
@@ -60,6 +67,7 @@ public class LoginController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@CookieValue(name = "REFRESH-TOKEN", required = true) String refreshToken,
                                           HttpServletResponse response) {
+        log.info("refresh 시작-------");
         TokenRefreshResult refreshResult = oauthService.refreshToken(refreshToken);
 
         // 새로운 액세스 토큰을 쿠키에 설정
@@ -90,7 +98,9 @@ public class LoginController {
             @CookieValue(name = "REFRESH-TOKEN", required = false) String refreshToken,
             HttpServletResponse response) {
 
+        log.info("logout요청 받음==========================");
         if (refreshToken != null || accessToken != null) {
+            log.info("ac, rf : {}, {}", accessToken, refreshToken);
             oauthService.logout(accessToken, refreshToken);
         }
 
@@ -120,6 +130,49 @@ public class LoginController {
         return ResponseEntity.ok(member);
     }
 
+    @PostMapping("/withdraw")
+    @Transactional  // 트랜잭션 추가 필요
+    public ResponseEntity<?> withdraw(
+            @CookieValue(name = "AUTH-TOKEN", required = false) String accessToken,
+            @CookieValue(name = "REFRESH-TOKEN", required = false) String refreshToken,  // 리프레시 토큰도 함께 처리
+            HttpServletResponse response
+    ) {
+        if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증 토큰이 필요합니다.");
+        }
+
+        try {
+            oauthService.withdraw(accessToken);
+
+            // 쿠키 삭제
+            ResponseCookie accessTokenCookie = ResponseCookie.from("AUTH-TOKEN", "")
+                    .httpOnly(true)
+                    .maxAge(0)
+                    .path("/")
+                    .secure(true)  // HTTPS 사용 시 secure 활성화
+                    .sameSite("Strict")  // CSRF 방지
+                    .build();
+
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("REFRESH-TOKEN", "")
+                    .httpOnly(true)
+                    .maxAge(0)
+                    .path("/")
+                    .secure(true)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+            return securityHeadersConfig.addSecurityHeaders(ResponseEntity.ok().build());
+        } catch (Exception e) {
+            log.error("회원 탈퇴 처리 중 오류 발생: {}", e.getMessage(), e);
+            return securityHeadersConfig.addSecurityHeaders(
+                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("회원 탈퇴 처리 중 오류가 발생했습니다.")
+            );
+        }
+    }
 
 
 //    @PostMapping("/login")

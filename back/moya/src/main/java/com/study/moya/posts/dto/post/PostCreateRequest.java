@@ -17,7 +17,7 @@ public record PostCreateRequest(
         Set<String> studyDetails,
         @Schema(example = "시작 예정 일자")
         LocalDateTime startDate,
-        @Schema(example = "마감 일자")
+        @Schema(example = "모집 마감 일자")
         LocalDateTime endDate
 ) {
 }

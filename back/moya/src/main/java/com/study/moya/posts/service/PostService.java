@@ -4,16 +4,20 @@ import com.study.moya.global.api.ApiResponse;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.posts.domain.Comment;
+import com.study.moya.posts.domain.Like;
 import com.study.moya.posts.domain.Post;
 import com.study.moya.posts.dto.like.LikeResponse;
 import com.study.moya.posts.dto.post.PostCreateRequest;
 import com.study.moya.posts.dto.post.PostDetailResponse;
 import com.study.moya.posts.dto.post.PostListResponse;
 import com.study.moya.posts.dto.post.PostUpdateRequest;
+import com.study.moya.posts.exception.PostErrorCode;
+import com.study.moya.posts.exception.PostException;
 import com.study.moya.posts.repository.LikeRepository;
 import com.study.moya.posts.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -33,10 +38,13 @@ public class PostService {
 
 
     @Transactional
-    public Long createPost(PostCreateRequest request, Long authorId) {
+    public Long createPost(PostCreateRequest request, String email) {
+        if (email == null) {
+            throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
+        }
 
-        Member author = memberRepository.findById(authorId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+        Member author = memberRepository.findByEmail(email)
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
 
         Post post = Post.builder()
                 .author(author)
@@ -56,19 +64,26 @@ public class PostService {
     }
 
     @Transactional
-    public ApiResponse<List<PostListResponse>> getPostList(int page, Long memberId) {
+    public ApiResponse<List<PostListResponse>> getPostList(int page, String email) {
 
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by("createdAt").descending());
-        Page<Post> postPage = postRepository.findAll(pageRequest);
+        Page<Post> postPage = postRepository.findByIsDeletedFalse(pageRequest);
 
         List<PostListResponse> responseList = postPage.getContent().stream().map(post -> {
             int commentCount = post.getComments().size();
             String authorName = post.getAuthor().getNickname();
 
+            //좋아요 처리
+            int totalLikes = likeRepository.countByPostId(post.getId());
             boolean isLiked = false;
-            if (memberId != null) {
-                // 좋아요 여부 확인: LikeRepository 활용
-                isLiked = likeRepository.findByMemberIdAndPostId(memberId, post.getId()).isPresent();
+
+            if (email != null) {
+                Member member = memberRepository.findByEmail(email).orElse(null);
+                if (member != null) {
+                    isLiked = likeRepository.findByMemberIdAndPostId(member.getId(), post.getId()).isPresent();
+                } else {
+                    log.warn("접근한 사용자가 DB에서는 존재하지 않는 사용자인데, @AuthenticationPrincipal 안에 Email이 존재");
+                }
             }
 
             return new PostListResponse(
@@ -84,7 +99,9 @@ public class PostService {
                     authorName,
                     post.getViews(),
                     commentCount,
-                    isLiked
+                    isLiked,
+                    totalLikes
+
             );
         }).toList();
 
@@ -93,13 +110,32 @@ public class PostService {
     }
 
     @Transactional
-    public ApiResponse<PostDetailResponse> getPostDetail(Long postId, Long currentUserId) {
+    public ApiResponse<PostDetailResponse> getPostDetail(Long postId, String currentEmail) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
 
+        if (post.getIsDeleted()) {
+            throw PostException.of(PostErrorCode.DELETED_POST);
+        }
+
+        //조회수
+        post.incrementViews();
+        //사용자
         String authorName = post.getAuthor().getNickname();
-        boolean isLiked = (currentUserId != null)
-                && likeRepository.findByMemberIdAndPostId(currentUserId, postId).isPresent();
+
+        Member member = null;
+        if (currentEmail != null) {
+            member = memberRepository.findByEmail(currentEmail).orElse(null);
+        }
+
+        // 좋아요 여부
+        boolean isLiked = false;
+        if (member != null) {
+            isLiked = likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
+        }
+
+        int totalLikes = likeRepository.countByPostId(postId);
+
 
         Set<Comment> allComments = post.getComments();
         // 루트 댓글만 필터
@@ -129,7 +165,8 @@ public class PostService {
                 post.getViews(),
                 commentDetails,
                 totalComments,
-                isLiked
+                isLiked,
+                totalLikes
         );
 
         return ApiResponse.of(detailResponse);
@@ -161,20 +198,103 @@ public class PostService {
         );
     }
 
-    public void updatePost(Long postId, PostUpdateRequest request, Long currentUserId) {
+    @Transactional
+    public void updatePost(Long postId, PostUpdateRequest request, String email) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
 
+        if (!post.getAuthor().getEmail().equals(email)) {
+            throw PostException.of(PostErrorCode.INVALID_AUTHOR);
+        }
+
+        post.updatePost(
+                request.title(),
+                request.content(),
+                request.recruits(),
+                request.expectedPeriod(),
+                request.studies(),
+                request.studyDetails(),
+                request.startDate(),
+                request.endDate()
+        );
     }
 
-    public void deletePost(Long postId, Long currentUserId) {
+    @Transactional
+    public void deletePost(Long postId, String currentEmail) {
+        if (currentEmail == null) {
+            throw PostException.of(PostErrorCode.BAD_ACCESS);
+        }
 
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
+
+        if (!post.getAuthor().getEmail().equals(currentEmail)) {
+            throw PostException.of(PostErrorCode.INVALID_AUTHOR);
+        }
+
+        post.markAsDeleted();
     }
 
-    public LikeResponse addLike(Long postId, Long currentUserId) {
-        return null;
+    @Transactional
+    public void deletePostAsAdmin(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
+
+        post.markAsDeleted();
     }
 
-    public LikeResponse removeLike(Long postId, Long currentUserId) {
+    /**
+     * 좋아요 추가
+     */
+    @Transactional
+    public LikeResponse addLike(Long postId, String currentEmail) {
+        if (currentEmail == null) {
+            throw PostException.of(PostErrorCode.BAD_ACCESS);
+        }
 
-        return null;
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
+
+        Member member = memberRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
+
+        boolean alreadyLiked = likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
+
+        if (alreadyLiked) {
+            // throw new IllegalStateException("이미 좋아요를 눌렀습니다.");
+            throw PostException.of(PostErrorCode.ALREADY_LIKED);
+        }
+
+        Like like = Like.builder()
+                .member(member)
+                .post(post)
+                .build();
+        likeRepository.save(like);
+
+        int totalLikes = likeRepository.countByPostId(postId);
+
+        return new LikeResponse(true, totalLikes);
+    }
+
+    /**
+     * 좋아요 취소
+     */
+    @Transactional
+    public LikeResponse removeLike(Long postId, String currentEmail) {
+        if (currentEmail == null) {
+            throw PostException.of(PostErrorCode.BAD_ACCESS);
+        }
+
+        Member member = memberRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
+
+        Like like = likeRepository.findByMemberIdAndPostId(member.getId(), postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.NO_LIKED));
+
+        likeRepository.delete(like);
+
+        int totalLikes = likeRepository.countByPostId(postId);
+
+        return new LikeResponse(false, totalLikes);
     }
 }
