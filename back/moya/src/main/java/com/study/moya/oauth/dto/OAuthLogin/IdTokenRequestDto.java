@@ -12,4 +12,5 @@ import lombok.Setter;
 public class IdTokenRequestDto {
     private String authCode;
     private String credential;
+    private String redirectUri;
 }

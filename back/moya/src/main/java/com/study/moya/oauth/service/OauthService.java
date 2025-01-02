@@ -87,7 +87,7 @@ public class OauthService {
     public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody) {
         log.info("Authorization Code: {}", requestBody.getAuthCode());
 
-        GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode());
+        GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode(),requestBody.getRedirectUri());
         GoogleIdToken.Payload idTokenPayload = verifyAndGetIdToken(tokenResponse.getIdToken());
         GoogleUserInfo userInfo = getGoogleUserInfo(tokenResponse.getAccessToken());
 
@@ -119,12 +119,12 @@ public class OauthService {
         return new MemberAuthResult(tokenInfo.getAccessToken(), tokenInfo.getRefreshToken(), savedMember);
     }
 
-    private GoogleIdTokenResponse getGoogleTokens(String authorizationCode) {
+    private GoogleIdTokenResponse getGoogleTokens(String authorizationCode, String redirectUri) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", authorizationCode);
         formData.add("client_id", clientId);
         formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", "https://moyastudy.com");
+        formData.add("redirect_uri", redirectUri);
         formData.add("grant_type", "authorization_code");
 
         return webClient.post()

@@ -33,9 +33,10 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody,
                                                    HttpServletResponse response) {
-        log.info("authCode : {}, credential: {}, origin: {}",
+        log.info("authCode : {}, credential: {}, redirectUrl : {}",
                 requestBody.getAuthCode(),
-                requestBody.getCredential());
+                requestBody.getCredential(),
+                requestBody.getRedirectUri());
         if (requestBody == null || requestBody.getAuthCode() == null) {
             throw new IllegalArgumentException("ID Token is required");
         }
