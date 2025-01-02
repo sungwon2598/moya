@@ -16,7 +16,7 @@ const StudyList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filters] = useState<Partial<FilterOptions>>({});
-    const [currentPage, setCurrentPage] = useState(1); // API는 1부터 시작하는 페이지네이션 사용
+    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
     const fetchPosts = async (page: number) => {
@@ -25,8 +25,8 @@ const StudyList = () => {
             setError(null);
 
             const response = await studyApiService.getStudyList(
-                page - 1, // API는 0-based index 사용
-                20, // size per page
+                page - 1,
+                20,
                 {
                     studies: filters.studies,
                     studyDetails: filters.studyDetails,
@@ -56,9 +56,6 @@ const StudyList = () => {
         window.scrollTo(0, 0);
     };
 
-
-
-    // 게시글 카드 컴포넌트
     const StudyCard = ({ post }: { post: StudyPost }) => {
         const navigate = useNavigate();
         const date = new Date(post.startDate);
@@ -96,9 +93,9 @@ const StudyList = () => {
                 className="bg-white rounded-2xl border border-gray-200 hover:border-gray-300 transition-all cursor-pointer p-6"
             >
                 <div className="flex gap-2 mb-4 flex-wrap">
-                    {post.studies.length > 0 && (
+                    {post.studies && (
                         <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                            🎯 {post.studies.join(', ')} {post.studyDetails.length > 0 && `- ${post.studyDetails.join(', ')}`}
+                            🎯 {post.studies} {post.studyDetails && `- ${post.studyDetails}`}
                         </span>
                     )}
                     {getStatusBadge()}
@@ -166,15 +163,12 @@ const StudyList = () => {
                     <h1 className="text-3xl font-bold">스터디 전체보기</h1>
                 </div>
 
-                {/* 필터 메뉴 컴포넌트는 그대로 유지 */}
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {posts.map(post => (
                         <StudyCard key={post.postId} post={post} />
                     ))}
                 </div>
 
-                {/* 페이지네이션 */}
                 {totalPages > 1 && (
                     <div className="flex justify-center mt-8 gap-2">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState} from 'react';
 import { Home, Book, User, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavItem from './components/NavItem';
