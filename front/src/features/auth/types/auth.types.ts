@@ -18,6 +18,14 @@ export interface GoogleAuthResponse {
     authCode: string;
 }
 
+export interface GoogleCredentialResponse {
+    credential: string;
+}
+
+export interface GoogleCodeResponse {
+    code: string;
+}
+
 export interface AuthResponseData {
     user: User;
 }
