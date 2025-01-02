@@ -1,12 +1,12 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState} from 'react';
 import { Home, Book, User, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavItem from './components/NavItem';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/core/store/store';
 import { UserDropdown } from "./components/usermenu/UserDropdown.tsx";
-import LoginAlertModal from "../modal/LoginAlertModal.tsx";
-import {ModalContext} from "../../../core/providers/context/ModalContext.tsx";
+// import LoginAlertModal from "../modal/LoginAlertModal.tsx";
+// import {ModalContext} from "../../../core/providers/context/ModalContext.tsx";
 
 const navigationItems = [
     {
@@ -39,7 +39,7 @@ export const Header: React.FC = () => {
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const { isLogin, user } = useSelector((state: RootState) => state.auth);
     const navigate = useNavigate();
-    const modalContext = useContext(ModalContext);
+    // const modalContext = useContext(ModalContext);
 
 
     useEffect(() => {
@@ -69,15 +69,15 @@ export const Header: React.FC = () => {
     };
 
     const handleCreateStudy = () => {
-        if (!isLogin && modalContext) {
-            modalContext.showModal(
-                <LoginAlertModal onClose={modalContext.hideModal} />,
-                {
-                    showCloseButton: false,
-                }
-            );
-            return;
-        }
+        // if (!isLogin && modalContext) {
+        //     modalContext.showModal(
+        //         <LoginAlertModal onClose={modalContext.hideModal} />,
+        //         {
+        //             showCloseButton: false,
+        //         }
+        //     );
+        //     return;
+        // }
         navigate('/study/create');
     };
 

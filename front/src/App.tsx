@@ -11,6 +11,7 @@ import SignInPage from "./pages/auth/SignInPage.tsx";
 import SignUpPage from "./pages/auth/SignUpPage.tsx";
 import StudyList from "./pages/study/StudyList.tsx";
 import StudyPostDetail from "./pages/study/StudyPostDetail.tsx";
+import StudyCreate from "./pages/study/StudyPostCreate.tsx";
 
 const App: React.FC = () => {
     return (
@@ -32,6 +33,7 @@ const App: React.FC = () => {
                             <Route path="study">
                                 <Route index element={<StudyList />} />
                                 <Route path=":postId" element={<StudyPostDetail />} />
+                                <Route path="create" element={<StudyCreate />} />
                             </Route>
 
                             <Route path="settings/profile" element={<EditProfile />} />

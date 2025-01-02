@@ -11,10 +11,13 @@ import com.study.moya.posts.dto.post.PostCreateRequest;
 import com.study.moya.posts.dto.post.PostDetailResponse;
 import com.study.moya.posts.dto.post.PostListResponse;
 import com.study.moya.posts.dto.post.PostUpdateRequest;
+import com.study.moya.posts.exception.PostErrorCode;
+import com.study.moya.posts.exception.PostException;
 import com.study.moya.posts.repository.LikeRepository;
 import com.study.moya.posts.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -36,11 +40,11 @@ public class PostService {
     @Transactional
     public Long createPost(PostCreateRequest request, String email) {
         if (email == null) {
-            throw new IllegalArgumentException("작성자의 아이디가 비어있습니다.");
+            throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
         Member author = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
 
         Post post = Post.builder()
                 .author(author)
@@ -72,9 +76,14 @@ public class PostService {
             //좋아요 처리
             int totalLikes = likeRepository.countByPostId(post.getId());
             boolean isLiked = false;
-            Member member = memberRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Member not found"));
-            if (member != null) {
-                isLiked = likeRepository.findByMemberIdAndPostId(member.getId(), post.getId()).isPresent();
+
+            if (email != null) {
+                Member member = memberRepository.findByEmail(email).orElse(null);
+                if (member != null) {
+                    isLiked = likeRepository.findByMemberIdAndPostId(member.getId(), post.getId()).isPresent();
+                } else {
+                    log.warn("접근한 사용자가 DB에서는 존재하지 않는 사용자인데, @AuthenticationPrincipal 안에 Email이 존재");
+                }
             }
 
             return new PostListResponse(
@@ -103,18 +112,27 @@ public class PostService {
     @Transactional
     public ApiResponse<PostDetailResponse> getPostDetail(Long postId, String currentEmail) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
+
+        if (post.getIsDeleted()) {
+            throw PostException.of(PostErrorCode.DELETED_POST);
+        }
 
         //조회수
         post.incrementViews();
         //사용자
         String authorName = post.getAuthor().getNickname();
 
-        Member member = memberRepository.findByEmail(currentEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+        Member member = null;
+        if (currentEmail != null) {
+            member = memberRepository.findByEmail(currentEmail).orElse(null);
+        }
 
-        boolean isLiked = (member != null)
-                && likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
+        // 좋아요 여부
+        boolean isLiked = false;
+        if (member != null) {
+            isLiked = likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
+        }
 
         int totalLikes = likeRepository.countByPostId(postId);
 
@@ -180,11 +198,13 @@ public class PostService {
         );
     }
 
+    @Transactional
     public void updatePost(Long postId, PostUpdateRequest request, String email) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
 
         if (!post.getAuthor().getEmail().equals(email)) {
-            throw new IllegalArgumentException("해당 게시글의 작성자가 아닙니다.");
+            throw PostException.of(PostErrorCode.INVALID_AUTHOR);
         }
 
         post.updatePost(
@@ -202,13 +222,14 @@ public class PostService {
     @Transactional
     public void deletePost(Long postId, String currentEmail) {
         if (currentEmail == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BAD_ACCESS);
         }
 
-        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
 
         if (!post.getAuthor().getEmail().equals(currentEmail)) {
-            throw new IllegalArgumentException("해당 글의 작성자가 아닙니다.");
+            throw PostException.of(PostErrorCode.INVALID_AUTHOR);
         }
 
         post.markAsDeleted();
@@ -216,7 +237,8 @@ public class PostService {
 
     @Transactional
     public void deletePostAsAdmin(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
 
         post.markAsDeleted();
     }
@@ -227,19 +249,20 @@ public class PostService {
     @Transactional
     public LikeResponse addLike(Long postId, String currentEmail) {
         if (currentEmail == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BAD_ACCESS);
         }
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
 
         Member member = memberRepository.findByEmail(currentEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
 
         boolean alreadyLiked = likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
 
         if (alreadyLiked) {
-            throw new IllegalStateException("이미 좋아요를 눌렀습니다.");
+            // throw new IllegalStateException("이미 좋아요를 눌렀습니다.");
+            throw PostException.of(PostErrorCode.ALREADY_LIKED);
         }
 
         Like like = Like.builder()
@@ -259,14 +282,14 @@ public class PostService {
     @Transactional
     public LikeResponse removeLike(Long postId, String currentEmail) {
         if (currentEmail == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BAD_ACCESS);
         }
 
         Member member = memberRepository.findByEmail(currentEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
 
         Like like = likeRepository.findByMemberIdAndPostId(member.getId(), postId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자가 게시글에 대해 좋아요를 누른 적이 없습니다."));
+                .orElseThrow(() -> PostException.of(PostErrorCode.NO_LIKED));
 
         likeRepository.delete(like);
 
