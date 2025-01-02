@@ -1,10 +1,8 @@
 package com.study.moya.oauth.service;
 
 
-import com.google.api.client.auth.openidconnect.IdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.study.moya.auth.jwt.JwtTokenProvider;
@@ -12,21 +10,18 @@ import com.study.moya.member.domain.Member;
 import com.study.moya.member.domain.MemberStatus;
 import com.study.moya.member.domain.Role;
 import com.study.moya.member.repository.MemberRepository;
-import com.study.moya.member.util.AESConverter;
-import com.study.moya.oauth.dto.GoogleIdTokenResponse;
+import com.study.moya.oauth.dto.OAuthLogin.GoogleIdTokenResponse;
 import com.study.moya.oauth.dto.GoogleUserInfo;
 import com.study.moya.oauth.dto.OAuthLogin.IdTokenRequestDto;
 import com.study.moya.oauth.dto.OAuthLogin.MemberAuthResult;
 import com.study.moya.oauth.dto.token.TokenRefreshResult;
 import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.redis.RedisService;
-import com.study.moya.redis.RedisWrapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.support.collections.RedisMap;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,8 +35,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -84,8 +78,6 @@ public class OauthService {
    private final JwtTokenProvider jwtTokenProvider;
    private final WebClient webClient;
    private final RedisService redisService;
-   private final AESConverter aesConverter;
-   private final RedisWrapper redisWrapper;
 
 
     /**
@@ -96,9 +88,7 @@ public class OauthService {
         log.info("Authorization Code: {}", requestBody.getAuthCode());
 
         GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode());
-
         GoogleIdToken.Payload idTokenPayload = verifyAndGetIdToken(tokenResponse.getIdToken());
-
         GoogleUserInfo userInfo = getGoogleUserInfo(tokenResponse.getAccessToken());
 
         Member savedMember = createOrUpdateMember(idTokenPayload, userInfo, tokenResponse);
@@ -114,23 +104,20 @@ public class OauthService {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String existingIdentifier = redisService.findIdentifierByEmail(savedMember.getEmail());
+        JwtTokenProvider.TokenInfo tokenInfo = jwtTokenProvider.createToken(authentication);
+        String memberId = String.valueOf(savedMember.getId());
+
+        String existingIdentifier = redisService.findIdentifierByMemberId(memberId);
 
         if (existingIdentifier != null) {
-            redisWrapper.deleteAllTokens(existingIdentifier);
+            redisService.deleteRefreshToken(memberId);
         }
-
 //        String uniqueIdentifier = generateUniqueIdentifier();
-        String encryptedEmail = aesConverter.convertToDatabaseColumn(userInfo.getEmail());
-        String jwtAccessToken = jwtTokenProvider.createTokenForOAuth(encryptedEmail);
-        String jwtRefreshToken = jwtTokenProvider.createRefreshToken(encryptedEmail);
+//        String encryptedEmail = aesConverter.convertToDatabaseColumn(userInfo.getEmail());
+        redisService.saveTokens(memberId, tokenInfo.getRefreshToken());
 
-//        redisWrapper.saveTokens(savedMember.getEmail(), tokenResponse.getAccessToken());
-        redisWrapper.saveTokens(savedMember.getEmail(), jwtRefreshToken);
-
-        return new MemberAuthResult(jwtAccessToken, jwtRefreshToken, savedMember);
+        return new MemberAuthResult(tokenInfo.getAccessToken(), tokenInfo.getRefreshToken(), savedMember);
     }
-
 
     private GoogleIdTokenResponse getGoogleTokens(String authorizationCode) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -182,18 +169,19 @@ public class OauthService {
             try {
                 String defaultNickname = idTokenPayload.getEmail().split("@")[0];
 
-                Member newMember = Member.createBuilder()
+                Member newMember = Member.builder()
                         .email(idTokenPayload.getEmail())
                         .profileImageUrl(userInfo.getPicture())
                         .nickname(defaultNickname)
                         .roles(Set.of(Role.USER))
                         .status(MemberStatus.ACTIVE)
-                        .providerId(idTokenPayload.getSubject())  // 필수값이므로 기본값 설정
-                        .accessToken(tokenResponse.getAccessToken())
-                        .refreshToken(tokenResponse.getRefreshToken())
+                        .providerId(idTokenPayload.getSubject())
                         .termsAgreed(true)
                         .privacyPolicyAgreed(true)
                         .marketingAgreed(true)
+                        .accessToken(tokenResponse.getAccessToken())
+                        .refreshToken(tokenResponse.getRefreshToken())
+                        .tokenExpirationTime(Instant.now().plusSeconds(tokenResponse.getExpiresIn()))
                         .build();
                 return memberRepository.save(newMember);
             } catch (Exception e) {
@@ -205,19 +193,17 @@ public class OauthService {
         log.debug("Updating existing member with email: {}", idTokenPayload.getEmail());
 
         try {
-            Member updatedMember = Member.updateBuilder(existingMember)
-                    .accessToken(existingMember.getAccessToken())
-                    .refreshToken(existingMember.getRefreshToken())
-                    .tokenExpirationTime(existingMember.getTokenExpirationTime())
-                    .build();
-            return memberRepository.save(updatedMember);
-
+            existingMember.updateOAuthTokens(
+                    tokenResponse.getAccessToken(),
+                    tokenResponse.getRefreshToken(),
+                    Instant.now().plusSeconds(tokenResponse.getExpiresIn())
+            );
+            return memberRepository.save(existingMember);
         } catch (Exception e) {
             log.error("Failed to update member", e);
             throw e;
         }
     }
-
 
     /**
      * ID Token 검증 및 Payload 추출
@@ -262,8 +248,6 @@ public class OauthService {
         String storedRefreshToken = redisService.getRefreshToken(currentIdentifier);
         log.info(storedRefreshToken);
 //        String storedEmail = redisService.getEmailByIdentifier(currentIdentifier);
-        String storedEmail = aesConverter.convertToEntityAttribute(currentIdentifier);
-        log.info(storedEmail);
 
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
@@ -273,7 +257,7 @@ public class OauthService {
             throw new InvalidTokenException("Expired or invalid refresh token");
         }
 
-        Member member = memberRepository.findByEmail(storedEmail)
+        Member member = memberRepository.findByEmail(currentIdentifier)
                 .orElseThrow(() -> new InvalidTokenException("User not found"));
 
         List<GrantedAuthority> authorities = member.getAuthorities().stream()
@@ -314,7 +298,7 @@ public class OauthService {
             }
 
             // Redis에서 리프레시 토큰 삭제
-            redisService.deleteAllTokens(userEmail);
+            redisService.deleteRefreshToken(userEmail);
 
             log.info("User logged out successfully: {}", userEmail);
         } catch (Exception e) {
@@ -328,17 +312,16 @@ public class OauthService {
     public void withdraw(String accessToken){
         try{
             log.info("accessToken for withdraw: {}", accessToken);
-            String AESUserEmail = jwtTokenProvider.getEmailFromOAuthToken(accessToken);
-            String userEmail = aesConverter.convertToEntityAttribute(AESUserEmail);
-            log.info("Start withdraw Account for {}", userEmail);
+            String memberId = jwtTokenProvider.getEmailFromOAuthToken(accessToken);
+            log.info("Start withdraw Account for {}", memberId);
             // 회원 조회
-            Member member = memberRepository.findByEmail(userEmail)
+            Member member = memberRepository.findByEmail(memberId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
             // 회원 삭제
             memberRepository.delete(member);
-            redisService.deleteRefreshToken(AESUserEmail);
-            log.info("Successfully withdrew account for {}", userEmail);
+            redisService.deleteRefreshToken(memberId);
+            log.info("Successfully withdrew account for {}", memberId);
 
         } catch (Exception e) {
             log.error("Error during withdrawal process for email", e);
@@ -363,74 +346,3 @@ public class OauthService {
         throw new RuntimeException("Failed to generate unique identifier");
     }
 }
-
-
-// 개발 임시 중단
-//    @Transactional
-//    public OAuth2SignupCompleteResponse completeSignup(OAuth2SignupCompleteRequest request) {
-//        // 토큰 검증 및 임시 회원 정보 조회
-//        OAuthTempMemberInfo tempInfo = validateAndGetTempInfo(request.getToken());
-//
-//        // 회원가입 요청 유효성 검증
-//        signupValidator.validate(request, tempInfo);
-//
-//        try {
-//            // 회원 생성 및 저장
-//            Member newMember = memberMapper.toMember(tempInfo, request);
-//            Member savedMember = memberRepository.save(newMember);
-//
-//            // JWT 토큰 생성
-//            TokenInfo tokenInfo = createAuthenticationToken(savedMember);
-//
-//            // Redis 임시 데이터 삭제
-//            redisService.deleteTempMemberInfo(request.getToken());
-//
-//            log.info("OAuth 회원가입 완료 - 이메일: {}", tempInfo.getEmail());
-//
-//            return OAuth2SignupCompleteResponse.builder()
-//                    .status("SUCCESS")
-//                    .message("회원가입이 완료되었습니다.")
-//                    .email(savedMember.getEmail())
-//                    .nickname(savedMember.getNickname())
-//                    .roles(savedMember.getRoles())
-//                    .accessToken(tokenInfo.getAccessToken())
-//                    .build();
-//
-//        } catch (Exception e) {
-//            log.error("회원가입 처리 중 오류 발생 - 이메일: {}", tempInfo.getEmail(), e);
-//            throw new RuntimeException("회원가입 처리 중 오류가 발생했습니다.", e);
-//        }
-//    }
-//
-//    private OAuthTempMemberInfo validateAndGetTempInfo(String token) {
-//        if (!tokenProvider.validateOAuthToken(token)) {
-//            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
-//        }
-//
-//        String email = tokenProvider.getEmailFromOAuthToken(token);
-//        OAuthTempMemberInfo tempInfo = redisService.getTempMemberInfo(token);
-//
-//        if (!email.equals(tempInfo.getEmail())) {
-//            throw new InvalidTokenException("토큰 정보가 일치하지 않습니다.");
-//        }
-//        return tempInfo;
-//    }
-
-//    private TokenInfo createAuthenticationToken(Member member) {
-//        List<GrantedAuthority> authorities = member.getRoles().stream()
-//                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-//                .collect(Collectors.toList());
-//
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(
-//                member, null, authorities);
-//
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//        return tokenProvider.createToken(authentication);
-//    }
-//
-//    @Transactional(readOnly = true)
-//    public void validateNickname(String nickname) {
-//        if(memberRepository.existsByNickname(nickname)) {
-//            throw new DuplicateNicknameException("이미 사용 중인 닉네임입니다 : " + nickname);
-//        }
-//    }
