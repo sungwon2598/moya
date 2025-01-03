@@ -115,7 +115,7 @@ export const studyApiService = {
             throw error;
         }
     },
-
+    // 배포
     // 스터디 상세 조회
     getStudyDetail: async (postId: number): Promise<StudyApiResponse<StudyPost>> => {
         try {
