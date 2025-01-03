@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from "axios";
 import type { User, GoogleAuthResponse } from "../types/auth.types";
 
 export const BASE_URL =
-  import.meta.env.VITE_API_URL || "https://api.moyastudy.com";
+    import.meta.env.VITE_API_URL || "https://api.moyastudy.com";
 
 export const OAUTH_ENDPOINTS = {
   LOGIN: "/v1/oauth/login",
@@ -23,9 +23,9 @@ export interface AuthResponseData {
 
 export class AuthApiError extends Error {
   constructor(
-    message: string,
-    public statusCode?: number,
-    public errorCode?: string,
+      message: string,
+      public statusCode?: number,
+      public errorCode?: string,
   ) {
     super(message);
     this.name = "AuthApiError";
@@ -48,7 +48,7 @@ export const createAxiosInstance = (): AxiosInstance => {
 export const axiosInstance = createAxiosInstance();
 
 export const postGoogleAuth = async (
-  authData: GoogleAuthResponse,
+    authData: GoogleAuthResponse,
 ): Promise<ApiResponse<AuthResponseData>> => {
   try {
     const response = await axiosInstance.post<User>(OAUTH_ENDPOINTS.LOGIN, {
@@ -85,7 +85,7 @@ export const logout = async (): Promise<void> => {
 export const getUserInfo = async (): Promise<User> => {
   try {
     const response = await axiosInstance.get<ApiResponse<User>>(
-      OAUTH_ENDPOINTS.USER_INFO,
+        OAUTH_ENDPOINTS.USER_INFO,
     );
 
     if (!response.data.success || !response.data.data) {
