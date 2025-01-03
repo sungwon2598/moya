@@ -86,7 +86,6 @@ public class OauthService {
     @Transactional
     public MemberAuthResult loginOAuthGoogle(IdTokenRequestDto requestBody) {
         log.info("Authorization Code: {}", requestBody.getAuthCode());
-
         GoogleIdTokenResponse tokenResponse = getGoogleTokens(requestBody.getAuthCode(),requestBody.getRedirectUri());
         GoogleIdToken.Payload idTokenPayload = verifyAndGetIdToken(tokenResponse.getIdToken());
         GoogleUserInfo userInfo = getGoogleUserInfo(tokenResponse.getAccessToken());
@@ -118,6 +117,7 @@ public class OauthService {
 
         return new MemberAuthResult(tokenInfo.getAccessToken(), tokenInfo.getRefreshToken(), savedMember);
     }
+
 
     private GoogleIdTokenResponse getGoogleTokens(String authorizationCode, String redirectUri) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
