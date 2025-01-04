@@ -4,6 +4,8 @@ import com.study.moya.auth.dto.SignupRequest;
 import com.study.moya.auth.exception.EmailAlreadyExistsException;
 import com.study.moya.auth.exception.UserNotFoundException;
 import com.study.moya.member.domain.Member;
+import com.study.moya.member.domain.MemberStatus;
+import com.study.moya.member.domain.Role;
 import com.study.moya.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.swing.text.html.Option;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
 
 @Service
@@ -58,15 +62,21 @@ public class MemberService implements UserDetailsService {
         String encodedPassword = passwordEncoder.encode(signUpRequest.password());
         log.debug("비밀번호 암호화 완료 - 이메일: {}", signUpRequest.email());
 
-        Member member = Member.createBuilder()
+        Member member = Member.builder()
                 .email(signUpRequest.email())
                 .password(encodedPassword)
                 .nickname(signUpRequest.nickname())
                 .providerId(signUpRequest.providerId())
-                .profileImageUrl(signUpRequest.profileImageUrl())
-                .termsAgreed(signUpRequest.termsAgreed())
-                .privacyPolicyAgreed(signUpRequest.privacyPolicyAgreed())
-                .marketingAgreed(signUpRequest.marketingAgreed())
+                .profileImageUrl("default_profile_image_url")
+                .roles(new HashSet<>(Collections.singleton(Role.USER)))
+                .status(MemberStatus.ACTIVE)
+                .version(1L)
+                .termsAgreed(true)
+                .privacyPolicyAgreed(true)
+                .marketingAgreed(false)
+                .accessToken(null)
+                .refreshToken(null)
+                .tokenExpirationTime(null)
                 .build();
 
         log.debug("회원 엔티티 생성 완료 - 이메일: {}, 닉네임: {}", member.getEmail(), member.getNickname());

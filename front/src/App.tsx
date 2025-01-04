@@ -15,6 +15,7 @@ import AdminLayout from "@pages/adminator/layout/AdminLayout.tsx";
 import CategoryManagement from "@pages/category/CategoryManagement.tsx";
 import {ProtectedRoute} from "@features/auth/components/ProtectedRoute.tsx";
 import {AdminRoute} from "@features/auth/components/AdminRoute.tsx";
+import StudyCreate from "./pages/study/StudyPostCreate.tsx";
 
 const App: React.FC = () => {
     return (
@@ -33,10 +34,11 @@ const App: React.FC = () => {
                                 </Route>
 
                                 {/* 스터디 관련 라우트 */}
-                                <Route path="study">
-                                    <Route index element={<StudyList />} />
-                                    <Route path=":postId" element={<StudyPostDetail />} />
-                                </Route>
+                            <Route path="study">
+                                <Route index element={<StudyList />} />
+                                <Route path=":postId" element={<StudyPostDetail />} />
+                                <Route path="create" element={<StudyCreate />} />
+                            </Route>
 
                             <Route path="admin">
                                 <Route path="categorys" element={

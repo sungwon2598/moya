@@ -1,6 +1,5 @@
 import { StudyPost, StudyApiResponse, Category } from '@/core/config/studyApiConfig';
 
-// 목업 카테고리 데이터
 export const MOCK_CATEGORIES: Category[] = [
     {
         "id": 1,
@@ -46,7 +45,6 @@ export const MOCK_CATEGORIES: Category[] = [
     }
 ];
 
-// 목업 게시글 데이터
 export const MOCK_STUDY_POSTS: StudyPost[] = [
     {
         postId: 1,
@@ -72,6 +70,7 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
         views: 130,
         totalComments: 0,
         isLiked: false,
+        totalLikes: 0,
         tags: ["React", "TypeScript", "Next.js"]
     },
     {
@@ -96,6 +95,7 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
         views: 91,
         totalComments: 0,
         isLiked: true,
+        totalLikes: 5,
         tags: ["Spring", "JPA", "AWS"]
     },
     {
@@ -117,6 +117,7 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
         views: 28,
         totalComments: 0,
         isLiked: false,
+        totalLikes: 2,
         tags: ["TypeScript", "React"]
     },
     {
@@ -142,6 +143,7 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
         views: 77,
         totalComments: 0,
         isLiked: true,
+        totalLikes: 8,
         tags: ["Spring", "AWS", "Docker", "Jenkins"]
     },
     {
@@ -167,13 +169,12 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
         views: 23,
         totalComments: 0,
         isLiked: false,
+        totalLikes: 3,
         tags: ["Python", "Pandas", "SQL"]
     }
 ];
 
-// Mock API Service
 export const mockStudyApiService = {
-    // 기존 메서드들 유지
     getCategoriesHierarchy: async (): Promise<StudyApiResponse<Category[]>> => {
         return {
             data: MOCK_CATEGORIES,
@@ -228,7 +229,6 @@ export const mockStudyApiService = {
         };
     },
 
-    // 새로 추가되는 메서드들
     getStudyDetail: async (postId: number): Promise<StudyApiResponse<StudyPost>> => {
         const post = MOCK_STUDY_POSTS.find(post => post.postId === postId);
 

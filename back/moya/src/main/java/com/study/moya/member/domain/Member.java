@@ -51,19 +51,7 @@ public class Member extends BaseEntity implements UserDetails {
     @Column(length = 200)
     private String profileImageUrl;
 
-
-    //-------------------redis에 저장 예정-------------------
-    @Column(length = 1000)
-    private String accessToken;
-
-    @Column(length = 1000)
-    private String refreshToken;
-
-    @Column
-    private Instant tokenExpirationTime;
-    //-----------------------------------------------------
-
-    //    @Convert(converter = StringCryptoConverter.class)
+    @Convert(converter = StringCryptoConverter.class)
     @Column(nullable = false, updatable = false)
     private String providerId;
 
@@ -88,6 +76,8 @@ public class Member extends BaseEntity implements UserDetails {
     @Embedded
     private PrivacyConsent privacyConsent;
 
+    @Embedded
+    private MemberOAuthToken memberOAuthToken;
 //    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private PointAccount pointAccount;
 
@@ -98,243 +88,42 @@ public class Member extends BaseEntity implements UserDetails {
         //createPointAccount();
     }
 
-//    @Builder(builderMethodName = "createBuilder")
-//    public Member(String email, String password, String nickname, String providerId, String profileImageUrl,
-//                  String accessToken, String refreshToken, Instant tokenExpirationTime,
-//                  Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed, Set<Role> roles,
-//                  MemberStatus status) {
-//        this.email = email;
-//        this.password = password;
-//        this.nickname = nickname;
-//        this.providerId = providerId;
-//        this.profileImageUrl = profileImageUrl;
-//        this.accessToken = accessToken;
-//        this.refreshToken = refreshToken;
-//        this.tokenExpirationTime = tokenExpirationTime;
-//        this.status = status;
-//        this.roles = roles;
-//        this.lastLoginAt = LocalDateTime.now();
-//        this.personalInfoExpiryDate = calculateExpiryDate();
-//        this.privacyConsent = PrivacyConsent.builder()
-//                .termsAgreed(termsAgreed)
-//                .privacyPolicyAgreed(privacyPolicyAgreed)
-//                .marketingAgreed(marketingAgreed)
-//                .build();
-//    }
-//
-//
-//    @Builder(builderMethodName = "updateBuilder")
-//    public Member(Member existingMember, String accessToken, String refreshToken, Instant tokenExpirationTime, Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed) {
-//        this.email = existingMember.getEmail();
-//        this.password = existingMember.getPassword();
-//        this.nickname = existingMember.getNickname();
-//        this.profileImageUrl = existingMember.getProfileImageUrl();
-//        this.accessToken = accessToken;
-//        this.refreshToken = refreshToken;
-//        this.tokenExpirationTime = tokenExpirationTime;
-//        this.status = existingMember.getStatus();
-//        this.roles = existingMember.getRoles();
-//        this.lastLoginAt = LocalDateTime.now();
-//        this.providerId = existingMember.getProviderId(); // getProviderId() 대신 직접 가져오기
-//        this.roles = existingMember.getRoles(); // getRoles() 대신 직접 가져오기
-//        this.status = existingMember.getStatus(); // getStatus() 대신 직접 가져오기
-//        this.privacyConsent = PrivacyConsent.builder()
-//                .termsAgreed(termsAgreed)
-//                .privacyPolicyAgreed(privacyPolicyAgreed)
-//                .marketingAgreed(marketingAgreed)
-//                .build();
-//    }
-
-    public static MemberBuilder createBuilder() {
-        return new MemberBuilder();
+    @Builder
+    private Member(String email, String password, String nickname, String providerId,
+                   String profileImageUrl, Set<Role> roles, MemberStatus status, Long version,
+                   Boolean termsAgreed, Boolean privacyPolicyAgreed, Boolean marketingAgreed,
+                   String accessToken, String refreshToken, Instant tokenExpirationTime) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.providerId = providerId;
+        this.profileImageUrl = profileImageUrl;
+        this.roles = roles != null ? roles : new HashSet<>();
+        this.status = status;
+        this.version = version;
+        this.lastLoginAt = LocalDateTime.now();
+        this.personalInfoExpiryDate = calculateExpiryDate();
+        this.privacyConsent = PrivacyConsent.builder()
+                .termsAgreed(termsAgreed)
+                .privacyPolicyAgreed(privacyPolicyAgreed)
+                .marketingAgreed(marketingAgreed)
+                .build();
+        this.memberOAuthToken = MemberOAuthToken.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenExpirationTime(tokenExpirationTime)
+                .build();
     }
 
-    public static class MemberBuilder {
-        private String email;
-        private String password;
-        private String nickname;
-        private String providerId;
-        private String profileImageUrl;
-        private String accessToken;
-        private String refreshToken;
-        private Instant tokenExpirationTime;
-        private Boolean termsAgreed;
-        private Boolean privacyPolicyAgreed;
-        private Boolean marketingAgreed;
-        private Set<Role> roles = new HashSet<>();
-        private MemberStatus status;
-        private Long version;
-
-        private MemberBuilder() {
-        }
-
-        public MemberBuilder email(String email) {
-            this.email = email;
-            return this;
-        }
-
-        public MemberBuilder password(String password) {
-            this.password = password;
-            return this;
-        }
-
-        public MemberBuilder nickname(String nickname) {
-            this.nickname = nickname;
-            return this;
-        }
-
-        public MemberBuilder providerId(String providerId) {
-            this.providerId = providerId;
-            return this;
-        }
-
-        public MemberBuilder profileImageUrl(String profileImageUrl) {
-            this.profileImageUrl = profileImageUrl;
-            return this;
-        }
-
-        public MemberBuilder accessToken(String accessToken) {
-            this.accessToken = accessToken;
-            return this;
-        }
-
-        public MemberBuilder refreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-            return this;
-        }
-
-        public MemberBuilder tokenExpirationTime(Instant tokenExpirationTime) {
-            this.tokenExpirationTime = tokenExpirationTime;
-            return this;
-        }
-
-        public MemberBuilder termsAgreed(Boolean termsAgreed) {
-            this.termsAgreed = termsAgreed;
-            return this;
-        }
-
-        public MemberBuilder privacyPolicyAgreed(Boolean privacyPolicyAgreed) {
-            this.privacyPolicyAgreed = privacyPolicyAgreed;
-            return this;
-        }
-
-        public MemberBuilder marketingAgreed(Boolean marketingAgreed) {
-            this.marketingAgreed = marketingAgreed;
-            return this;
-        }
-
-        public MemberBuilder roles(Set<Role> roles) {
-            this.roles = roles;
-            return this;
-        }
-
-        public MemberBuilder version(Long version) {
-            this.version = version;
-            return this;
-        }
-
-        public MemberBuilder status(MemberStatus status) {
-            this.status = status;
-            return this;
-        }
-
-        public Member build() {
-            Member member = new Member();
-            member.email = this.email;
-            member.password = this.password;
-            member.nickname = this.nickname;
-            member.providerId = this.providerId;
-            member.profileImageUrl = this.profileImageUrl;
-            member.accessToken = this.accessToken;
-            member.refreshToken = this.refreshToken;
-            member.tokenExpirationTime = this.tokenExpirationTime;
-            member.roles = this.roles;
-            member.status = this.status;
-            member.version = this.version;
-            member.lastLoginAt = LocalDateTime.now();
-            member.personalInfoExpiryDate = calculateExpiryDate();
-            member.privacyConsent = PrivacyConsent.builder()
-                    .termsAgreed(this.termsAgreed)
-                    .privacyPolicyAgreed(this.privacyPolicyAgreed)
-                    .marketingAgreed(this.marketingAgreed)
+    public void updateOAuthTokens(String accessToken, String refreshToken, Instant tokenExpirationTime) {
+        if (this.memberOAuthToken == null) {
+            this.memberOAuthToken = MemberOAuthToken.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .tokenExpirationTime(tokenExpirationTime)
                     .build();
-            return member;
-        }
-
-        private LocalDateTime calculateExpiryDate() {
-            return LocalDateTime.now().plusYears(MemberConstants.PERSONAL_INFO_RETENTION_YEARS);
-        }
-    }
-
-    public static MemberUpdateBuilder updateBuilder(Member existingMember) {
-        return new MemberUpdateBuilder(existingMember);
-    }
-
-    public static class MemberUpdateBuilder {
-        private final Member existingMember;
-        private String accessToken;
-        private String refreshToken;
-        private Instant tokenExpirationTime;
-        private Boolean termsAgreed;
-        private Boolean privacyPolicyAgreed;
-        private Boolean marketingAgreed;
-
-        private MemberUpdateBuilder(Member existingMember) {
-            this.existingMember = existingMember;
-        }
-
-        public MemberUpdateBuilder accessToken(String accessToken) {
-            this.accessToken = accessToken;
-            return this;
-        }
-
-        public MemberUpdateBuilder refreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-            return this;
-        }
-
-        public MemberUpdateBuilder tokenExpirationTime(Instant tokenExpirationTime) {
-            this.tokenExpirationTime = tokenExpirationTime;
-            return this;
-        }
-
-        public MemberUpdateBuilder termsAgreed(Boolean termsAgreed) {
-            this.termsAgreed = termsAgreed;
-            return this;
-        }
-
-        public MemberUpdateBuilder privacyPolicyAgreed(Boolean privacyPolicyAgreed) {
-            this.privacyPolicyAgreed = privacyPolicyAgreed;
-            return this;
-        }
-
-        public MemberUpdateBuilder marketingAgreed(Boolean marketingAgreed) {
-            this.marketingAgreed = marketingAgreed;
-            return this;
-        }
-
-        public Member build() {
-            Member updatedMember = new Member();
-            updatedMember.id = this.existingMember.getId();
-            updatedMember.email = this.existingMember.getEmail();
-            updatedMember.password = this.existingMember.getPassword();
-            updatedMember.nickname = this.existingMember.getNickname();
-            updatedMember.profileImageUrl = this.existingMember.getProfileImageUrl();
-            updatedMember.accessToken = this.accessToken != null ? this.accessToken : this.existingMember.getAccessToken();
-            updatedMember.refreshToken = this.refreshToken != null ? this.refreshToken : this.existingMember.getRefreshToken();
-            updatedMember.tokenExpirationTime = this.tokenExpirationTime != null ? this.tokenExpirationTime : this.existingMember.getTokenExpirationTime();
-            updatedMember.providerId = this.existingMember.getProviderId();
-            updatedMember.roles = this.existingMember.getRoles();
-            updatedMember.status = this.existingMember.getStatus();
-            updatedMember.version = this.existingMember.getVersion();
-            updatedMember.lastLoginAt = LocalDateTime.now();
-            updatedMember.personalInfoExpiryDate = this.existingMember.getPersonalInfoExpiryDate();
-            updatedMember.privacyConsent = PrivacyConsent.builder()
-                    .termsAgreed(true)
-                    .privacyPolicyAgreed(true)
-                    .marketingAgreed(true)
-                    .build();
-            return updatedMember;
+        } else {
+            this.memberOAuthToken.updateOAuthToken(accessToken, refreshToken, tokenExpirationTime);
         }
     }
 
@@ -482,12 +271,4 @@ public class Member extends BaseEntity implements UserDetails {
     public boolean isEnabled() {
         return this.status == MemberStatus.ACTIVE;
     }
-
-    public void updateTokenInfo(String accessToken, String refreshToken, Instant tokenExpirationTime) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-        this.tokenExpirationTime = tokenExpirationTime;
-        this.updateLastModifiedAt();
-    }
-
 }

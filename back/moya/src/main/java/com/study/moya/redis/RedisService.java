@@ -2,7 +2,6 @@ package com.study.moya.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.study.moya.oauth.dto.OAuthTempMemberInfo;
 import com.study.moya.oauth.exception.InvalidTokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,50 +25,6 @@ public class RedisService {
     private static final String TOKEN_REFRESH_PREFIX = "token:refresh:";
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
-    public OAuthTempMemberInfo getTempMemberInfo(String token) {
-        String key = REDIS_KEY_PREFIX + token;
-        log.info("Attempting to get data with key: {}", key);
-
-        Object tempMemberObj = redisTemplate.opsForValue().get(key);
-        log.info("Retrieved value from Redis: {}", tempMemberObj);
-
-        if (tempMemberObj == null) {
-            log.error("No data found for key: {}", key);
-            throw new InvalidTokenException("임시 회원 정보를 찾을 수 없거나 만료되었습니다.");
-        }
-
-        try {
-            String tempMemberJson;
-            if (tempMemberObj instanceof String) {
-                tempMemberJson = (String) tempMemberObj;
-            } else {
-                tempMemberJson = objectMapper.writeValueAsString(tempMemberObj);
-            }
-
-            log.info("JSON string to parse: {}", tempMemberJson);
-            return objectMapper.readValue(tempMemberJson, OAuthTempMemberInfo.class);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to parse JSON for key {}: {}", key, e.getMessage());
-            throw new RuntimeException("임시 회원 정보 변환 중 오류 발생", e);
-        }
-    }
-
-    /**
-     * 회원 가입 시 임시 토큰 생성 (약관 동의 및 별명, 자기소개 글 설정 이후 삭제)
-     */
-    public void saveTempMemberInfo(String token, OAuthTempMemberInfo info) {
-        String key = REDIS_KEY_PREFIX + token;
-        try {
-            String value = objectMapper.writeValueAsString(info);
-            log.info("Saving to Redis - Key: {}, Value: {}", key, value);
-            redisTemplate.opsForValue().set(key, value);
-            redisTemplate.expire(key, 2, TimeUnit.MINUTES);
-            log.info("Successfully saved to Redis");
-        } catch (JsonProcessingException e) {
-            log.error("Failed to save to Redis", e);
-            throw new RuntimeException("Failed to save temp member info", e);
-        }
-    }
 
     public void deleteTempMemberInfo(String token) {
         String key = REDIS_KEY_PREFIX + token;
@@ -81,9 +36,9 @@ public class RedisService {
     /**
      * Access Token과 Refresh Token 저장
      */
-    public void saveTokens(String encryptedEmail, String refreshToken) {
+    public void saveTokens(String memberId, String refreshToken) {
 //        String accessKey = TOKEN_ACCESS_PREFIX + uniqueIdentifier;
-        String refreshKey = TOKEN_REFRESH_PREFIX + encryptedEmail;
+        String refreshKey = TOKEN_REFRESH_PREFIX + memberId;
 
         try {
 //            redisTemplate.opsForValue().set(accessKey, accessToken);
@@ -95,10 +50,10 @@ public class RedisService {
 
             redisTemplate.opsForHash().putAll(refreshKey, tokenInfo);
             redisTemplate.expire(refreshKey, 7, TimeUnit.DAYS);
-            log.info("Token info saved for identifier: {}", encryptedEmail);
+            log.info("Token info saved for identifier: {}", memberId);
 
         } catch (Exception e) {
-            log.error("Failed to save tokens and email for identifier: {}", encryptedEmail, e);
+            log.error("Failed to save tokens and email for identifier: {}", memberId, e);
             throw new RuntimeException("토큰과 이메일 저장 중 오류가 발생했습니다.", e);
         }
     }
@@ -119,8 +74,8 @@ public class RedisService {
     /**
      * Refresh Token 조회
      */
-    public String getRefreshToken(String uniqueIdentifier) {
-        String key = TOKEN_REFRESH_PREFIX + uniqueIdentifier;
+    public String getRefreshToken(String memberId) {
+        String key = TOKEN_REFRESH_PREFIX + memberId;
         String refreshToken = (String) redisTemplate.opsForHash().get(key, "refreshToken");
 
         if (refreshToken == null) {
@@ -178,13 +133,13 @@ public class RedisService {
     /**
      * Refresh Token만 삭제
      */
-    public void deleteRefreshToken(String email) {
-        String key = TOKEN_REFRESH_PREFIX + email;
+    public void deleteRefreshToken(String memberId) {
+        String key = TOKEN_REFRESH_PREFIX + memberId;
         try {
             Boolean deleted = redisTemplate.delete(key);
-            log.info("Refresh Token deleted for email: {} (result: {})", email, deleted);
+            log.info("Refresh Token deleted for email: {} (result: {})", memberId, deleted);
         } catch (Exception e) {
-            log.error("Failed to delete Refresh Token for email: {}", email, e);
+            log.error("Failed to delete Refresh Token for email: {}", memberId, e);
             throw new RuntimeException("Refresh Token 삭제 중 오류가 발생했습니다.", e);
         }
     }
@@ -244,12 +199,12 @@ public class RedisService {
     /**
      * 로그인 시에 redis에 refreshToken이 존재하는지 확인
      */
-    public String findIdentifierByEmail(String email) {
+    public String findIdentifierByMemberId(String memberId) {
         Set<String> keys = redisTemplate.keys(TOKEN_REFRESH_PREFIX + "*");
         if (keys != null) {
             for (String key : keys) {
                 String storedEmail = (String) redisTemplate.opsForHash().get(key, "email");
-                if (email.equals(storedEmail)) {
+                if (memberId.equals(storedEmail)) {
                     return key.substring(TOKEN_REFRESH_PREFIX.length());
                 }
             }
