@@ -242,12 +242,18 @@ public class OauthService {
      */
     @Transactional
     public TokenRefreshResult refreshToken(String refreshToken) {
-        log.info(refreshToken);
-        String currentIdentifier = jwtTokenProvider.getEmailFromOAuthToken(refreshToken);
-        log.info(currentIdentifier);
-        String storedRefreshToken = redisService.getRefreshToken(currentIdentifier);
-        log.info(storedRefreshToken);
-//        String storedEmail = redisService.getEmailByIdentifier(currentIdentifier);
+        log.info("Refresh token received: {}", refreshToken);
+
+        // 토큰에서 이메일 추출
+        String currentId = jwtTokenProvider.extractEmail(refreshToken);
+        log.info("User email extracted from token: {}", currentId);
+        Member member = memberRepository.findByEmail(currentId)
+                .orElseThrow(() -> new InvalidTokenException("User not found"));
+
+        String memberId = String.valueOf(member.getId());
+
+        String storedRefreshToken = redisService.getRefreshToken(memberId);
+        log.info("Stored refresh token found: {}", storedRefreshToken);
 
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
@@ -256,9 +262,6 @@ public class OauthService {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new InvalidTokenException("Expired or invalid refresh token");
         }
-
-        Member member = memberRepository.findByEmail(currentIdentifier)
-                .orElseThrow(() -> new InvalidTokenException("User not found"));
 
         List<GrantedAuthority> authorities = member.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
@@ -269,40 +272,38 @@ public class OauthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-//        String newIdentifier = generateUniqueIdentifier();
-        String newAccessToken = jwtTokenProvider.createTokenForOAuth(currentIdentifier);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(currentIdentifier);
+        JwtTokenProvider.TokenInfo tokenInfo = jwtTokenProvider.createToken(authentication);
 
-        redisService.saveTokens(currentIdentifier, newRefreshToken);
+        redisService.saveTokens(memberId, tokenInfo.getRefreshToken());
 
-        return new TokenRefreshResult(newAccessToken, newRefreshToken);
+        return new TokenRefreshResult(tokenInfo.getAccessToken(), tokenInfo.getRefreshToken());
     }
-
 
     /**                          
      * 로그아웃 메서드
      */
     public void logout(String accessToken, String refreshToken) {
         try {
-            // 리프레시 토큰에서 이메일 추출
-            log.info("ac, rf : {}, {}", accessToken, refreshToken);
-            String userEmail = jwtTokenProvider.getEmailFromOAuthToken(refreshToken);
-            log.info("userEmail : {}", userEmail);
+            log.info("Logout request received - Access Token: {}, Refresh Token: {}", accessToken, refreshToken);
+
+            String userEmail = jwtTokenProvider.extractEmail(refreshToken);
+            log.info("User email extracted from token: {}", userEmail);
 
             SecurityContextHolder.clearContext();
 
-            // 액세스 토큰 블랙리스트에 추가
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
                 long expirationTime = jwtTokenProvider.getExpirationTime(accessToken);
                 redisService.addToBlacklist(accessToken, expirationTime);
+                log.info("Access token added to blacklist, expires at: {}", expirationTime);
             }
 
-            // Redis에서 리프레시 토큰 삭제
             redisService.deleteRefreshToken(userEmail);
+            log.info("Refresh token deleted for user: {}", userEmail);
 
-            log.info("User logged out successfully: {}", userEmail);
+            log.info("Logout completed successfully for user: {}", userEmail);
         } catch (Exception e) {
             log.error("Error during logout process", e);
+            throw e;
         }
     }
 
