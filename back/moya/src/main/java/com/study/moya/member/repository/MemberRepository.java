@@ -2,6 +2,8 @@ package com.study.moya.member.repository;
 
 import com.study.moya.member.domain.Member;
 import java.util.Optional;
+
+import com.study.moya.member.domain.MemberStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +16,5 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     boolean existsByNickname(String nickname);
 
+    boolean existsByNicknameAndStatusNot(String nickname, MemberStatus status);
 }

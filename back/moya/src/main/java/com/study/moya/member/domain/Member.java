@@ -73,6 +73,9 @@ public class Member extends BaseEntity implements UserDetails {
     @Column(name = "personal_info_expiry_date")
     private LocalDateTime personalInfoExpiryDate;
 
+    @Column(length = 500)
+    private String introduction;
+
     @Embedded
     private PrivacyConsent privacyConsent;
 
@@ -185,6 +188,11 @@ public class Member extends BaseEntity implements UserDetails {
         if (this.status == MemberStatus.DORMANT) {
             this.status = MemberStatus.ACTIVE;
         }
+    }
+
+    public void updateIntroduction(String introduction) {
+        validateModifiable();
+        this.introduction = introduction;
     }
 
     public void convertToDormant() {
