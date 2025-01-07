@@ -12,6 +12,9 @@ export const STUDY_ENDPOINTS = {
     LIKE: (postId: number) => `${BASE_URL}/api/posts/${postId}/like`,
     UNLIKE: (postId: number) => `${BASE_URL}/api/posts/${postId}/like`,
     CATEGORIES_HIERARCHY: `${BASE_URL}/api/categories/hierarchy`,
+    CREATE_CATEGORY: `${BASE_URL}/api/categories`,
+    DELETE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
+    UPDATE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`
 } as const;
 
 // 카테고리 관련 타입 정의
@@ -20,6 +23,18 @@ export interface Category {
     name: string;
     subCategories: Category[];
 }
+
+//카테고리 생성 dto 인터페이스
+export interface CreateCategoryRequest {
+    name: string;
+    parentId?: number;  // Long -> number, optional로 설정
+}
+
+//카테고리 수정 dto 인터페이스
+export interface UpdateCategoryRequest {
+    name: string;
+}
+
 
 // 스터디 게시글 관련 타입 정의
 export interface StudyPost {
@@ -91,6 +106,33 @@ export const studyApiService = {
     },
 
     // 스터디 목록 조회
+    //카테고리 생성
+    createCategory: async (data: CreateCategoryRequest) => {
+        const response = await axios.post<StudyApiResponse<void>>(
+            STUDY_ENDPOINTS.CREATE_CATEGORY,
+            data
+        );
+        return response.data;
+    },
+
+    //카테고리 삭제
+    deleteCategory: async (categoryId: number) => {
+        const response = await axios.delete<StudyApiResponse<void>>(
+            STUDY_ENDPOINTS.DELETE_CATEGORY(categoryId)
+        );
+        return response.data;
+    },
+
+    //카테고리 수정
+    updateCategory: async (categoryId: number, data: UpdateCategoryRequest) => {
+        const response = await axios.put(
+            STUDY_ENDPOINTS.UPDATE_CATEGORY(categoryId),
+            data
+        );
+        return response.data;
+    },
+
+    // 스터디 목록 조회 (Mock 데이터 사용)
     getStudyList: async (page = 0, size = 10, filters?: Record<string, any>): Promise<StudyApiResponse<StudyPost[]>> => {
         try {
             const params = new URLSearchParams({
