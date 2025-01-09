@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { useModal } from "@shared/hooks/useModal";
 import CreateRoadmapModal from "@pages/create-sample/CreateRoadmapModal";
@@ -8,6 +8,7 @@ import {
     RoadMapSimpleDto,
     roadmapApiService
 } from "@core/config/roadmapApiConfig";
+import ViewRoadmapModal from "@pages/create-sample/ViewRoadmapModal.tsx";
 
 const CreateSample: React.FC = () => {
     const { showModal } = useModal();
@@ -22,6 +23,7 @@ const CreateSample: React.FC = () => {
     const [roadmapList, setRoadmapList] = useState<RoadMapSimpleDto[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasNewResponse, setHasNewResponse] = useState<boolean>(false);
 
     // 로드맵 생성 함수
     const handleGenerateRoadmap = async (request: RoadmapRequest) => {
@@ -30,6 +32,7 @@ const CreateSample: React.FC = () => {
         try {
             const response = await roadmapApiService.generateWeeklyRoadmap(request);
             setRoadmapResponse(response);
+            setHasNewResponse(true);  // 새로운 응답이 도착하면 true로 설정
         } catch (err) {
             setError(err instanceof Error ? err.message : '로드맵 생성에 실패했습니다.');
         } finally {
@@ -79,8 +82,24 @@ const CreateSample: React.FC = () => {
                         </div>
                     )}
 
-                    {/* 추가 버튼 - 박스 우측 하단에 위치 */}
-                    <div className="absolute bottom-6 right-6">
+                    {/* 추가 버튼들 영역 */}
+                    <div className="absolute bottom-6 right-6 flex gap-4">
+                        {roadmapResponse && (
+                            <button
+                                className="bg-white border border-gray-200 text-gray-800 p-4 rounded-full shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                                onClick={() => {
+                                    setHasNewResponse(false);  // 확인 시 false로 설정
+                                    showModal(<ViewRoadmapModal roadmapResponse={roadmapResponse} />);
+                                }}
+                            >
+                                <span className="font-medium">샘플 확인</span>
+                                {hasNewResponse && (
+                                    <div className="bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">
+                                        1
+                                    </div>
+                                )}
+                            </button>
+                        )}
                         <button
                             className="bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                             onClick={() => showModal(<CreateRoadmapModal onSubmit={handleGenerateRoadmap} />)}
