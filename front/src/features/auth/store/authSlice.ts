@@ -16,7 +16,7 @@ const initialState: AuthState = {
 //     user: {         // 목업 유저 데이터
 //         email: 'test@test.com',
 //         nickname: 'TestAdmin',
-//         roles: ['ADMIN'],
+//         roles: ['ROLE_ADMIN'],
 //         status: 'ACTIVE' as const
 //     },
 //     loading: false,
