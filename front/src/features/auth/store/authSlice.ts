@@ -17,7 +17,8 @@ const initialState: AuthState = {
 //         email: 'test@test.com',
 //         nickname: 'TestAdmin',
 //         roles: ['ROLE_ADMIN'],
-//         status: 'ACTIVE' as const
+//         status: 'ACTIVE' as const,
+//         profileImageUrl: 'https://lh3.googleusercontent.com/a/ACg8ocJvIDalnTBvCDOYm4opKgE5TENJI4SsKk7dsltfHR3GtF-bWA=s96-c'
 //     },
 //     loading: false,
 //     error: null,
