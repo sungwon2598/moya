@@ -96,15 +96,15 @@ public class CommentService {
     @Transactional
     public void deleteCommentAsAdmin(Long postId, Long commentId, String email) {
         if (email == null) {
-            throw new IllegalArgumentException("잘못된 접근입니다.");
+            throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
         if (postRepository.existsById(postId)) {
-            throw new IllegalArgumentException("존재하는 게시글이 아닙니다.");
+            throw PostException.of(PostErrorCode.POST_NOT_FOUND);
         }
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> PostException.of(PostErrorCode.NO_COMMENT));
 
         commentRepository.delete(comment);
     }
