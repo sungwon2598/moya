@@ -43,13 +43,15 @@ const App: React.FC = () => {
                                 <Route path="create" element={<StudyCreate />} />
                             </Route>
 
-                            <Route path="go" element={
-                                <ProtectedRoute>
-                                    <AdminRoute>
-                                        <Outlet />
-                                    </AdminRoute>
-                                </ProtectedRoute>
-                            }>
+                            <Route path="go"
+                            //        element={
+                            //     <ProtectedRoute>
+                            //         <AdminRoute>
+                            //             <Outlet />
+                            //         </AdminRoute>
+                            //     </ProtectedRoute>
+                            // }
+                            >
                                 <Route path="categorys" element={<CategoryManagement />} />
                                 <Route path="create-sample" element={<CreateSample />} />
                             </Route>

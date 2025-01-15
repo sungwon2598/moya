@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useModal } from "@shared/hooks/useModal";
 import { studyApiService } from "@core/config/studyApiConfig";
 import { RoadmapRequest } from "@core/config/roadmapApiConfig";
+import { getChoseong } from "es-hangul";
+import SearchBox from "@pages/create-sample/SerchBox.tsx";
 
 interface Category {
     id: number;
@@ -13,7 +15,10 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
     const { hideModal } = useModal();
     const [step, setStep] = useState(1);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+    const [filteredSubCategories, setFilteredSubCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // 선택된 값들을 저장할 상태
     const [selectedMainCategory, setSelectedMainCategory] = useState<Category | null>(null);
@@ -21,7 +26,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
     const [formData, setFormData] = useState({
         topic: "",
         level: "1",
-        duration: 1
+        duration: 2
     });
 
     // 카테고리 데이터 불러오기
@@ -31,6 +36,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
             try {
                 const response = await studyApiService.getCategoriesHierarchy();
                 setCategories(response);
+                setFilteredCategories(response);
             } catch (error) {
                 console.error("카테고리 로드 실패:", error);
             }
@@ -38,6 +44,52 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
         };
         fetchCategories();
     }, []);
+
+    // 검색어로 카테고리 필터링하는 함수
+    const filterBySearchTerm = (items: Category[], searchTerm: string) => {
+        const normalizedQuery = searchTerm.replace(/\s+/g, "").toLowerCase();
+        let queryChoseong = "";
+
+        if (/[\u3131-\u3163\uac00-\ud7a3]/.test(normalizedQuery)) {
+            queryChoseong = getChoseong(normalizedQuery);
+        }
+
+        return items.filter((item) => {
+            const itemName = item.name.replace(/\s+/g, "").toLowerCase();
+            let itemChoseong = "";
+
+            if (/[\u3131-\u3163\uac00-\ud7a3]/.test(itemName)) {
+                itemChoseong = getChoseong(itemName);
+            }
+
+            return (
+                itemName.includes(normalizedQuery) ||
+                (queryChoseong && itemChoseong.includes(queryChoseong))
+            );
+        });
+    };
+
+    // 대분류 검색 처리
+    const handleMainCategorySearch = (query: string) => {
+        setSearchQuery(query);
+        setFilteredCategories(filterBySearchTerm(categories, query));
+    };
+
+    // 중분류 검색 처리
+    const handleSubCategorySearch = (query: string) => {
+        setSearchQuery(query);
+        if (selectedMainCategory) {
+            setFilteredSubCategories(filterBySearchTerm(selectedMainCategory.subCategories, query));
+        }
+    };
+
+    // 대분류 선택 시 중분류 초기화
+    useEffect(() => {
+        if (selectedMainCategory) {
+            setFilteredSubCategories(selectedMainCategory.subCategories);
+            setSearchQuery("");
+        }
+    }, [selectedMainCategory]);
 
     // 최종 제출 처리
     const handleSubmit = () => {
@@ -60,11 +112,17 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
             case 1:
                 return (
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium mb-4">대분류 선택</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium">대분류 선택</h3>
+                            <SearchBox
+                                placeholder="대분류 검색..."
+                                onSearch={handleMainCategorySearch}
+                            />
+                        </div>
                         <div className="flex flex-wrap gap-3">
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <div className="flex flex-wrap gap-3">
-                                    {categories.map((category) => (
+                                    {filteredCategories.map((category) => (
                                         <div
                                             key={category.id}
                                             className={`px-4 py-2 rounded-full cursor-pointer transition-colors duration-200 ${
@@ -86,11 +144,17 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
             case 2:
                 return (
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium mb-4">중분류 선택</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium">중분류 선택</h3>
+                            <SearchBox
+                                placeholder="중분류 검색..."
+                                onSearch={handleSubCategorySearch}
+                            />
+                        </div>
                         <div className="flex flex-wrap gap-3">
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <div className="flex flex-wrap gap-3">
-                                    {selectedMainCategory?.subCategories.map((category) => (
+                                    {(searchQuery ? filteredSubCategories : selectedMainCategory?.subCategories)?.map((category) => (
                                         <div
                                             key={category.id}
                                             className={`px-4 py-2 rounded-full cursor-pointer transition-colors duration-200 ${
