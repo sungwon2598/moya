@@ -16,8 +16,9 @@ const initialState: AuthState = {
 //     user: {         // 목업 유저 데이터
 //         email: 'test@test.com',
 //         nickname: 'TestAdmin',
-//         roles: ['ADMIN'],
-//         status: 'ACTIVE' as const
+//         roles: ['ROLE_ADMIN'],
+//         status: 'ACTIVE' as const,
+//         profileImageUrl: 'https://lh3.googleusercontent.com/a/ACg8ocJvIDalnTBvCDOYm4opKgE5TENJI4SsKk7dsltfHR3GtF-bWA=s96-c'
 //     },
 //     loading: false,
 //     error: null,

@@ -8,7 +8,7 @@ const RoadmapPreview: FC = () => {
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold mb-2">로드맵 미리보기</h1>
+                    <h1 className="text-4xl font-bold mb-2 text-black">로드맵 미리보기</h1>
                     <p className="text-gray-600">AI가 만들어준 로드맵을 미리 확인해 볼 수 있어요</p>
                 </div>
 

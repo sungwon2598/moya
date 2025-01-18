@@ -1,8 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import {BrowserRouter, Routes, Route, Outlet} from 'react-router-dom';
 import { ModalProvider } from './core/providers/context/ModalContext';
 import RootLayout from './features/layout/RootLayout';
-import Main from './pages/main/MainContent.tsx';
+import Main from './pages/main/MainPage.tsx';
 import RoadmapPreview from './features/roadmap/RoadmapPreview.tsx';
 import EditProfile from "./features/profile/EditProfile.tsx";
 import {store} from './core/store/store.ts'
@@ -16,6 +16,8 @@ import CategoryManagement from "@pages/category/CategoryManagement.tsx";
 import {ProtectedRoute} from "@features/auth/components/ProtectedRoute.tsx";
 import {AdminRoute} from "@features/auth/components/AdminRoute.tsx";
 import StudyCreate from "./pages/study/StudyPostCreate.tsx";
+import CreateSample from "@pages/create-sample/CreateSample.tsx";
+import LearningRoad from "@pages/learningRoad/LearningRoad.tsx";
 
 const App: React.FC = () => {
     return (
@@ -28,28 +30,31 @@ const App: React.FC = () => {
                             <Route path="signin" element={<SignInPage />} />
                             <Route path="signup" element={<SignUpPage /> } />
 
-                                {/* 로드맵 관련 라우트 */}
-                                <Route path="roadmap">
-                                    <Route path="preview" element={<RoadmapPreview />} />
-                                </Route>
+                            {/* 로드맵 관련 라우트 */}
+                            <Route path="roadmap">
+                                <Route path="preview" element={<RoadmapPreview />} />
+                                <Route path="road" element={<LearningRoad />} />
+                            </Route>
 
-                                {/* 스터디 관련 라우트 */}
+                            {/* 스터디 관련 라우트 */}
                             <Route path="study">
                                 <Route index element={<StudyList />} />
                                 <Route path=":postId" element={<StudyPostDetail />} />
                                 <Route path="create" element={<StudyCreate />} />
                             </Route>
 
-                            <Route path="admin">
-                                <Route path="categorys" element={
-                                    <ProtectedRoute>
-                                        <AdminRoute>
-                                            <CategoryManagement />
-                                        </AdminRoute>
-                                    </ProtectedRoute>
-                                } />
+                            <Route path="go"
+                            //        element={
+                            //     <ProtectedRoute>
+                            //         <AdminRoute>
+                            //             <Outlet />
+                            //         </AdminRoute>
+                            //     </ProtectedRoute>
+                            // }
+                            >
+                                <Route path="categorys" element={<CategoryManagement />} />
+                                <Route path="create-sample" element={<CreateSample />} />
                             </Route>
-
                             <Route path="settings/profile" element={<EditProfile />} />
 
                             {/* 404 페이지 처리 */}
@@ -65,7 +70,7 @@ const App: React.FC = () => {
                             />
                         </Route>
 
-                        <Route path="adminn" element={<AdminLayout />}>
+                        <Route path="ggo" element={<AdminLayout />}>
                             <Route path="categories" element={<CategoryManagement />} />
                             <Route
                                 path="*"
