@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import { Settings, LogOut, User } from 'lucide-react';
+import { Settings, LogOut, User, Map, Heart } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logoutUser } from '@/features/auth/store/authSlice';
 import { User as UserType } from '@/features/auth/types/auth.types';
@@ -60,6 +60,18 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
 
                     <div className="py-1">
                         <MenuItem
+                            icon={Map}
+                            text="내 로드맵"
+                            href="/my-roadmap"
+                            onClick={onClose}
+                        />
+                        <MenuItem
+                            icon={Heart}
+                            text="내 관심 로드맵"
+                            href="/my-favorite-roadmap"
+                            onClick={onClose}
+                        />
+                        <MenuItem
                             icon={Settings}
                             text="프로필 설정"
                             href="/settings/profile"
@@ -96,6 +108,7 @@ interface MenuItemProps {
     text: string;
     href: string;
     onClick: () => void;
+    size?: number;
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({ icon: Icon, text, href, onClick }) => (
