@@ -9,7 +9,7 @@ const AdminLayout: React.FC = () => {
     }, []);
 
     return (
-        <div>
+        <div className="adminator">
             <LeftSidebar />
             <Dashboard />
         </div>
