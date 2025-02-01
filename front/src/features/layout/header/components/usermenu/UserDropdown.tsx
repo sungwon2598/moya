@@ -1,25 +1,23 @@
 import React from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, User, Map, Heart } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logoutUser } from '@/features/auth/store/authSlice';
-import { User } from '@/features/auth/types/auth.types';
+import { User as UserType } from '@/features/auth/types/auth.types';
 import { AppDispatch } from '@/core/store/store';
 import GoogleLoginButton from "../../../../auth/components/GoogleLoginButton.tsx";
 import { useAuth} from '../../../../auth/hooks/useAuth.ts'
 
 interface UserDropdownProps {
-    user: User | null;
+    user: UserType | null;
     isLogin: boolean;
     onClose: () => void;
 }
 
-export const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
-    const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
-    const navigate = useNavigate(); // useNavigate hook
-
+const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
     const { isAuthenticated, handleGoogleLogin } = useAuth();
-
 
     const handleLogout = async () => {
         try {
@@ -42,17 +40,37 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => 
         }
     };
 
-
     return (
         <div className="absolute right-0 top-[64px] w-56 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
             {isAuthenticated && user ? (
                 <>
-                    <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
-                        <p className="text-sm text-gray-600">{user.email}</p>
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center space-x-3">
+                        {user?.profileImageUrl ? (
+                            <img src={user.profileImageUrl} alt="프로필" className="w-10 h-10 rounded-full" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <User className="w-6 h-6 text-gray-600" />
+                            </div>
+                        )}
+                        <div>
+                            <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
+                            <p className="text-sm text-gray-600">{user.email}</p>
+                        </div>
                     </div>
 
                     <div className="py-1">
+                        <MenuItem
+                            icon={Map}
+                            text="내 로드맵"
+                            href="/my-roadmap"
+                            onClick={onClose}
+                        />
+                        <MenuItem
+                            icon={Heart}
+                            text="내 관심 로드맵"
+                            href="/my-favorite-roadmap"
+                            onClick={onClose}
+                        />
                         <MenuItem
                             icon={Settings}
                             text="프로필 설정"
@@ -90,6 +108,7 @@ interface MenuItemProps {
     text: string;
     href: string;
     onClick: () => void;
+    size?: number;
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({ icon: Icon, text, href, onClick }) => (
@@ -102,3 +121,5 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon: Icon, text, href, onClick }) 
         {text}
     </Link>
 );
+
+export default UserDropdown;

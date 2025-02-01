@@ -4,9 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import NavItem from './components/NavItem';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/core/store/store';
-import { UserDropdown } from "./components/usermenu/UserDropdown.tsx";
-// import LoginAlertModal from "../modal/LoginAlertModal.tsx";
-// import {ModalContext} from "../../../core/providers/context/ModalContext.tsx";
+import UserDropdown from "./components/usermenu/UserDropdown.tsx";
 
 const navigationItems = [
     {
@@ -39,8 +37,6 @@ export const Header: React.FC = () => {
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const { isLogin, user } = useSelector((state: RootState) => state.auth);
     const navigate = useNavigate();
-    // const modalContext = useContext(ModalContext);
-
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -69,18 +65,8 @@ export const Header: React.FC = () => {
     };
 
     const handleCreateStudy = () => {
-        // if (!isLogin && modalContext) {
-        //     modalContext.showModal(
-        //         <LoginAlertModal onClose={modalContext.hideModal} />,
-        //         {
-        //             showCloseButton: false,
-        //         }
-        //     );
-        //     return;
-        // }
         navigate('/study/create');
     };
-
 
     return (
         <>
@@ -117,7 +103,6 @@ export const Header: React.FC = () => {
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            {/* 스터디 만들기 버튼 추가 */}
                             <button
                                 onClick={handleCreateStudy}
                                 className="hidden md:flex px-4 py-2 bg-emerald-500 text-white rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors duration-200"
@@ -132,10 +117,14 @@ export const Header: React.FC = () => {
                                     aria-expanded={isDropdownOpen}
                                     aria-haspopup="true"
                                 >
-                                    <User className="w-5 h-5" />
+                                    {isLogin && user?.profileImageUrl ? (
+                                        <img src={user.profileImageUrl} alt="프로필" className="w-5 h-5 rounded-full" />
+                                    ) : (
+                                        <User className="w-5 h-5" />
+                                    )}
                                     <span className="text-sm font-medium">
-                                        {isLogin ? user?.nickname : '게스트'}
-                                    </span>
+                                       {isLogin ? user?.nickname : '게스트'}
+                                   </span>
                                     <ChevronDown className="w-4 h-4" />
                                 </button>
                                 {isDropdownOpen && (
@@ -175,7 +164,6 @@ export const Header: React.FC = () => {
                 </div>
 
                 <div className="py-4">
-                    {/* 모바일 메뉴에 스터디 만들기 버튼 추가 */}
                     <button
                         onClick={() => {
                             handleCreateStudy();
