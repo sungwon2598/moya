@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/core/store/store';
 import { UserAvatar } from './UserAvatar';
-import { UserDropdown } from './UserDropdown';
+import UserDropdown from './UserDropdown';
 
 export const UserMenu: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
