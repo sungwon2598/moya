@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { PlusCircle } from "lucide-react";
 import { useModal } from "@shared/hooks/useModal";
 import CreateRoadmapModal from "@pages/create-sample/CreateRoadmapModal";
@@ -12,15 +12,15 @@ import ViewRoadmapModal from "@pages/create-sample/ViewRoadmapModal.tsx";
 
 const CreateSample: React.FC = () => {
     const { showModal } = useModal();
-    const [roadmapRequest, setRoadmapRequest] = useState<RoadmapRequest>({
-        mainCategory: "",
-        subCategory: "",
-        currentLevel: "1",
-        duration: 1
-    });
+    // const [roadmapRequest, setRoadmapRequest] = useState<RoadmapRequest>({
+    //     mainCategory: "",
+    //     subCategory: "",
+    //     currentLevel: "1",
+    //     duration: 1
+    // });
 
     const [roadmapResponse, setRoadmapResponse] = useState<WeeklyRoadmapResponse | null>(null);
-    const [roadmapList, setRoadmapList] = useState<RoadMapSimpleDto[]>([]);
+    const [roadmapList] = useState<RoadMapSimpleDto[]>([]);  // fetchCategoryRoadmaps 구현 시 setRoadmapList 추가
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [hasNewResponse, setHasNewResponse] = useState<boolean>(false);
@@ -41,18 +41,18 @@ const CreateSample: React.FC = () => {
     };
 
     // 카테고리별 로드맵 목록 조회 함수
-    const fetchCategoryRoadmaps = async (categoryId: number) => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const response = await roadmapApiService.getCategoryRoadmaps(categoryId);
-            setRoadmapList(response);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : '로드맵 목록 조회에 실패했습니다.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // const fetchCategoryRoadmaps = async (categoryId: number) => {
+    //     setIsLoading(true);
+    //     setError(null);
+    //     try {
+    //         const response = await roadmapApiService.getCategoryRoadmaps(categoryId);
+    //         setRoadmapList(response);
+    //     } catch (err) {
+    //         setError(err instanceof Error ? err.message : '로드맵 목록 조회에 실패했습니다.');
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     return (
         <div className="p-6 min-h-screen bg-gray-50">
