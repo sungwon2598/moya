@@ -64,29 +64,29 @@ public class JwtTokenProvider {
     @Transactional
     public TokenInfo createToken(Authentication authentication) {
         Member member = (Member) authentication.getPrincipal();
-        String username = member.getEmail();
+        Long userId = member.getId();
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         // Access Token 생성
-        String accessToken = createAccessToken(username, authorities, member);
+        String accessToken = createAccessToken(userId, authorities, member);
         // Refresh Token 생성
-        String refreshToken = createRefreshToken(username);
+        String refreshToken = createRefreshToken(userId);
 
-        log.info("사용자를 위한 토큰 생성 완료: {}", username);
+        log.info("사용자를 위한 토큰 생성 완료: {}", userId);
         return new TokenInfo(accessToken, refreshToken);
     }
 
-    private String createAccessToken(String username, String authorities, Member member) {
+    private String createAccessToken(Long id, String authorities, Member member) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + accessTokenValidityInMilliseconds);
 
         return Jwts.builder()
-                .subject(username)
+                .subject(String.valueOf(id))
                 .claim("auth", authorities)
-                .claim("id", member.getId())
-                .claim("name", member.getNickname())
+//                .claim("id", member.getId())
+//                .claim("name", member.getNickname())
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(key, Jwts.SIG.HS256)
@@ -94,12 +94,12 @@ public class JwtTokenProvider {
     }
 
     @Transactional
-    public String createRefreshToken(String uniqueIdentifier) {
+    public String createRefreshToken(Long id) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
 
         String refreshToken = Jwts.builder()
-                .subject(uniqueIdentifier)
+                .subject(String.valueOf(id))
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(key, Jwts.SIG.HS256)
@@ -107,18 +107,17 @@ public class JwtTokenProvider {
 
         try {
             // 기존 리프레시 토큰이 있다면 삭제
-            refreshTokenRepository.deleteByMemberEmail(uniqueIdentifier);
-
+            refreshTokenRepository.deleteByMemberId(id);
             // 새로운 리프레시 토큰 저장
             refreshTokenRepository.save(new RefreshToken(
                     refreshToken,
-                    uniqueIdentifier,
+                    id,
                     LocalDateTime.now().plusSeconds(refreshTokenValidityInMilliseconds / 1000)
             ));
 
-            log.debug("리프레시 토큰 생성 및 저장 완료 - 사용자: {}", uniqueIdentifier);
+            log.debug("리프레시 토큰 생성 및 저장 완료 - 사용자: {}", id);
         } catch (Exception e) {
-            log.error("리프레시 토큰 처리 중 오류 발생 - 사용자: {}, 오류: {}", uniqueIdentifier, e.getMessage());
+            log.error("리프레시 토큰 처리 중 오류 발생 - 사용자: {}, 오류: {}", id, e.getMessage());
             throw new TokenProcessingException("리프레시 토큰 처리 중 오류가 발생했습니다.", e);
         }
         return refreshToken;
@@ -142,19 +141,20 @@ public class JwtTokenProvider {
 
         // 사용자 정보 조회
         MemberService memberService = memberServiceProvider.getObject();
-        Member member = memberService.findByEmail(refreshTokenEntity.getMemberEmail());
+//        Member member = memberService.findByEmail(refreshTokenEntity.getMemberEmail());
+        Member member = memberService.findById(refreshTokenEntity.getMemberId());
 
         // 새로운 액세스 토큰 생성
         String authorities = member.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        String newAccessToken = createAccessToken(member.getEmail(), authorities, member);
+        String newAccessToken = createAccessToken(member.getId(), authorities, member);
 
         // 새로운 리프레시 토큰 생성
-        String newRefreshToken = createRefreshToken(member.getEmail());
+        String newRefreshToken = createRefreshToken(member.getId());
 
-        log.info("토큰 갱신 완료 - 사용자: {}", member.getEmail());
+        log.info("토큰 갱신 완료 - 사용자 ID: {}, Email : {}", member.getId(), member.getEmail());
         return new TokenInfo(newAccessToken, newRefreshToken);
     }
 
@@ -171,10 +171,11 @@ public class JwtTokenProvider {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        String username = claims.getSubject();
-        log.info("사용자에 대한 인증 정보가 추출되었습니다: {}", username);
+//      String username = claims.getSubject();
+        Long userId = Long.parseLong(claims.getSubject());
+        log.info("사용자에 대한 인증 정보가 추출되었습니다: {}", userId);
 
-        return new UsernamePasswordAuthenticationToken(username, token, authorities);
+        return new UsernamePasswordAuthenticationToken(userId, token, authorities);
     }
 
     public boolean validateToken(String token) {
@@ -230,7 +231,7 @@ public class JwtTokenProvider {
         return claims.getExpiration().getTime();
     }
 
-    public String extractEmail(String token) {
+    public Long extractMemberId(String token) {
         try {
             if (token == null || token.trim().isEmpty()) {
                 throw new InvalidTokenException("토큰이 비어있습니다.");
@@ -247,7 +248,7 @@ public class JwtTokenProvider {
                 throw new InvalidTokenException("토큰에서 이메일 정보를 찾을 수 없습니다.");
             }
 
-            return subject;
+            return Long.parseLong(subject);
         } catch (JwtException e) {
             log.error("JWT 토큰 처리 중 오류 발생: {}", e.getMessage());
             throw new InvalidTokenException("토큰 처리 중 오류가 발생했습니다.", e);

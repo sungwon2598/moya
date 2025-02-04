@@ -245,12 +245,12 @@ public class OauthService {
         log.info("Refresh token received: {}", refreshToken);
 
         // 토큰에서 이메일 추출
-        String currentId = jwtTokenProvider.extractEmail(refreshToken);
-        log.info("User email extracted from token: {}", currentId);
-        Member member = memberRepository.findByEmail(currentId)
+        Long currentId =jwtTokenProvider.extractMemberId(refreshToken);
+        log.info("UserId extracted from token: {}", currentId);
+        Member member = memberRepository.findById(currentId)
                 .orElseThrow(() -> new InvalidTokenException("User not found"));
 
-        String memberId = String.valueOf(member.getId());
+        String memberId = String.valueOf(currentId);
 
         String storedRefreshToken = redisService.getRefreshToken(memberId);
         log.info("Stored refresh token found: {}", storedRefreshToken);
@@ -286,8 +286,8 @@ public class OauthService {
         try {
             log.info("Logout request received - Access Token: {}, Refresh Token: {}", accessToken, refreshToken);
 
-            String userEmail = jwtTokenProvider.extractEmail(refreshToken);
-            log.info("User email extracted from token: {}", userEmail);
+            String userId = String.valueOf(jwtTokenProvider.extractMemberId(refreshToken));
+            log.info("User Id extracted from token: {}", userId);
 
             SecurityContextHolder.clearContext();
 
@@ -297,10 +297,10 @@ public class OauthService {
                 log.info("Access token added to blacklist, expires at: {}", expirationTime);
             }
 
-            redisService.deleteRefreshToken(userEmail);
-            log.info("Refresh token deleted for user: {}", userEmail);
+            redisService.deleteRefreshToken(userId);
+            log.info("Refresh token deleted for user: {}", userId);
 
-            log.info("Logout completed successfully for user: {}", userEmail);
+            log.info("Logout completed successfully for user: {}", userId);
         } catch (Exception e) {
             log.error("Error during logout process", e);
             throw e;

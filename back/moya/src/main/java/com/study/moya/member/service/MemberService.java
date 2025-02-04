@@ -118,5 +118,31 @@ public class MemberService implements UserDetailsService {
         }
     }
 
+    public Long findMemberIdByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("해당 이메일을 가진 회원을 찾을 수 없습니다: " + email))
+                .getId();
+    }
 
+    /**
+     * Id 값으로 member 찾는 메서드
+     * @param memberId
+     * @return member
+     */
+    public Member findById(Long memberId) {
+        log.debug("ID로 회원 조회 시작 - Id: {}", memberId);
+        try {
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> {
+                        log.error("회원을 찾을 수 없음 - 이메일: {}", memberId);
+                        return new UserNotFoundException(memberId);
+                    });
+            log.debug("회원 조회 완료 - 이메일: {}, ID: {}", member.getEmail(), memberId);
+            return member;
+
+        } catch (Exception e) {
+            log.error("회원 조회 중 오류 발생 - 이메일: {}, 오류: {}", memberId, e.getMessage(), e);
+            throw e;
+        }
+    }
 }

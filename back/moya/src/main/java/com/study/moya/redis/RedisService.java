@@ -3,6 +3,7 @@ package com.study.moya.redis;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.moya.oauth.exception.InvalidTokenException;
+import com.study.moya.posts.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectMapper objectMapper;
 
     private static final String REDIS_KEY_PREFIX = "oauth:temp:";
     private static final String TOKEN_ACCESS_PREFIX = "token:access:";
@@ -211,5 +211,4 @@ public class RedisService {
         }
         return null;
     }
-
 }

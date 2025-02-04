@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "refresh_token",
         indexes = {
-                @Index(name = "idx_member_email", columnList = "memberEmail"),
+                @Index(name = "idx_member_id", columnList = "memberId"),
                 @Index(name = "idx_token", columnList = "token", unique = true)
         })
 @Getter
@@ -31,14 +31,14 @@ public class RefreshToken {
     private String token;
 
     @Column(nullable = false)
-    private String memberEmail;
+    private Long memberId;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 
-    public RefreshToken(String token, String memberEmail, LocalDateTime expiryDate) {
+    public RefreshToken(String token, Long memberId, LocalDateTime expiryDate) {
         this.token = token;
-        this.memberEmail = memberEmail;
+        this.memberId = memberId;
         this.expiryDate = expiryDate;
     }
 
