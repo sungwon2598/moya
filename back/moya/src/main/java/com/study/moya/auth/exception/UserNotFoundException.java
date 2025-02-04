@@ -10,4 +10,7 @@ public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String email) {
         super(String.format(USER_NOT_FOUND, email));
     }
+    public UserNotFoundException(Long id){
+        super(String.format(USER_NOT_FOUND, id));
+    }
 }
