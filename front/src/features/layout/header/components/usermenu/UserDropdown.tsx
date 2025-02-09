@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import { Settings, LogOut, User, Map, Heart } from 'lucide-react';
+import { Settings, LogOut, User, Map, Heart, LayoutGrid, PlusSquare } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logoutUser } from '@/features/auth/store/authSlice';
 import { User as UserType } from '@/features/auth/types/auth.types';
@@ -18,6 +18,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const { isAuthenticated, handleGoogleLogin } = useAuth();
+
+    const isAdmin = user?.roles.includes('ROLE_ADMIN');
 
     const handleLogout = async () => {
         try {
@@ -77,6 +79,24 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
                             href="/settings/profile"
                             onClick={onClose}
                         />
+
+                        {isAdmin && (
+                            <>
+                                <div className="border-t border-gray-100 my-1"></div>
+                                <MenuItem
+                                    icon={LayoutGrid}
+                                    text="카테고리 관리"
+                                    href="/go/categorys"
+                                    onClick={onClose}
+                                />
+                                <MenuItem
+                                    icon={PlusSquare}
+                                    text="샘플 제작"
+                                    href="/go/create-sample"
+                                    onClick={onClose}
+                                />
+                            </>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-100">
