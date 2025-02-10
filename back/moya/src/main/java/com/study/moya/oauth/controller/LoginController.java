@@ -1,6 +1,7 @@
 package com.study.moya.oauth.controller;
 
 import com.google.common.net.HttpHeaders;
+import com.study.moya.global.api.ApiResponse;
 import com.study.moya.global.config.security.SecurityHeadersConfig;
 import com.study.moya.member.domain.Member;
 import com.study.moya.oauth.dto.OAuthLogin.IdTokenRequestDto;
@@ -32,7 +33,7 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody,
-                                                   HttpServletResponse response) {
+                                                             HttpServletResponse response) {
         log.info("authCode : {}, credential: {}, redirectUrl : {}",
                 requestBody.getAuthCode(),
                 requestBody.getCredential(),
@@ -62,7 +63,8 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember());
-        return securityHeadersConfig.addSecurityHeaders(ResponseEntity.ok(loginResponse));
+        return securityHeadersConfig.addSecurityHeaders(
+                ResponseEntity.ok(loginResponse));
     }
 
     @PostMapping("/refresh")
@@ -90,7 +92,8 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        return securityHeadersConfig.addSecurityHeaders(ResponseEntity.ok().build());
+        return securityHeadersConfig.addSecurityHeaders(
+                ResponseEntity.ok(ApiResponse.success()));
     }
 
     @PostMapping("/logout")
@@ -123,7 +126,8 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        return securityHeadersConfig.addSecurityHeaders(ResponseEntity.ok().build());
+        return securityHeadersConfig.addSecurityHeaders(
+                ResponseEntity.ok(ApiResponse.success()));
     }
 
     @GetMapping("/user/info")
