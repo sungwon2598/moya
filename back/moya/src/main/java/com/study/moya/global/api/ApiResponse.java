@@ -16,6 +16,7 @@ public class ApiResponse<T> {
     private final PageInfo pagination;
     private final ApiError error;
 
+
     private ApiResponse(int status, T data, ApiError error, PageInfo pagination) {
         this.status = status;
         this.data = data;
