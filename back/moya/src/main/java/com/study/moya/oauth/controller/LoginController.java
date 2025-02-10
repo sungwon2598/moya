@@ -32,7 +32,7 @@ public class LoginController {
     private final SecurityHeadersConfig securityHeadersConfig;
 
     @PostMapping("/login")
-    public ResponseEntity<?> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody,
+    public ResponseEntity<ApiResponse<OAuthLoginResponse>> LoginWithGoogleOauth2(@RequestBody IdTokenRequestDto requestBody,
                                                              HttpServletResponse response) {
         log.info("authCode : {}, credential: {}, redirectUrl : {}",
                 requestBody.getAuthCode(),
@@ -64,7 +64,7 @@ public class LoginController {
 
         OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember());
         return securityHeadersConfig.addSecurityHeaders(
-                ResponseEntity.ok(loginResponse));
+                ResponseEntity.ok(ApiResponse.of(loginResponse)));
     }
 
     @PostMapping("/refresh")
