@@ -1,14 +1,9 @@
-package com.study.moya.cu;
+package com.study.moya.coupon.domain;
 
 import com.study.moya.BaseEntity;
 import com.study.moya.member.domain.Member;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,9 +19,15 @@ public class Coupon extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    @Enumerated(EnumType.STRING)
+    private CouponType couponType;
 
     private LocalDateTime expirationDate;
 
@@ -35,8 +36,9 @@ public class Coupon extends BaseEntity {
     private LocalDateTime usedAt;
 
     @Builder
-    private Coupon(Member member, LocalDateTime expirationDate) {
+    private Coupon(Member member, CouponType couponType, LocalDateTime expirationDate) {
         this.member = member;
+        this.couponType = couponType;
         this.expirationDate = expirationDate;
         this.isUsed = false;
     }
@@ -60,8 +62,22 @@ public class Coupon extends BaseEntity {
             throw new IllegalStateException("이미 사용된 쿠폰입니다.");
         }
     }
+    public void assignMember(Member member) {
+        validateNotAssigned();
+        this.member = member;
+    }
+
+    private void validateNotAssigned() {
+        if (this.member != null) {
+            throw new IllegalStateException("이미 할당된 쿠폰입니다.");
+        }
+    }
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expirationDate);
+    }
+
+    public int getDiscountPercent() {
+        return this.couponType.getTokenAmount();
     }
 }
