@@ -1,13 +1,14 @@
 package com.study.moya.auth.jwt;
 
 
-import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.domain.RefreshToken;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.exception.TokenProcessingException;
 import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.service.MemberService;
+import com.study.moya.oauth.exception.OAuthErrorCode;
+import com.study.moya.oauth.exception.OAuthException;
 import com.study.moya.redis.RedisService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -199,22 +200,22 @@ public class JwtTokenProvider {
     public String getEmailFromOAuthToken(String token) {
         try {
             if (token == null || token.trim().isEmpty()) {
-                throw new InvalidTokenException("토큰이 비어있습니다.");
+                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
             }
 
             if (!validateToken(token)) {
-                throw new InvalidTokenException("유효하지 않은 토큰입니다.");
+                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
             }
 
             Authentication authentication = getAuthentication(token);
             if (authentication == null || authentication.getName() == null) {
-                throw new InvalidTokenException("토큰에서 사용자 정보를 찾을 수 없습니다.");
+                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
             }
 
             return authentication.getName();
         } catch (JwtException e) {
             log.error("JWT 토큰 처리 중 오류 발생: {}", e.getMessage());
-            throw new InvalidTokenException("토큰 처리 중 오류가 발생했습니다.", e);
+            throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
         }
     }
 
@@ -234,7 +235,7 @@ public class JwtTokenProvider {
     public Long extractMemberId(String token) {
         try {
             if (token == null || token.trim().isEmpty()) {
-                throw new InvalidTokenException("토큰이 비어있습니다.");
+                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
             }
 
             Claims claims = Jwts.parser()
@@ -245,13 +246,13 @@ public class JwtTokenProvider {
 
             String subject = claims.getSubject();
             if (subject == null || subject.trim().isEmpty()) {
-                throw new InvalidTokenException("토큰에서 이메일 정보를 찾을 수 없습니다.");
+                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
             }
 
             return Long.parseLong(subject);
         } catch (JwtException e) {
             log.error("JWT 토큰 처리 중 오류 발생: {}", e.getMessage());
-            throw new InvalidTokenException("토큰 처리 중 오류가 발생했습니다.", e);
+            throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
         }
     }
 

@@ -1,8 +1,9 @@
-package com.study.moya.oauth.dto.OAuthLogin;
+package com.study.moya.oauth.dto.auth;
 
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.domain.MemberStatus;
 import com.study.moya.member.domain.Role;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,11 +11,21 @@ import java.util.Set;
 
 @Getter
 @Builder
+@Schema(description = "OAuth 로그인 응답")
 public class OAuthLoginResponse {
+    @Schema(description = "사용자 이메일")
     private String email;
+
+    @Schema(description = "사용자 닉네임")
     private String nickname;
+
+    @Schema(description = "사용자 권한 목록")
     private Set<Role> roles;
+
+    @Schema(description = "사용자 상태")
     private MemberStatus status;
+
+    @Schema(description = "프로필 이미지 URL")
     private String profileImageUrl;
 
     public static OAuthLoginResponse from(Member member) {
