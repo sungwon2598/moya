@@ -1,6 +1,5 @@
 package com.study.moya.auth.controller;
 
-import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.dto.*;
 import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
@@ -8,6 +7,7 @@ import com.study.moya.auth.service.AuthService;
 import com.study.moya.global.config.security.SecurityHeadersConfig;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.member.service.MemberService;
+import com.study.moya.oauth.exception.OAuthException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -164,7 +164,7 @@ public class AuthController {
             log.info("시큐리티 컨텍스트 클리어 완료");
 
             return ResponseEntity.ok(LogoutResponse.success("로그아웃되었습니다"));
-        } catch (InvalidTokenException e) {
+        } catch (OAuthException e) {
             log.error("Invalid token error during logout: {}", e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)

@@ -1,6 +1,5 @@
 package com.study.moya.auth.service;
 
-import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.auth.dto.LoginRequest;
 import com.study.moya.auth.dto.LogoutRequest;
 import com.study.moya.auth.dto.UserInfoResponse;
@@ -10,6 +9,8 @@ import com.study.moya.member.constants.MemberErrorCode;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.exception.MemberException;
 import com.study.moya.member.repository.MemberRepository;
+import com.study.moya.oauth.exception.OAuthErrorCode;
+import com.study.moya.oauth.exception.OAuthException;
 import com.study.moya.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,7 +99,7 @@ public class AuthService {
 
             if (!isValidTokenPair(request.getAccessToken(), savedAccessToken)) {
                 log.warn("Access Token 불일치 - email: {}", request.getEmail());
-                throw new InvalidTokenException("유효하지 않은 Access Token 입니다");
+                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
             }
             redisService.deleteAllTokens(request.getAccessToken());
             log.info("모든 토큰이 삭제되었습니다 - email: {}", request.getAccessToken());
