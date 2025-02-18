@@ -2,7 +2,6 @@ package com.study.moya.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.study.moya.oauth.exception.InvalidTokenException;
 import com.study.moya.posts.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
