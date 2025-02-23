@@ -20,27 +20,27 @@ import org.springframework.transaction.annotation.Transactional;
 public class MyPageService {
     private final MemberRepository memberRepository;
 
-    public MyPageResponse getMyPageInfo(String email) {
-        Member member = memberRepository.findByEmail(email)
+    public MyPageResponse getMyPageInfo(Long memberId) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> MyPageException.of(MyPageErrorCode.MEMBER_NOT_FOUND));
         return MyPageResponse.from(member);
     }
 
     @Transactional
-    public MyPageResponse updateMyPage(String email, MyPageUpdateRequest request) {
-        Member member = memberRepository.findByEmail(email)
+    public MyPageResponse updateMyPage(Long memberId, MyPageUpdateRequest request) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> MyPageException.of(MyPageErrorCode.MEMBER_NOT_FOUND));
 
-        if(!member.getNickname().equals(request.nickname()) &&
+        if(!member.getNickname().equals(request.getNickname()) &&
                 memberRepository.existsByNicknameAndStatusNot(
-                        request.nickname(),
+                        request.getNickname(),
                         MemberStatus.WITHDRAWN
                 )){
             throw MyPageException.of(MyPageErrorCode.DUPLICATE_NICKNAME);
         }
-        member.updateNickname(request.nickname());
-        member.updateProfileImage(request.profileImageUrl());
-        member.updateIntroduction(request.introduction());
+        member.updateNickname(request.getNickname());
+        member.updateProfileImage(request.getProfileImageUrl());
+        member.updateIntroduction(request.getIntroduction());
 
         return MyPageResponse.from(member);
     }
