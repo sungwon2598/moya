@@ -13,7 +13,7 @@ import StudyList from "./pages/study/StudyList.tsx";
 import StudyPostDetail from "./pages/study/StudyPostDetail.tsx";
 import AdminLayout from "@pages/adminator/layout/AdminLayout.tsx";
 import CategoryManagement from "@pages/category/CategoryManagement.tsx";
-import {ProtectedRoute} from "@features/auth/components/ProtectedRoute.tsx";
+// import {ProtectedRoute} from "@features/auth/components/ProtectedRoute.tsx";
 import {AdminRoute} from "@features/auth/components/AdminRoute.tsx";
 import StudyCreate from "./pages/study/StudyPostCreate.tsx";
 import CreateSample from "@pages/create-sample/CreateSample.tsx";
@@ -45,11 +45,11 @@ const App: React.FC = () => {
 
                             <Route path="go"
                                    element={
-                                <ProtectedRoute>
+                                // <ProtectedRoute>
                                     <AdminRoute>
                                         <Outlet />
                                     </AdminRoute>
-                                </ProtectedRoute>
+                                // </ProtectedRoute>
                             }
                             >
                                 <Route path="categorys" element={<CategoryManagement />} />
