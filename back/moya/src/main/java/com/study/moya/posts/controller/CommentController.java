@@ -1,11 +1,9 @@
 package com.study.moya.posts.controller;
 
 import com.study.moya.global.api.ApiResponse;
-import com.study.moya.member.domain.Member;
 import com.study.moya.posts.dto.comment.CommentCreateRequest;
 import com.study.moya.posts.dto.comment.CommentUpdateRequest;
 import com.study.moya.posts.service.CommentService;
-import com.study.moya.posts.util.MemberCheckUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +24,8 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> addComment(@PathVariable Long postId,
                                                         @RequestBody CommentCreateRequest request,
-                                                        @AuthenticationPrincipal String email) {
-        Long commentId = commentService.addComment(postId, request, email);
+                                                        @AuthenticationPrincipal Long memberId) {
+        Long commentId = commentService.addComment(postId, request, memberId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(commentId));
     }
 
@@ -38,8 +36,8 @@ public class CommentController {
     public ResponseEntity<ApiResponse<Void>> updateComment(@PathVariable Long postId,
                                                            @PathVariable Long commentId,
                                                            @RequestBody CommentUpdateRequest request,
-                                                           @AuthenticationPrincipal String email) {
-        commentService.updateComment(postId, commentId, request, email);
+                                                           @AuthenticationPrincipal Long memberId) {
+        commentService.updateComment(postId, commentId, request, memberId);
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -49,16 +47,15 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long postId,
                                               @PathVariable Long commentId,
-                                              @AuthenticationPrincipal String email) {
+                                              @AuthenticationPrincipal Long memberId) {
 
         if (SecurityContextHolder.getContext().getAuthentication().getAuthorities()
                 .stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-            commentService.deleteCommentAsAdmin(postId, commentId, email);
+            commentService.deleteCommentAsAdmin(postId, commentId, memberId);
         } else {
-            commentService.deleteComment(postId, commentId, email);
+            commentService.deleteComment(postId, commentId, memberId);
         }
 
         return ResponseEntity.noContent().build();
     }
-
 }
