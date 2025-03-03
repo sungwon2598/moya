@@ -23,14 +23,15 @@ public class CommentService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public Long addComment(Long postId, CommentCreateRequest request, String email) {
-        if (email == null) {
+    public Long addComment(Long postId, CommentCreateRequest request, Long memberId) {
+        if (memberId == null) {
             throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
-        Member author = memberRepository.findByEmail(email)
+
+        Member author = memberRepository.findById(memberId)
                 .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
 
         Comment parentComment = null;
@@ -47,13 +48,12 @@ public class CommentService {
                 .build();
 
         Comment saved = commentRepository.save(comment);
-
         return saved.getId();
     }
 
     @Transactional
-    public void updateComment(Long postId, Long commentId, CommentUpdateRequest request, String email) {
-        if (email == null) {
+    public void updateComment(Long postId, Long commentId, CommentUpdateRequest request, Long memberId) {
+        if (memberId == null) {
             throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
@@ -64,8 +64,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> PostException.of(PostErrorCode.NO_COMMENT));
 
-        // 권한 체크: 작성자 또는 관리자
-        if (!comment.getAuthor().getEmail().equals(email)) {
+        if (!comment.getAuthor().getId().equals(memberId)) {
             throw PostException.of(PostErrorCode.INVALID_AUTHOR);
         }
 
@@ -73,8 +72,8 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteComment(Long postId, Long commentId, String email) {
-        if (email == null) {
+    public void deleteComment(Long postId, Long commentId, Long memberId) {
+        if (memberId == null) {
             throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
@@ -85,8 +84,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> PostException.of(PostErrorCode.NO_COMMENT));
 
-        // 권한 체크
-        if (!comment.getAuthor().getEmail().equals(email)) {
+        if (!comment.getAuthor().getId().equals(memberId)) {
             throw PostException.of(PostErrorCode.INVALID_AUTHOR);
         }
 
@@ -94,8 +92,8 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteCommentAsAdmin(Long postId, Long commentId, String email) {
-        if (email == null) {
+    public void deleteCommentAsAdmin(Long postId, Long commentId, Long memberId) {
+        if (memberId == null) {
             throw PostException.of(PostErrorCode.BLANK_AUTHOR_EMAIL);
         }
 
@@ -108,5 +106,4 @@ public class CommentService {
 
         commentRepository.delete(comment);
     }
-
 }
