@@ -36,6 +36,7 @@ export const SignInPage: React.FC = () => {
             navigate('/'); // 로그인 성공 시 홈으로 이동
         } catch (err) {
             setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+            console.log(err)
             setIsLoading(false);
         }
     };

@@ -19,7 +19,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onClose }) => {
     const navigate = useNavigate();
     const { isAuthenticated, handleGoogleLogin } = useAuth();
 
-    const isAdmin = user?.roles.includes('ROLE_ADMIN');
+    const isAdmin = user?.roles?.includes('ROLE_ADMIN');
 
     const handleLogout = async () => {
         try {

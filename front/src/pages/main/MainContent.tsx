@@ -15,6 +15,7 @@ const MainContent: React.FC = () => {
     const { isAuthenticated, loading, handleGoogleLogin } = useAuth();
     const navigate = useNavigate();
 
+
     const actionButtons = [
         {
             title: '로드맵 생성',
