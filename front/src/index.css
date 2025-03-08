@@ -1,8 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
+
     body:not(.adminator-body) {
         @apply pt-16 bg-gray-50;
     }
@@ -120,3 +119,9 @@
     @apply bg-background text-foreground;
     }
 }
+
+  body:not(.adminator-body) {
+    @apply pt-16 bg-gray-50;
+  }
+}
+
