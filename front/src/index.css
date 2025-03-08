@@ -1,9 +1,10 @@
+@config "../tailwind.config.js";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-    body:not(.adminator-body) {
-        @apply pt-16 bg-gray-50;
-    }
+  body:not(.adminator-body) {
+    @apply pt-16 bg-gray-50;
+  }
 }
