@@ -16,8 +16,8 @@ const StudyPostCreate = () => {
         expectedPeriod: '',
         startDate: '',
         endDate: '',
-        studies: '',
-        studyDetails: '',
+        studies: [],
+        studyDetails: [],
     });
 
     const recruitOptions = [
@@ -70,6 +70,7 @@ const StudyPostCreate = () => {
             await studyApiService.createPost(postData);
             navigate('/study');
         } catch (error) {
+           
             console.error('Failed to submit post:', error);
         } finally {
             setLoading(false);
@@ -77,10 +78,22 @@ const StudyPostCreate = () => {
     };
 
     const handleChange = (field: keyof CreateStudyDTO, value: any) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+         if (field === 'studies') {
+            // Ensure studies is always treated as an array
+            setFormData(prev => ({
+                ...prev,
+                [field]: [value] // Wrap the value in an array
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [field]: value
+            }));
+        }
+        //  setFormData(prev => ({
+        //         ...prev,
+        //         [field]: value
+        //     }));
     };
 
     const modules = {
@@ -114,7 +127,8 @@ const StudyPostCreate = () => {
                                 label="모집 구분"
                                 categories={categories}
                                 onChange={(value) => handleChange('studies', value)}
-                                value={formData.studies}
+                              value={Array.isArray(formData.studies) && formData.studies.length > 0 ? formData.studies[0] : ''}
+                            // value={formData.studies}
                                 isCategory={true}
                             />
                             <Dropdown

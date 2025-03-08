@@ -66,9 +66,10 @@ export default defineConfig(({ mode }): UserConfig => {
       open: true,
       cors: true,
       proxy: {
-        "/api": {
-          target: "http://api.moyastudy.com",
-          // http://api.moyastudy.com
+
+        '/api': {
+          target: 'https://api.moyastudy.com',
+
           // http://localhost:8080
           changeOrigin: true,
           secure: false,
