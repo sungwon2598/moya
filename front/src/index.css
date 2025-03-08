@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* @layer에서 body 스타일 적용 */
 @layer base {
   body:not(.adminator-body) {
     @apply pt-16 bg-gray-50;
