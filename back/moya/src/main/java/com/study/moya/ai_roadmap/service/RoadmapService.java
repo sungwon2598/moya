@@ -59,12 +59,15 @@ public class RoadmapService {
         return CompletableFuture.supplyAsync(() -> {
             log.info("로드맵 생성 시작");
 
+            String systemPrompt = promptService.createSystemPrompt(request);
+            log.info("===================시스템 프롬프트=================== \n" + systemPrompt);
+
             String prompt = promptService.createPrompt(request);
             log.info("생성된 Prompt:\n{}", prompt);
 
             ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
                     .model(roadmapModel)
-                    .messages(promptService.buildMessages(prompt))
+                    .messages(promptService.buildMessages(systemPrompt, prompt))
                     .temperature(0.8)
                     .maxTokens(2000)
                     .build();
