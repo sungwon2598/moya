@@ -1,5 +1,6 @@
 package com.study.moya.ai_roadmap.service;
 
+import com.study.moya.ai_roadmap.constants.LearningObjective;
 import com.study.moya.ai_roadmap.domain.DailyPlan;
 import com.study.moya.ai_roadmap.domain.RoadMap;
 import com.study.moya.ai_roadmap.domain.WeeklyPlan;
@@ -58,12 +59,15 @@ public class RoadmapService {
         return CompletableFuture.supplyAsync(() -> {
             log.info("로드맵 생성 시작");
 
+            String systemPrompt = promptService.createSystemPrompt(request);
+            log.info("===================시스템 프롬프트=================== \n" + systemPrompt);
+
             String prompt = promptService.createPrompt(request);
             log.info("생성된 Prompt:\n{}", prompt);
 
             ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
                     .model(roadmapModel)
-                    .messages(promptService.buildMessages(prompt))
+                    .messages(promptService.buildMessages(systemPrompt, prompt))
                     .temperature(0.8)
                     .maxTokens(2000)
                     .build();
@@ -84,7 +88,7 @@ public class RoadmapService {
 
                 // 파싱된 응답을 엔티티로 저장
                 saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1, request.getSubCategory(),
-                        request.getDuration(), response);
+                        request.getDuration(), request.getLearningObjective(), response);
 
                 return response;
             } catch (Exception e) {
@@ -95,7 +99,8 @@ public class RoadmapService {
     }
 
     @Transactional
-    public Long saveCurriculum(int goalLevel, String topic, int duration, WeeklyRoadmapResponse response) {
+    public Long saveCurriculum(int goalLevel, String topic, int duration, LearningObjective learningObjective,
+                               WeeklyRoadmapResponse response) {
         log.info("커리큘럼 저장 시작");
 
         // RoadMap 생성
@@ -105,6 +110,7 @@ public class RoadmapService {
                 .topic(topic)
                 .evaluation(response.getCurriculumEvaluation())
                 .overallTips(response.getOverallTips())
+                .learningObjective(learningObjective)
                 .build();
 
         // 먼저 RoadMap을 저장하여 ID를 확보
