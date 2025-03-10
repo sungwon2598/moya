@@ -69,6 +69,10 @@ jobs:
             # application.yml 업데이트
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             
+            # 로그 디렉토리 권한 설정
+            mkdir -p /home/ubuntu/moya/back/moya/logs
+            chmod -R 777 /home/ubuntu/moya/back/moya/logs
+            
             # 도커 컴포즈로 서비스 재시작
             cd /home/ubuntu/moya-docker
             docker-compose stop springboot-app
