@@ -61,6 +61,12 @@ jobs:
           script: |
             # 백엔드 코드 업데이트
             cd /home/ubuntu/moya/back/moya
+            
+            # 로그 파일 권한
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/moya/back/moya/logs || true
+            sudo chmod -R 777 /home/ubuntu/moya/back/moya/logs || true
+          
+
             git reset --hard
             git clean -fd
             git remote set-url origin git@github.com:sungwon2598/moya.git
@@ -68,10 +74,6 @@ jobs:
             
             # application.yml 업데이트
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
-            
-            # 로그 디렉토리 권한 설정
-            mkdir -p /home/ubuntu/moya/back/moya/logs
-            chmod -R 777 /home/ubuntu/moya/back/moya/logs
             
             # 도커 컴포즈로 서비스 재시작
             cd /home/ubuntu/moya-docker
