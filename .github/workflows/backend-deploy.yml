@@ -65,7 +65,7 @@ jobs:
             # 로그 파일 권한
             sudo chown -R ubuntu:ubuntu /home/ubuntu/moya/back/moya/logs || true
             sudo chmod -R 777 /home/ubuntu/moya/back/moya/logs || true
-            
+          
 
             git reset --hard
             git clean -fd
