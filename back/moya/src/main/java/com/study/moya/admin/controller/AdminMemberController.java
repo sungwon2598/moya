@@ -15,7 +15,7 @@ public class AdminMemberController {
     private final AdminMemberService adminMemberService;
 
 
-    //테스트입니다
+    //테스트입니다1
     @GetMapping
     public Page<AdminMemberResponse> getMembers(Pageable pageable) {
         return adminMemberService.getMembers(pageable);

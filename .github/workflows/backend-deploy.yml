@@ -62,10 +62,7 @@ jobs:
             # 백엔드 코드 업데이트
             cd /home/ubuntu/moya/back/moya
             
-            # 로그 파일 권한
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/moya/back/moya/logs || true
-            sudo chmod -R 777 /home/ubuntu/moya/back/moya/logs || true
-          
+            chmod -R 777 /home/ubuntu/moya/back/moya/logs 2>/dev/null || true
 
             git reset --hard
             git clean -fd
