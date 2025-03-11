@@ -1,6 +1,7 @@
 package com.study.moya.ai_roadmap.controller;
 
 
+import com.study.moya.ai_roadmap.constants.LearningObjective;
 import com.study.moya.ai_roadmap.domain.Category;
 import com.study.moya.ai_roadmap.dto.request.BulkCategoryRequest;
 import com.study.moya.ai_roadmap.dto.request.CreateCategoryRequest;
@@ -10,8 +11,15 @@ import com.study.moya.ai_roadmap.dto.response.CategoryHierarchyResponse;
 import com.study.moya.ai_roadmap.dto.response.CategoryResponse;
 import com.study.moya.ai_roadmap.service.CategoryService;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class CategoryController {
 
+    private static final Logger log = LoggerFactory.getLogger(CategoryController.class);
     private final CategoryService categoryService;
 
     @PostMapping
@@ -70,6 +79,27 @@ public class CategoryController {
     @GetMapping("/hierarchy") // 대분류, 중분류 전체
     public ResponseEntity<List<CategoryHierarchyResponse>> getCategoryHierarchy() {
         return ResponseEntity.ok(categoryService.getCategoryHierarchy());
+    }
+
+    @GetMapping("/roadmap-form-data")
+    public ResponseEntity<Map<String, Object>> getRoadmapFormData() {
+        Map<String, Object> formData = new HashMap<>();
+
+        // 카테고리 계층 구조 가져오기
+        List<CategoryHierarchyResponse> categories = categoryService.getCategoryHierarchy();
+
+        // 학습 목표 목록 가져오기
+        List<Map<String, String>> objectives = Arrays.stream(LearningObjective.values())
+                .map(objective -> Map.of(
+                        "code", objective.name(),
+                        "description", objective.getDescription()
+                ))
+                .collect(Collectors.toList());
+
+        formData.put("categories", categories);
+        formData.put("learningObjectives", objectives);
+
+        return ResponseEntity.ok(formData);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

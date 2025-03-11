@@ -59,8 +59,8 @@ export interface StudyPost {
     expectedPeriod: string;
     startDate: string;
     endDate: string;
-    studies: string;
-    studyDetails: string;
+    studies: string[];
+    studyDetails: string[];
     authorName: string;
     views: number;
     totalComments: number;
@@ -76,8 +76,8 @@ export interface CreateStudyDTO {
     expectedPeriod: string;
     startDate: string;
     endDate: string;
-    studies: string;
-    studyDetails: string;
+    studies: string[];
+    studyDetails: string[];
 }
 
 export interface UpdateStudyDTO extends CreateStudyDTO {
@@ -210,7 +210,9 @@ export const studyApiService = {
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                console.log(postData)
                 throw new Error(error.response?.data?.message || '스터디 생성에 실패했습니다.');
+     
             }
             throw error;
         }
