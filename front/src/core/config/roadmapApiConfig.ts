@@ -14,7 +14,8 @@ export interface RoadmapRequest {
     mainCategory: string;  // 중분류
     subCategory: string;   // 주제
     currentLevel?: string; // 1(초급) 2(중급) 3(고급)
-    duration: number;      // 주 단위
+    duration: number;
+    learningObjective?: string;// 주 단위
 }
 
 // 일별 계획 인터페이스

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useModal } from "@shared/hooks/useModal";
-import { studyApiService } from "@core/config/studyApiConfig";
+import { studyApiService, LearningObjective } from "@core/config/studyApiConfig";
 import { RoadmapRequest } from "@core/config/roadmapApiConfig";
 import { getChoseong } from "es-hangul";
 import SearchBox from "@pages/create-sample/SerchBox.tsx";
@@ -15,6 +15,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
     const { hideModal } = useModal();
     const [step, setStep] = useState(1);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [learningObjectives, setLearningObjectives] = useState<LearningObjective[]>([]);
     const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
     const [filteredSubCategories, setFilteredSubCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -26,27 +27,46 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
     const [formData, setFormData] = useState({
         topic: "",
         level: "1",
-        duration: 2
+        duration: 2,
+        learningObjective: "" // 추가된 학습 목표 필드
     });
 
-    // 카테고리 데이터 불러오기
+    // 로드맵 폼 데이터 불러오기
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchFormData = async () => {
             setIsLoading(true);
             try {
-                const response = await studyApiService.getCategoriesHierarchy();
-                setCategories(response);
-                setFilteredCategories(response);
+                const response = await studyApiService.getRoadmapFormData();
+                setCategories(response.categories);
+                setFilteredCategories(response.categories);
+                setLearningObjectives(response.learningObjectives);
+
+                // 기본 학습 목표 설정 (첫 번째 항목)
+                if (response.learningObjectives && response.learningObjectives.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        learningObjective: response.learningObjectives[0].code
+                    }));
+                }
             } catch (error) {
-                console.error("카테고리 로드 실패:", error);
+                console.error("로드맵 폼 데이터 로드 실패:", error);
+                // 기존 방식으로 폴백
+                try {
+                    const categoriesResponse = await studyApiService.getCategoriesHierarchy();
+                    setCategories(categoriesResponse);
+                    setFilteredCategories(categoriesResponse);
+                } catch (fallbackError) {
+                    console.error("카테고리 로드 실패:", fallbackError);
+                }
             }
             setIsLoading(false);
         };
-        fetchCategories();
+        fetchFormData();
     }, []);
 
-    // 검색어로 카테고리 필터링하는 함수
+    // 검색어로 카테고리 필터링하는 함수 (기존 코드와 동일)
     const filterBySearchTerm = (items: Category[], searchTerm: string) => {
+        // 기존 함수 내용 유지
         const normalizedQuery = searchTerm.replace(/\s+/g, "").toLowerCase();
         let queryChoseong = "";
 
@@ -69,13 +89,13 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
         });
     };
 
-    // 대분류 검색 처리
+    // 대분류 검색 처리 (기존 코드와 동일)
     const handleMainCategorySearch = (query: string) => {
         setSearchQuery(query);
         setFilteredCategories(filterBySearchTerm(categories, query));
     };
 
-    // 중분류 검색 처리
+    // 중분류 검색 처리 (기존 코드와 동일)
     const handleSubCategorySearch = (query: string) => {
         setSearchQuery(query);
         if (selectedMainCategory) {
@@ -83,7 +103,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
         }
     };
 
-    // 대분류 선택 시 중분류 초기화
+    // 대분류 선택 시 중분류 초기화 (기존 코드와 동일)
     useEffect(() => {
         if (selectedMainCategory) {
             setFilteredSubCategories(selectedMainCategory.subCategories);
@@ -91,7 +111,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
         }
     }, [selectedMainCategory]);
 
-    // 최종 제출 처리
+    // 최종 제출 처리 - learningObjective 필드 추가
     const handleSubmit = () => {
         if (!selectedMiddleCategory) return;
 
@@ -99,17 +119,20 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
             mainCategory: selectedMiddleCategory.name,
             subCategory: formData.topic,
             currentLevel: formData.level,
-            duration: formData.duration
+            duration: formData.duration,
+            learningObjective: formData.learningObjective || undefined // 학습 목표 추가
         };
 
         onSubmit(request);
+        console.log(request);
         hideModal();
     };
 
-    // 단계별 UI 렌더링
+    // 단계별 UI 렌더링 - 3단계에 학습 목표 선택 옵션 추가
     const renderStepContent = () => {
         switch (step) {
             case 1:
+                // 기존 1단계 UI 유지
                 return (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center mb-4">
@@ -142,6 +165,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
                 );
 
             case 2:
+                // 기존 2단계 UI 유지
                 return (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center mb-4">
@@ -174,6 +198,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
                 );
 
             case 3:
+                // 3단계 UI에 학습 목표 선택 추가
                 return (
                     <div className="space-y-4">
                         <h3 className="text-lg font-medium mb-4">로드맵 정보 입력</h3>
@@ -201,7 +226,6 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
                                 >
                                     <option value="1">초급</option>
                                     <option value="2">중급</option>
-                                    <option value="3">고급</option>
                                 </select>
                             </div>
                             <div>
@@ -222,13 +246,30 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
                                     className="w-full px-3 py-2 border rounded-md"
                                 />
                             </div>
+                            {/* 학습 목표 선택 추가 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    학습 목표
+                                </label>
+                                <select
+                                    value={formData.learningObjective}
+                                    onChange={(e) => setFormData({...formData, learningObjective: e.target.value})}
+                                    className="w-full px-3 py-2 border rounded-md"
+                                >
+                                    {learningObjectives.map((objective) => (
+                                        <option key={objective.code} value={objective.code}>
+                                            {objective.description}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 );
         }
     };
 
-    // 다음 버튼 활성화 여부 확인
+    // 다음 버튼 활성화 여부 확인 - 학습 목표 필드 추가
     const isNextDisabled = () => {
         switch (step) {
             case 1:
@@ -236,7 +277,7 @@ const CreateRoadmapModal: React.FC<{ onSubmit: (request: RoadmapRequest) => void
             case 2:
                 return !selectedMiddleCategory;
             case 3:
-                return !formData.topic.trim() || formData.duration < 1;
+                return !formData.topic.trim() || formData.duration < 1 || !formData.learningObjective;
             default:
                 return false;
         }

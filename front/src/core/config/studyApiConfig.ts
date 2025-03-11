@@ -14,7 +14,9 @@ export const STUDY_ENDPOINTS = {
     CATEGORIES_HIERARCHY: `${BASE_URL}/api/categories/hierarchy`,
     CREATE_CATEGORY: `${BASE_URL}/api/categories`,
     DELETE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
-    UPDATE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`
+    UPDATE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
+    // 로드맵 관련 엔드포인트 추가
+    ROADMAP_FORM_DATA: `${BASE_URL}/api/categories/roadmap-form-data`,
 } as const;
 
 // 카테고리 관련 타입 정의
@@ -22,6 +24,18 @@ export interface Category {
     id: number;
     name: string;
     subCategories: Category[];
+}
+
+// 로드맵 학습 목표 인터페이스 추가
+export interface LearningObjective {
+    code: string;
+    description: string;
+}
+
+// 로드맵 폼 데이터 인터페이스 추가
+export interface RoadmapFormData {
+    categories: Category[];
+    learningObjectives: LearningObjective[];
 }
 
 //카테고리 생성 dto 인터페이스
@@ -101,6 +115,19 @@ export const studyApiService = {
             return response.data;
         } catch (error) {
             console.error('카테고리 데이터를 불러오는데 실패했습니다:', error);
+            throw error;
+        }
+    },
+
+    // 로드맵 폼 데이터 가져오기
+    getRoadmapFormData: async (): Promise<RoadmapFormData> => {
+        try {
+            const response = await axios.get<RoadmapFormData>(
+                STUDY_ENDPOINTS.ROADMAP_FORM_DATA
+            );
+            return response.data;
+        } catch (error) {
+            console.error('로드맵 폼 데이터를 불러오는데 실패했습니다:', error);
             throw error;
         }
     },
