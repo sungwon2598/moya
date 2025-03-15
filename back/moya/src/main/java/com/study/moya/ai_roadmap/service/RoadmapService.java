@@ -55,7 +55,7 @@ public class RoadmapService {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Async
-    public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request) {
+    public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request, Long memberId) {
         return CompletableFuture.supplyAsync(() -> {
             log.info("로드맵 생성 시작");
 
@@ -98,7 +98,6 @@ public class RoadmapService {
         });
     }
 
-    @Transactional
     public Long saveCurriculum(int goalLevel, String topic, int duration, LearningObjective learningObjective,
                                WeeklyRoadmapResponse response) {
         log.info("커리큘럼 저장 시작");
