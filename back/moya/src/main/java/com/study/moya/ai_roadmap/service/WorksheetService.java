@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +29,9 @@ public class WorksheetService {
 
     @Value("${openai.api.models.worksheet_generation.model}")
     private String worksheetModel;
+
+    private static final int MAX_RETRIES = 3;  // 최대 재시도 횟수
+    private static final long DELAY_MS = 1000;  // 재시도 간 대기 시간 (1초)
 
     private final OpenAiService openAiService;
     private final WorksheetPromptService promptService;
@@ -47,10 +52,10 @@ public class WorksheetService {
                 try {
                     generateWorksheetForGroup(planGroup);
                     // API 요청 제한을 고려한 대기 시간
-                    Thread.sleep(1000);
+                    Thread.sleep(DELAY_MS);
                 } catch (Exception e) {
                     log.error("그룹 학습지 생성 중 오류 발생: {}일차 그룹, 오류: {}",
-                            planGroup.get(0).getDayNumber(), e.getMessage());
+                            planGroup.getFirst().getDayNumber(), e.getMessage());
                 }
             }
 
@@ -68,7 +73,54 @@ public class WorksheetService {
     }
 
     private void generateWorksheetForGroup(List<DailyPlan> planGroup) {
-        String prompt = promptService.createPrompt(planGroup);
+        String initialPrompt = promptService.createPrompt(planGroup);
+        Map<Integer, String> dayWorksheets = retryChatCompletion(initialPrompt, planGroup);
+
+        updateDailyPlansWithWorksheet(planGroup, dayWorksheets);
+        log.info("학습지 생성 완료 - {} ~ {}일차", planGroup.getFirst().getDayNumber(), planGroup.getLast().getDayNumber());
+    }
+
+    private Map<Integer, String> retryChatCompletion(String prompt, List<DailyPlan> planGroup) {
+        AtomicInteger retryCount = new AtomicInteger(0);
+
+        while (retryCount.get() < MAX_RETRIES) {
+            try {
+                ChatCompletionResult chatCompletion = createChatCompletion(prompt, planGroup, retryCount.get() + 1);
+                String worksheetContent = chatCompletion.getChoices().getFirst().getMessage().getContent();
+                Map<Integer, String> dayWorksheets = worksheetResponseParser.parseResponse(worksheetContent);
+
+                if (!dayWorksheets.isEmpty()) {
+                    log.info("=======================토큰 생성 {}일 ~ {}일 ====================================", planGroup.getFirst().getDayNumber(), planGroup.getLast().getDayNumber());
+                    logTokenUsage(chatCompletion.getUsage());
+                    return dayWorksheets;
+                }
+                throw new IllegalStateException("파싱된 학습 가이드가 없습니다.");
+
+            } catch (Exception e) {
+                int attempts = retryCount.incrementAndGet();
+                if (attempts >= MAX_RETRIES) {
+                    log.error("최대 재시도 횟수({}) 초과, 학습지 생성 실패 - {} ~ {}일차: {}",
+                            MAX_RETRIES, planGroup.getFirst().getDayNumber(), planGroup.getLast().getDayNumber(), e.getMessage());
+                    throw new RuntimeException("학습지 생성 실패: 최대 재시도 초과", e);
+                }
+                log.warn("학습지 생성 실패, 재시도 {}회 시도 - {} ~ {}일차: {}",
+                        attempts, planGroup.getFirst().getDayNumber(), planGroup.getLast().getDayNumber(), e.getMessage());
+                try {
+                    Thread.sleep(DELAY_MS * attempts); // 지수 백오프
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("재시도 대기 중 인터럽트 발생", ie);
+                }
+            }
+        }
+        throw new RuntimeException("학습지 생성 실패: 알 수 없는 오류");
+    }
+
+    private ChatCompletionResult createChatCompletion(String prompt, List<DailyPlan> planGroup, int attempt) {
+
+        log.info("학습지 생성 API 호출 시작 - {} ~ {}일차, 시도 횟수: {}",
+                planGroup.getFirst().getDayNumber(), planGroup.getLast().getDayNumber(), attempt);
+
 
         ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
                 .model(worksheetModel)
@@ -77,31 +129,10 @@ public class WorksheetService {
                 .maxTokens(2500)
                 .build();
 
-        try {
-            log.info("학습지 생성 API 호출 시작 - {} ~ {}일차",
-                    planGroup.get(0).getDayNumber(),
-                    planGroup.get(planGroup.size() - 1).getDayNumber());
-
-            ChatCompletionResult chatCompletion = openAiService.createChatCompletion(completionRequest);
-            String worksheetContent = chatCompletion.getChoices().get(0).getMessage().getContent();
-
-            updateDailyPlansWithWorksheet(planGroup, worksheetContent);
-            logTokenUsage(chatCompletion.getUsage());
-
-            log.info("학습지 생성 완료 - {} ~ {}일차",
-                    planGroup.get(0).getDayNumber(),
-                    planGroup.get(planGroup.size() - 1).getDayNumber());
-
-        } catch (Exception e) {
-            log.error("학습지 생성 중 오류 발생:", e);
-            throw new RuntimeException("학습지 생성 실패", e);
-        }
+        return openAiService.createChatCompletion(completionRequest);
     }
 
-    @Transactional
-    protected void updateDailyPlansWithWorksheet(List<DailyPlan> plans, String worksheetContent) {
-        Map<Integer, String> dayWorksheets = worksheetResponseParser.parseResponse(worksheetContent);
-
+    protected void updateDailyPlansWithWorksheet(List<DailyPlan> plans, Map<Integer, String> dayWorksheets) {
         for (DailyPlan plan : plans) {
             String worksheet = dayWorksheets.get(plan.getDayNumber());
             if (worksheet != null) {
