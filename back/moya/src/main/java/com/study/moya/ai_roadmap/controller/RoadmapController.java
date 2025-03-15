@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,10 +34,11 @@ public class RoadmapController {
 
     @PostMapping("/generate")
     public CompletableFuture<ResponseEntity<WeeklyRoadmapResponse>> generateWeeklyRoadmap(
-            @Valid @RequestBody RoadmapRequest request
+            @Valid @RequestBody RoadmapRequest request,
+            @AuthenticationPrincipal Long memberId
     ) {
         log.info("작동해버리기~============================");
-        return roadMapService.generateWeeklyRoadmapAsync(request)
+        return roadMapService.generateWeeklyRoadmapAsync(request,memberId)
                 .thenApply(response -> ResponseEntity.ok(response))
                 .exceptionally(ex -> {
                     // 예외 발생 시 처리
