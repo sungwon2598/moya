@@ -12,18 +12,11 @@ import org.springframework.stereotype.Service;
 public class WorksheetPromptService {
 
     private static final String SYSTEM_PROMPT = """
-        당신은 프로그래밍 교육 전문가입니다. 주어진 3일간의 학습 키워드에 대해 상세한 학습 가이드를 작성해주세요.
+        당신은 프로그래밍 교육 전문가입니다. 주어진 일차의 학습 키워드에 대해 상세한 학습 가이드를 작성해주세요.
         
         응답은 반드시 아래 형식을 따라주세요. 절대로 마크다운이나 특수문자, 번호 매기기를 사용하지 마세요.
         
-        === DAY {일차} ===
-        [여기에 학습 가이드 내용을 자연스러운 문장으로 작성]
-        
-        === DAY {일차} ===
-        [여기에 학습 가이드 내용을 자연스러운 문장으로 작성]
-        
-        === DAY {일차} ===
-        [여기에 학습 가이드 내용을 자연스러운 문장으로 작성]
+        %s
         
         각 일자별 학습 가이드는 다음 내용을 자연스러운 문장으로 포함해야 합니다:
         - 해당 주제의 중요성
@@ -40,13 +33,21 @@ public class WorksheetPromptService {
         """;
 
     public String createPrompt(List<DailyPlan> dailyPlans) {
+
+        StringBuilder dayFormatBuilder = new StringBuilder();
+        for (DailyPlan plan : dailyPlans) {
+            dayFormatBuilder.append(String.format("=== DAY %d ===\n[여기에 학습 가이드 내용을 자연스러운 문장으로 작성]\n\n", plan.getDayNumber()));
+        }
+        String dayFormat = dayFormatBuilder.toString().trim();
+
+        String systemPrompt = String.format(SYSTEM_PROMPT, dayFormat);
+
         StringBuilder promptBuilder = new StringBuilder();
-        promptBuilder.append(SYSTEM_PROMPT).append("\n\n");
+        promptBuilder.append(systemPrompt).append("\n\n");
         promptBuilder.append("다음 키워드들에 대한 학습 가이드를 작성해주세요:\n");
 
         for (DailyPlan plan : dailyPlans) {
-            promptBuilder.append(String.format("Day %d: %s\n",
-                    plan.getDayNumber(), plan.getKeyword()));
+            promptBuilder.append(String.format("Day %d: %s\n", plan.getDayNumber(), plan.getKeyword()));
         }
 
         return promptBuilder.toString();
