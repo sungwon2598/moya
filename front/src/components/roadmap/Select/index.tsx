@@ -14,16 +14,9 @@ export default function Select({
     "inline-block px-4 py-2 mr-2 bg-blue-100 rounded min-w-32 min-h-10";
   const pBTN = "mt-2";
   const questionStep = () => {
-    setRoadmapQuestionStage(...currentStatusNumber);
+    setRoadmapQuestionStage();
   };
-  const nowQuestion = () => {
-    // roadmapCreationQuestion.map((question) => {
-    //   if (roadmapQuestionStage.currentStatusNumber === question.id) {
-    //     console;
-    //     return question;
-    //   }
-    // });
-  };
+
   return (
     <>
       <article className="p-8 mb-12 text-3xl font-bold bg-neutral-100 rounded-2xl">
@@ -47,17 +40,23 @@ export default function Select({
         </div>
       </article>
       <section>
-        <h3>{nowQuestion}</h3>
-        <p>어떤 목표를 가지고 있나요?</p>
+        <h3>{roadmapCreationQuestion[0].title}</h3>
+        <p>{roadmapCreationQuestion[0].subQuestion}</p>
         <form className="mt-3.5 gap-4 grid grid-cols-2">
-          <label className="w-full p-6 transition border rounded-lg cursor-pointer bg-neutral-50 border-neutral-500 hover:bg-neutral-100 hover:border-neutral-900 has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200">
-            <input type="radio" name="roadmap" className="hidden" />
-            <span>선택지 1</span>
-          </label>
-          <label className="w-full p-6 transition border rounded-lg cursor-pointer bg-neutral-50 border-neutral-500 hover:bg-neutral-100 hover:border-neutral-900 has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200">
-            <input type="radio" name="roadmap" className="hidden" />
-            <span>선택지 1</span>
-          </label>
+          {roadmapCreationQuestion[
+            roadmapQuestionStage.currentStatusNumber + 1
+          ].choices.map((item) => {
+            return (
+              <label
+                key={item}
+                className="w-full p-6 transition border rounded-lg cursor-pointer bg-neutral-50 border-neutral-500 hover:bg-neutral-100 hover:border-neutral-900 has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200"
+              >
+                <input type="radio" name="roadmap" className="hidden" />
+                <span>{item}</span>
+              </label>
+            );
+          })}
+
           <div className="col-span-2 text-right">
             <Button
               type="button"
