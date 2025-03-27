@@ -1,6 +1,6 @@
 import { Button } from "@/components/shared/ui/button";
 import { RoadmapQuestionStageType } from "@/pages/roadmap/type";
-// import { roadmapCreationQuestion } from "@/pages/roadmap/data/createRoadmap";
+import { roadmapCreationQuestion } from "@/pages/roadmap/data/createRoadmap";
 interface SelectProp {
   roadmapQuestionStage: RoadmapQuestionStageType;
   setRoadmapQuestionStage: () => void;
@@ -14,9 +14,16 @@ export default function Select({
     "inline-block px-4 py-2 mr-2 bg-blue-100 rounded min-w-32 min-h-10";
   const pBTN = "mt-2";
   const questionStep = () => {
-    // setRoadmapQuestionStage(...currentStatusNumber);
+    setRoadmapQuestionStage(...currentStatusNumber);
   };
-
+  const nowQuestion = () => {
+    // roadmapCreationQuestion.map((question) => {
+    //   if (roadmapQuestionStage.currentStatusNumber === question.id) {
+    //     console;
+    //     return question;
+    //   }
+    // });
+  };
   return (
     <>
       <article className="p-8 mb-12 text-3xl font-bold bg-neutral-100 rounded-2xl">
