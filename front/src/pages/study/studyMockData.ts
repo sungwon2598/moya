@@ -121,7 +121,7 @@ export const MOCK_STUDY_POSTS: StudyPost[] = [
     tags: ['TypeScript', 'React'],
   },
   {
-    postId: 4,
+    postId: 26,
     title: 'LLM을 활용한 회고 관리 서비스에서 백엔드 개발자를 찾고 있습니다!',
     content: `<p>AI/머신러닝 스터디 함께하실 분들 모집합니다 🤖</p>
 <p><br></p>
