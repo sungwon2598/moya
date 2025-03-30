@@ -21,6 +21,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @Slf4j
 @RestControllerAdvice
@@ -120,6 +121,36 @@ public class GlobalExceptionHandler {
                 "field", e.getParameterName(),
                 "value", "",
                 "reason", "필수 파라미터가 누락되었습니다"
+        )));
+
+        BaseException baseException = BaseException.of(CommonErrorCode.INVALID_INPUT_VALUE);
+
+        log.error(ERROR_LOG_FORMAT, baseException.getStatus(), request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(baseException.getStatus())
+                .body(ApiResponse.error(baseException, details));
+    }
+
+    /**
+     * JSON 파싱 관련 예외 처리 (enum 값 불일치 포함)
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    protected ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException e, HttpServletRequest request) {
+        Map<String, Object> details = new HashMap<>();
+
+        // Enum 값 불일치 여부를 확인하는 조건
+        boolean isEnumValueError = e.getMessage() != null &&
+                (e.getMessage().contains("not one of the values accepted for Enum class") ||
+                        e.getMessage().contains("Cannot deserialize value of type"));
+
+        String reason = isEnumValueError ?
+                "선택하신 학습 목표가 유효하지 않습니다" :
+                "요청 본문을 파싱할 수 없습니다";
+
+        details.put("errors", List.of(Map.of(
+                "field", isEnumValueError ? "learningObjective" : "requestBody",
+                "value", "",
+                "reason", reason
         )));
 
         BaseException baseException = BaseException.of(CommonErrorCode.INVALID_INPUT_VALUE);

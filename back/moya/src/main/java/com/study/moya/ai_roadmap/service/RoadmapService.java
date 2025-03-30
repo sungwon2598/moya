@@ -1,5 +1,6 @@
 package com.study.moya.ai_roadmap.service;
 
+import com.study.moya.ai_roadmap.constants.LearningObjective;
 import com.study.moya.ai_roadmap.domain.DailyPlan;
 import com.study.moya.ai_roadmap.domain.RoadMap;
 import com.study.moya.ai_roadmap.domain.WeeklyPlan;
@@ -10,6 +11,9 @@ import com.study.moya.ai_roadmap.repository.DailyPlanRepository;
 import com.study.moya.ai_roadmap.repository.RoadMapRepository;
 import com.study.moya.ai_roadmap.repository.WeeklyPlanRepository;
 import com.study.moya.ai_roadmap.util.RoadmapResponseParser;
+import com.study.moya.token.dto.usage.AiUsageResponse;
+import com.study.moya.token.dto.usage.UseTokenRequest;
+import com.study.moya.token.service.TokenFacadeService;
 import com.theokanning.openai.Usage;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
@@ -49,21 +53,41 @@ public class RoadmapService {
     private final RoadMapRepository roadMapRepository;
     private final WeeklyPlanRepository weeklyPlanRepository;
     private final DailyPlanRepository dailyPlanRepository;
+    private final TokenFacadeService tokenFacadeService;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private static final Long ROADMAP_SERVICE_ID = 1L;
 
     @Async
-    public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request) {
+    public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request, Long memberId) {
         return CompletableFuture.supplyAsync(() -> {
             log.info("로드맵 생성 시작");
+            Long usageId = null;
+
+            String systemPrompt = promptService.createSystemPrompt(request);
+            log.info("===================시스템 프롬프트=================== \n" + systemPrompt);
 
             String prompt = promptService.createPrompt(request);
             log.info("생성된 Prompt:\n{}", prompt);
 
+            UseTokenRequest tokenRequest = UseTokenRequest.builder()
+                    .aiServiceId(ROADMAP_SERVICE_ID)
+                    .requestData(prompt)
+                    .build();
+
+            try {
+                AiUsageResponse usageResponse = tokenFacadeService.useTokenForAiService(memberId, tokenRequest);
+                usageId = usageResponse.getId();
+                log.info("토큰 차감 완료. 사용 ID: {}", usageId);
+            } catch (Exception e) {
+                log.error("토큰 차감 실패: {}", e.getMessage());
+                throw new RuntimeException("토큰 차감 실패", e);
+            }
+
             ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
                     .model(roadmapModel)
-                    .messages(promptService.buildMessages(prompt))
+                    .messages(promptService.buildMessages(systemPrompt, prompt))
                     .temperature(0.8)
                     .maxTokens(2000)
                     .build();
@@ -77,25 +101,57 @@ public class RoadmapService {
                 String apiResponse = chatCompletion.getChoices().get(0).getMessage().getContent();
                 log.info("OpenAI API 응답 수신 완료:\n{}", apiResponse);
 
-                logTokenUsage(chatCompletion.getUsage());
+                // 6. 토큰 사용량 로깅
+                Usage usage = chatCompletion.getUsage();
+                logTokenUsage(usage);
+
+                // 7. 실제 사용량 기록 (선택 사항)
+                if (usage != null && usageId != null) {
+                    try {
+                        tokenFacadeService.updateActualTokenUsage(usageId, usage.getTotalTokens());
+                    } catch (Exception e) {
+                        log.error("실제 사용량 업데이트 실패: {}", e.getMessage());
+                        // 실제 사용량 업데이트 실패는 로드맵 생성 자체에 영향을 주지 않음
+                    }
+                }
 
                 // 응답 파싱
                 WeeklyRoadmapResponse response = responseParser.parseResponse(apiResponse);
 
                 // 파싱된 응답을 엔티티로 저장
                 saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1, request.getSubCategory(),
-                        request.getDuration(), response);
+                        request.getDuration(), request.getLearningObjective(), response);
+
+                // 9. AI 사용 내역 완료 처리
+                try {
+                    tokenFacadeService.markAiUsageAsCompleted(usageId);
+                    log.info("AI 사용 내역 완료 처리: {}", usageId);
+                } catch (Exception e) {
+                    log.error("AI 사용 내역 완료 처리 실패: {}", e.getMessage());
+                    // 상태 업데이트 실패는 로드맵 생성 자체에 영향을 주지 않음
+                }
+
 
                 return response;
             } catch (Exception e) {
                 log.error("OpenAI API 호출 중 예외 발생:", e);
+                // 10. API 호출 실패 시 토큰 환불 처리
+                if (usageId != null) {
+                    try {
+                        tokenFacadeService.markAiUsageAsFailed(usageId);
+                        log.info("토큰 환불 처리 완료: {}", usageId);
+                    } catch (Exception ex) {
+                        log.error("토큰 환불 처리 실패: {}", ex.getMessage());
+                    }
+                }
+
                 throw new RuntimeException("OpenAI API 호출 실패", e);
             }
         });
     }
 
-    @Transactional
-    public Long saveCurriculum(int goalLevel, String topic, int duration, WeeklyRoadmapResponse response) {
+    public Long saveCurriculum(int goalLevel, String topic, int duration, LearningObjective learningObjective,
+                               WeeklyRoadmapResponse response) {
         log.info("커리큘럼 저장 시작");
 
         // RoadMap 생성
@@ -105,6 +161,7 @@ public class RoadmapService {
                 .topic(topic)
                 .evaluation(response.getCurriculumEvaluation())
                 .overallTips(response.getOverallTips())
+                .learningObjective(learningObjective)
                 .build();
 
         // 먼저 RoadMap을 저장하여 ID를 확보
@@ -137,6 +194,8 @@ public class RoadmapService {
 
         return savedRoadMap.getId();
     }
+
+
 
 //    @Transactional
 //    public Long saveCurriculum(int goalLevel, String topic, int duration, WeeklyRoadmapResponse response) {
