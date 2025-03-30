@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 @theme {
   --font-sans: "Pretendard Variable", Pretendard, -apple-system,
@@ -5,6 +6,7 @@
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "sans-serif";
 }
+
 @layer base {
   body:not(.adminator-body) {
     @apply pt-16 bg-gray-50;
