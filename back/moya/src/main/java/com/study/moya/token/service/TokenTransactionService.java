@@ -107,6 +107,24 @@ public class TokenTransactionService {
         return tokenTransactionRepository.save(transaction);
     }
 
+    @Transactional
+    public TokenTransaction createCouponTransaction(Long tokenAccountId, Long amount,String description) {
+        TokenAccount tokenAccount = tokenAccountRepository.findById(tokenAccountId)
+                .orElseThrow(() -> TokenException.of(TokenErrorCode.TOKEN_ACCOUNT_NOT_FOUND));
+
+        TokenTransaction transaction = TokenTransaction.builder()
+                .tokenAccount(tokenAccount)
+                .amount(amount)
+                .transactionType(TransactionType.REFUND)
+                .paymentMethod(PaymentMethod.COUPON) // 환불에는 결제 방법이 없음
+                .balanceAfter(tokenAccount.getBalance())
+                .description(description)
+                .createdBy("SYSTEM")
+                .build();
+
+        return tokenTransactionRepository.save(transaction);
+    }
+
     public Page<TokenTransactionDto> getMemberTransactions(Long tokenAccountId, Pageable pageable) {
         return tokenTransactionRepository.findByTokenAccountIdOrderByCreatedAtDesc(tokenAccountId, pageable)
                 .map(TokenTransactionDto::from);

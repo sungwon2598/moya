@@ -114,7 +114,7 @@ public class CouponController {
     })
     public ResponseEntity<ApiResponse<CouponResponse>> createCoupons(
             @RequestBody CouponBatchRequest request) {
-        CouponResponse responses = couponService.createCoupons(request.getCount(), request.getCouponType(), request.getExpirationDate());
+        CouponResponse responses = couponService.createCoupons(request.getCount(), request.getCouponType(), request.getExpirationDate(), request.getBalance());
         return securityHeadersConfig.addSecurityHeaders(ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.of(responses)));
     }

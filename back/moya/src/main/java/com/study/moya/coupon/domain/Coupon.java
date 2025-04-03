@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 public class Coupon extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Version
     private Long version;
@@ -35,12 +35,15 @@ public class Coupon extends BaseEntity {
 
     private LocalDateTime usedAt;
 
+    private Long balance;
+
     @Builder
-    private Coupon(Member member, CouponType couponType, LocalDateTime expirationDate) {
+    private Coupon(Member member, CouponType couponType, LocalDateTime expirationDate, Long balance) {
         this.member = member;
         this.couponType = couponType;
         this.expirationDate = expirationDate;
         this.isUsed = false;
+        this.balance = balance;
     }
 
     public void use() {
@@ -77,7 +80,4 @@ public class Coupon extends BaseEntity {
         return LocalDateTime.now().isAfter(expirationDate);
     }
 
-    public int getDiscountPercent() {
-        return this.couponType.getTokenAmount();
-    }
 }
