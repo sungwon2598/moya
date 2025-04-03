@@ -8,6 +8,11 @@ import com.study.moya.coupon.exception.CouponException;
 import com.study.moya.coupon.repository.CouponRepository;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
+import com.study.moya.token.domain.enums.PaymentMethod;
+import com.study.moya.token.domain.enums.TransactionType;
+import com.study.moya.token.dto.account.TokenAccountDto;
+import com.study.moya.token.service.TokenAccountService;
+import com.study.moya.token.service.TokenTransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +30,8 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final MemberRepository memberRepository;
+    private final TokenAccountService tokenAccountService;
+    private final TokenTransactionService tokenTransactionService;
 
     /**
      * 이미 발급된 쿠폰을 사용하는 기능
@@ -39,10 +46,22 @@ public class CouponService {
                 .orElseThrow(() -> CouponException.of(CouponErrorCode.COUPON_NOT_FOUND));
         try {
             coupon.use();
+
+            TokenAccountDto tokenAccountDto = tokenAccountService.getOrCreateTokenAccount(memberId);
+
+            Long newBalance = tokenAccountService.addTokens(tokenAccountDto.getId(), coupon.getBalance());
+
+            tokenTransactionService.createCouponTransaction(
+                    tokenAccountDto.getId(),
+                    coupon.getBalance(),
+                    "쿠폰(" + couponType + ") 사용으로 토큰 충전"
+            );
+
+            log.info("쿠폰 사용 및 토큰 충전 완료 - 멤버ID: {}, 쿠폰ID: {}, 충전된 토큰: {}, 새 잔액: {}",
+                    memberId, coupon.getId(), coupon.getBalance(), newBalance);
         } catch (IllegalStateException e) {
             handleCouponUsageException(e);
         }
-        log.info("쿠폰 사용 완료 - 멤버ID: {}, 쿠폰ID: {}, 쿠폰타입: {}", memberId, coupon.getId(), couponType);
     }
 
     /**
@@ -71,8 +90,8 @@ public class CouponService {
      * 관리자용 쿠폰 생성 메소드
      */
     @Transactional
-    public CouponResponse createCoupons(int count, CouponType couponType, LocalDateTime expirationDate) {
-        log.info("새로운 {} 쿠폰 {} 개 생성 시도", couponType, count);
+    public CouponResponse createCoupons(int count, CouponType couponType, LocalDateTime expirationDate, Long balance) {
+        log.info("새로운 {} 쿠폰 {} 개 생성 시도, 토큰 충전액: {}", couponType, count, balance);
 
         if (expirationDate.isBefore(LocalDateTime.now())) {
             throw CouponException.of(CouponErrorCode.INVALID_EXPIRATION_DATE);
@@ -82,10 +101,11 @@ public class CouponService {
             coupons.add(Coupon.builder()
                     .couponType(couponType)
                     .expirationDate(LocalDateTime.now().plusDays(30))
+                    .balance(balance)
                     .build());
         }
         List<Coupon> savedCoupons = couponRepository.saveAll(coupons);
-        log.info("새로운 {} 쿠폰 {} 개 생성 완료", couponType, count);
+        log.info("새로운 {} 쿠폰 {} 개 생성 완료, 토큰 충전액: {}", couponType, count, balance);
         return CouponResponse.from(savedCoupons.get(0));
     }
 

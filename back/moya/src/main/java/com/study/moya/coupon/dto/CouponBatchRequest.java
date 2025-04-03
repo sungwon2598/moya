@@ -22,4 +22,8 @@ public class CouponBatchRequest {
     @NotNull(message = "유효기간은 필수입니다")
     @Schema(description = "쿠폰 만료일시", example = "2024-12-31T23:59:59", required = true)
     private LocalDateTime expirationDate;
+
+    @NotNull(message = "충전될 토큰 잔액은 필수입니다")
+    @Schema(description = "충전될 토큰 잔액", example = "1000", required = true, minimum = "1")
+    private Long balance;
 }

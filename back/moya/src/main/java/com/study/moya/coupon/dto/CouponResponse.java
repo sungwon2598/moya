@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Schema(description = "쿠폰 발급 응답")
 public class CouponResponse {
     @Schema(description = "쿠폰 ID", example = "1")
-    private Long couponId;
+    private String couponId;
 
     @Schema(description = "회원 ID", example = "100")
     private Long memberId;
@@ -23,12 +23,16 @@ public class CouponResponse {
     @Schema(description = "쿠폰 사용 여부", example = "false")
     private boolean isUsed;
 
+    @Schema(description = "충전될 토큰 잔액", example = "1000")
+    private Long balance;
+
     public static CouponResponse from(Coupon coupon) {
         return CouponResponse.builder()
                 .couponId(coupon.getId())
-                .memberId(coupon.getMember().getId())
+                .memberId(coupon.getMember() != null ? coupon.getMember().getId() : null)
                 .expirationDate(coupon.getExpirationDate())
                 .isUsed(coupon.isUsed())
+                .balance(coupon.getBalance())
                 .build();
     }
 }
