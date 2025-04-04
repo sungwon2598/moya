@@ -77,12 +77,19 @@ public class CategoryController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "카테고리 목록 호출", description = "카테고리 목록을 불러옵니다.")
+    @Operation(
+            summary = "카테고리 목록 호출",
+            description = "최대 깊이 1의 대분류와 중분류로 구성된 카테고리 계층 구조를 객체배열로 반환합니다."
+    )
     @GetMapping("/hierarchy") // 대분류, 중분류 전체
     public ResponseEntity<List<CategoryHierarchyResponse>> getCategoryHierarchy() {
         return ResponseEntity.ok(categoryService.getCategoryHierarchy());
     }
 
+    @Operation(
+            summary = "카테고리, 목표수준 목록 호출",
+            description = "카테고리, 목표수준 목록을 불러옵니다."
+    )
     @GetMapping("/roadmap-form-data")
     public ResponseEntity<Map<String, Object>> getRoadmapFormData() {
         Map<String, Object> formData = new HashMap<>();
