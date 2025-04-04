@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,7 @@ public class CategoryController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "카테고리 목록 호출", description = "카테고리 목록을 불러옵니다.")
     @GetMapping("/hierarchy") // 대분류, 중분류 전체
     public ResponseEntity<List<CategoryHierarchyResponse>> getCategoryHierarchy() {
         return ResponseEntity.ok(categoryService.getCategoryHierarchy());
