@@ -3,12 +3,12 @@ package com.study.moya.ai_roadmap.controller;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
-import com.study.moya.ai_roadmap.service.CategoryService;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import com.study.moya.ai_roadmap.service.WorksheetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -38,17 +38,22 @@ public class RoadmapController {
     @Operation(
             summary = "주간 로드맵 생성",
             description = "요청에 따라 주간 로드맵을 생성합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            examples = {
-                                    @ExampleObject(
-                                            name = "roadmap-request-example",
-                                            summary = "로드맵 요청 예시",
-                                            externalValue = "/swagger/examples/roadmap-example.json"
-                                    )
-                            }
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "성공적으로 로드맵 생성",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "roadmap-response-example",
+                                                    summary = "로드맵 응답 예시",
+                                                    externalValue = "/static/swagger/examples/roadmap-example.json"
+                                            )
+                                    }
+                            )
                     )
-            )
+            }
     )
     @PostMapping("/generate")
     public CompletableFuture<ResponseEntity<WeeklyRoadmapResponse>> generateWeeklyRoadmap(
