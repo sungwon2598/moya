@@ -1,0 +1,283 @@
+{
+  "weeklyPlans": [
+    {
+      "week": 1,
+      "weeklyKeyword": "C# 소개 및 환경 설정",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "C# 개요"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "Visual Studio 설치 및 설정"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "첫 번째 C# 프로그램"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "데이터 타입 이해"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "변수와 상수"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "기본 입력 및 출력"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "주간 복습"
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "weeklyKeyword": "조건문과 반복문",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "조건문 기초"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "if-else 구조"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "switch 문"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "for 반복문"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "while 반복문"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "do-while 반복문"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "조건문과 반복문 응용"
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "weeklyKeyword": "배열과 리스트",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "배열 개념"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "배열 선언 및 초기화"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "배열의 사용법"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "리스트 개념"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "리스트 사용법"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "배열과 리스트 비교"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "배열과 리스트 실습"
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "weeklyKeyword": "메소드와 클래스의 기초",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "메소드 개념"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "메소드 작성법"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "매개변수와 반환값"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "클래스 개념"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "클래스 선언 및 사용"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "객체 생성"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "클래스와 객체 실습"
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "weeklyKeyword": "객체 지향 프로그래밍",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "객체 지향 개념"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "상속"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "다형성"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "캡슐화"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "추상 클래스"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "인터페이스"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "객체 지향 실습"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "weeklyKeyword": "예외 처리와 파일 입출력",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "예외 처리 개념"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "try-catch 문"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "throw 키워드"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "파일 입출력 개념"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "파일 읽기"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "파일 쓰기"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "예외 처리와 파일 입출력 실습"
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "weeklyKeyword": "컬렉션과 제네릭",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "컬렉션 개요"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "List와 Dictionary"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "Queue와 Stack"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "제네릭 개념"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "제네릭 클래스"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "제네릭 메소드"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "컬렉션과 제네릭 실습"
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "weeklyKeyword": "기본 개념 통합 및 프로젝트",
+      "dailyPlans": [
+        {
+          "day": 1,
+          "dailyKeyword": "기본 개념 복습"
+        },
+        {
+          "day": 2,
+          "dailyKeyword": "작은 프로젝트 기획"
+        },
+        {
+          "day": 3,
+          "dailyKeyword": "프로젝트 구현: 설계"
+        },
+        {
+          "day": 4,
+          "dailyKeyword": "프로젝트 구현: 코딩"
+        },
+        {
+          "day": 5,
+          "dailyKeyword": "프로젝트 구현: 테스트"
+        },
+        {
+          "day": 6,
+          "dailyKeyword": "프로젝트 발표 준비"
+        },
+        {
+          "day": 7,
+          "dailyKeyword": "프로젝트 발표 및 피드백"
+        }
+      ]
+    }
+  ],
+  "overallTips": [
+    "Visual Studio의 디버거를 적극 활용하세요.",
+    "모든 실습 후에는 코드를 다시 한 번 검토하여 이해도를 높이세요.",
+    "주간 복습 시간을 활용하여 쌓은 지식을 체계적으로 정리하세요."
+  ],
+  "curriculumEvaluation": "기초 개념을 이해하는 데 충분한 커리큘럼입니다.",
+  "hasRestrictedTopics": "없음"
+}
