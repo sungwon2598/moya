@@ -100,8 +100,8 @@ public class CategoryController {
         // 학습 목표 목록 가져오기
         List<Map<String, String>> objectives = Arrays.stream(LearningObjective.values())
                 .map(objective -> Map.of(
-                        "code", objective.name(),
-                        "description", objective.getDescription()
+                        "id", objective.name(),
+                        "name", objective.getDescription()
                 ))
                 .collect(Collectors.toList());
 
