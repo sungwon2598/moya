@@ -33,16 +33,11 @@ public class MemberOAuthService {
      * nickname -> email에 '@gmail.com' 제외한 부분
      */
     @Transactional
-    public Member createOrUpdateMember(GoogleIdToken.Payload idTokenPayload,
-                                       GoogleUserInfo userInfo,
-                                       OAuthTokenResponse tokenResponse) {
+    public Member createOrUpdateMember(GoogleIdToken.Payload idTokenPayload, OAuthTokenResponse tokenResponse) {
         try {
-            Member existingMember = memberRepository.findByEmail(idTokenPayload.getEmail())
-                    .orElse(null);
+            Member existingMember = memberRepository.findByEmail(idTokenPayload.getEmail()).orElse(null);
 
-            if (existingMember == null) {
-                return createNewMember(idTokenPayload, userInfo, tokenResponse);
-            }
+            if (existingMember == null) {return createNewMember(idTokenPayload, tokenResponse);}
 
             return updateExistingMember(existingMember, tokenResponse);
         } catch (Exception e) {
@@ -55,13 +50,12 @@ public class MemberOAuthService {
      * 신규 회원 생성
      */
     private Member createNewMember(GoogleIdToken.Payload idTokenPayload,
-                                   GoogleUserInfo userInfo,
                                    OAuthTokenResponse tokenResponse) {
         String defaultNickname = idTokenPayload.getEmail().split("@")[0];
 
         Member newMember = Member.builder()
                 .email(idTokenPayload.getEmail())
-                .profileImageUrl(userInfo.getPicture())
+                .profileImageUrl((String) idTokenPayload.get("picture"))
                 .nickname(defaultNickname)
                 .roles(Set.of(Role.USER))
                 .status(MemberStatus.ACTIVE)
@@ -92,24 +86,15 @@ public class MemberOAuthService {
     /**
      * 로그아웃 메서드
      */
-    public void logout(String accessToken, String refreshToken) {
+    public void logout(String memberId, String refreshToken) {
         try {
-            log.info("Logout request received - Access Token: {}, Refresh Token: {}", accessToken, refreshToken);
-
-            String userId = String.valueOf(jwtTokenProvider.extractMemberId(refreshToken));
-            log.info("User Id extracted from token: {}", userId);
-
+            log.info("Logout request received - memberId: {}, Refresh Token: {}", memberId, refreshToken);
             SecurityContextHolder.clearContext();
 
-            if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
-                long expirationTime = jwtTokenProvider.getExpirationTime(accessToken);
-                redisService.addToBlacklist(accessToken, expirationTime);
-                log.info("Access token added to blacklist, expires at: {}", expirationTime);
-            }
+            redisService.deleteRefreshToken(memberId);
+            log.info("Refresh token deleted for user: {}", memberId);
 
-            redisService.deleteRefreshToken(userId);
-            log.info("Refresh token deleted for user: {}", userId);
-            log.info("Logout completed successfully for user: {}", userId);
+            log.info("Logout completed successfully for user: {}", memberId);
         } catch (Exception e) {
             log.error("Error during logout process", e);
             throw OAuthException.of(OAuthErrorCode.LOGOUT_FAILED);
