@@ -1,3 +1,3 @@
-import { StudyCreate } from './StudyCreate';
+import { StudyCreate } from './studyCreate';
 
 export { StudyCreate };

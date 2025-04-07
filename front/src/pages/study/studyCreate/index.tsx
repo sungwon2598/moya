@@ -6,38 +6,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Card, Input, Button, Select, Popover, Form } from '@/components';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Card, Input, Button, Select, Form } from '@/components';
 import ReactQuill from 'react-quill';
-import { CalendarIcon, Users, Clock, BookOpen, PenTool, CheckCircle, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const formSchema = z
-  .object({
-    title: z.string().min(2, { message: '제목은 최소 2글자 이상이어야 합니다.' }),
-    content: z.string().min(10, { message: '내용은 최소 10글자 이상이어야 합니다.' }),
-    recruits: z.string().min(1, { message: '모집 인원을 선택해주세요.' }),
-    expectedPeriod: z.string().min(1, { message: '예상 기간을 선택해주세요.' }),
-    studies: z.string().min(1, { message: '모집 구분을 선택해주세요.' }),
-    studyDetails: z.array(z.string()).optional(),
-    startDate: z.date({ required_error: '모집 시작일을 선택해주세요.' }),
-    endDate: z.date({ required_error: '모집 마감일을 선택해주세요.' }),
-  })
-  .refine((data) => data.endDate > data.startDate, {
-    message: '마감일은 시작일 이후여야 합니다.',
-    path: ['endDate'],
-  });
+import { postSchema } from '@/schema';
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof postSchema>;
 
 const StudyCreate = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [activeSection, setActiveSection] = useState<string>('basic');
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(postSchema),
     defaultValues: {
       title: '',
       content: '',
@@ -50,24 +34,6 @@ const StudyCreate = () => {
     },
     mode: 'onChange',
   });
-
-  const watchAllFields = form.watch();
-
-  useEffect(() => {
-    const totalFields = 7;
-    let filledFields = 0;
-
-    if (watchAllFields.title) filledFields++;
-    if (watchAllFields.content && watchAllFields.content.length >= 10) filledFields++;
-    if (watchAllFields.recruits) filledFields++;
-    if (watchAllFields.expectedPeriod) filledFields++;
-    if (watchAllFields.studies) filledFields++;
-    if (watchAllFields.startDate) filledFields++;
-    if (watchAllFields.endDate) filledFields++;
-
-    const percentage = Math.round((filledFields / totalFields) * 100);
-    setProgress(percentage);
-  }, [watchAllFields]);
 
   // Options for form selects
   const recruitOptions = [
@@ -153,359 +119,325 @@ const StudyCreate = () => {
     return options;
   };
 
-  const getStepStatus = (step: string) => {
-    if (step === 'basic') {
-      return watchAllFields.studies && watchAllFields.recruits && watchAllFields.expectedPeriod
-        ? 'complete'
-        : 'incomplete';
-    } else if (step === 'details') {
-      return watchAllFields.startDate && watchAllFields.endDate && watchAllFields.title ? 'complete' : 'incomplete';
-    } else if (step === 'content') {
-      return watchAllFields.content && watchAllFields.content.length >= 10 ? 'complete' : 'incomplete';
-    }
-    return 'incomplete';
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-blue-500 rounded-full animate-spin border-t-transparent" />
-      </div>
-    );
-  }
+  // 로딩 상태 컴포넌트는 제거하고 버튼에서 처리
 
   return (
-    <div className="min-h-screen py-12 bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50 py-12">
       {/* 헤더 */}
-      <div className="max-w-3xl px-6 mx-auto mb-6">
+      <div className="mx-auto mb-6 max-w-3xl px-4">
         <button
           onClick={() => navigate('/study')}
           className="flex items-center text-gray-600 transition-colors hover:text-gray-900">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           <span>스터디 목록으로 돌아가기</span>
         </button>
       </div>
 
-      <Card.Card className="max-w-3xl px-6 mx-auto bg-white border-0 shadow-lg rounded-3xl">
-        <Card.CardHeader className="pb-4 border-b">
+      <Card.Card className="mx-auto max-w-3xl rounded-2xl border-0 bg-white px-4 py-6 shadow-sm">
+        <Card.CardHeader className="px-6 pb-4">
           <Card.CardTitle className="text-2xl font-bold text-gray-800">스터디 모집하기</Card.CardTitle>
-          <p className="text-gray-500">함께할 팀원들을 모집하고 원하는 스터디를 생성해보세요</p>
+          <p className="text-gray-500">필요한 정보를 입력하여 새로운 스터디를 등록해보세요</p>
         </Card.CardHeader>
 
-        <div className="px-8 py-4 bg-gray-50">
-          <div className="flex justify-between">
-            <div
-              className={`flex cursor-pointer flex-col items-center ${activeSection === 'basic' ? 'text-blue-600' : getStepStatus('basic') === 'complete' ? 'text-green-600' : 'text-gray-400'}`}
-              onClick={() => setActiveSection('basic')}>
-              <div
-                className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full ${
-                  activeSection === 'basic'
-                    ? 'border-2 border-blue-500 bg-blue-100 text-blue-600'
-                    : getStepStatus('basic') === 'complete'
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-gray-100 text-gray-400'
-                }`}>
-                <LayoutGrid className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-medium">기본 정보</span>
-            </div>
-
-            <div
-              className={`flex cursor-pointer flex-col items-center ${activeSection === 'details' ? 'text-blue-600' : getStepStatus('details') === 'complete' ? 'text-green-600' : 'text-gray-400'}`}
-              onClick={() => setActiveSection('details')}>
-              <div
-                className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full ${
-                  activeSection === 'details'
-                    ? 'border-2 border-blue-500 bg-blue-100 text-blue-600'
-                    : getStepStatus('details') === 'complete'
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-gray-100 text-gray-400'
-                }`}>
-                <PenTool className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-medium">세부 정보</span>
-            </div>
-
-            <div
-              className={`flex cursor-pointer flex-col items-center ${activeSection === 'content' ? 'text-blue-600' : getStepStatus('content') === 'complete' ? 'text-green-600' : 'text-gray-400'}`}
-              onClick={() => setActiveSection('content')}>
-              <div
-                className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full ${
-                  activeSection === 'content'
-                    ? 'border-2 border-blue-500 bg-blue-100 text-blue-600'
-                    : getStepStatus('content') === 'complete'
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-gray-100 text-gray-400'
-                }`}>
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-medium">프로젝트 소개</span>
-            </div>
-          </div>
-
-          {/* 연결선 */}
-          <div className="relative flex justify-between mx-auto mb-1 -mt-5 px-14">
-            <div
-              className={`h-1 flex-1 ${getStepStatus('basic') === 'complete' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            <div
-              className={`h-1 flex-1 ${getStepStatus('details') === 'complete' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-          </div>
-          {/* <p> {progress}</p> */}
-        </div>
-
-        <Card.CardContent className="p-8">
+        <Card.CardContent className="px-6">
           <Form.Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {activeSection === 'basic' && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-800">기본 정보</h3>
-                  <p className="text-gray-500">스터디 유형과 인원, 기간을 설정해주세요</p>
-
-                  <div className="p-6 border border-blue-100 rounded-xl bg-blue-50">
-                    <Form.FormField
-                      control={form.control}
-                      name="studies"
-                      render={({ field }) => (
-                        <Form.FormItem className="mb-6">
-                          <Form.FormLabel className="flex items-center text-gray-700">
-                            <BookOpen className="w-4 h-4 mr-2 text-blue-500" />
-                            모집 구분
-                          </Form.FormLabel>
-                          <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <Form.FormControl>
-                              <Select.SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                                <Select.SelectValue placeholder="모집 구분을 선택하세요" />
-                              </Select.SelectTrigger>
-                            </Form.FormControl>
-                            <Select.SelectContent className="bg-white">
-                              {getCategoryOptions().map((option) => (
-                                <Select.SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </Select.SelectItem>
-                              ))}
-                            </Select.SelectContent>
-                          </Select.Select>
-                          <Form.FormMessage />
-                        </Form.FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <Form.FormField
-                        control={form.control}
-                        name="recruits"
-                        render={({ field }) => (
-                          <Form.FormItem>
-                            <Form.FormLabel className="flex items-center text-gray-700">
-                              <Users className="w-4 h-4 mr-2 text-blue-500" />
-                              모집 인원
-                            </Form.FormLabel>
-                            <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <Form.FormControl>
-                                <Select.SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                                  <Select.SelectValue placeholder="모집 인원을 선택하세요" />
-                                </Select.SelectTrigger>
-                              </Form.FormControl>
-                              <Select.SelectContent className="bg-white">
-                                {recruitOptions.map((option) => (
-                                  <Select.SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </Select.SelectItem>
-                                ))}
-                              </Select.SelectContent>
-                            </Select.Select>
-                            <Form.FormMessage />
-                          </Form.FormItem>
+              {/* 기본 정보 섹션 */}
+              <div className="space-y-4">
+                <Form.FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <Form.FormItem>
+                      <Form.FormLabel className="text-gray-700">
+                        제목
+                        {form.formState.errors.title && (
+                          <span className="ml-2 text-xs font-medium text-red-500">
+                            {form.formState.errors.title.message}
+                          </span>
                         )}
-                      />
+                      </Form.FormLabel>
+                      <Form.FormControl>
+                        <Input
+                          placeholder="스터디 제목을 입력해주세요"
+                          {...field}
+                          className={cn(
+                            'rounded-lg',
+                            form.formState.errors.title ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                          )}
+                        />
+                      </Form.FormControl>
+                      {/* 필드 아래 오류 메시지 제거 */}
+                    </Form.FormItem>
+                  )}
+                />
 
-                      <Form.FormField
-                        control={form.control}
-                        name="expectedPeriod"
-                        render={({ field }) => (
-                          <Form.FormItem>
-                            <Form.FormLabel className="flex items-center text-gray-700">
-                              <Clock className="w-4 h-4 mr-2 text-blue-500" />
-                              진행 기간
-                            </Form.FormLabel>
-                            <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <Form.FormControl>
-                                <Select.SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                                  <Select.SelectValue placeholder="진행 기간을 선택하세요" />
-                                </Select.SelectTrigger>
-                              </Form.FormControl>
-                              <Select.SelectContent className="bg-white">
-                                {periodOptions.map((option) => (
-                                  <Select.SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </Select.SelectItem>
-                                ))}
-                              </Select.SelectContent>
-                            </Select.Select>
-                            <Form.FormMessage />
-                          </Form.FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end mt-6">
-                    <Button
-                      type="button"
-                      onClick={() => setActiveSection('details')}
-                      disabled={!watchAllFields.studies || !watchAllFields.recruits || !watchAllFields.expectedPeriod}
-                      className="text-white bg-blue-600 hover:bg-blue-700">
-                      다음 단계
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {activeSection === 'details' && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-800">세부 정보</h3>
-                  <p className="text-gray-500">스터디 제목과 모집 기간을 입력해주세요</p>
-
-                  <div className="p-6 border rounded-xl border-amber-100 bg-amber-50">
-                    <Form.FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <Form.FormItem className="mb-6">
-                          <Form.FormLabel className="flex items-center text-gray-700">
-                            <PenTool className="w-4 h-4 mr-2 text-amber-500" />
-                            제목
-                          </Form.FormLabel>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Form.FormField
+                    control={form.control}
+                    name="studies"
+                    render={({ field }) => (
+                      <Form.FormItem>
+                        <Form.FormLabel className="text-gray-700">
+                          모집 구분
+                          {form.formState.errors.studies && (
+                            <span className="ml-2 text-xs font-medium text-red-500">
+                              {form.formState.errors.studies.message}
+                            </span>
+                          )}
+                        </Form.FormLabel>
+                        <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <Input
-                              placeholder="스터디 제목을 입력해주세요"
-                              {...field}
-                              className="bg-white border-amber-200 focus:ring-amber-500"
-                            />
+                            <Select.SelectTrigger
+                              className={cn(
+                                'rounded-lg',
+                                form.formState.errors.studies ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                              )}>
+                              <Select.SelectValue placeholder="모집 구분을 선택하세요" />
+                            </Select.SelectTrigger>
                           </Form.FormControl>
-                          <Form.FormMessage />
-                        </Form.FormItem>
-                      )}
-                    />
+                          <Select.SelectContent
+                            className="animate-in zoom-in-95 fade-in-50 origin-top bg-white duration-100"
+                            position="popper"
+                            sideOffset={5}>
+                            {getCategoryOptions().map((option) => (
+                              <Select.SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </Select.SelectItem>
+                            ))}
+                          </Select.SelectContent>
+                        </Select.Select>
+                        {/* 필드 아래 오류 메시지 제거 */}
+                      </Form.FormItem>
+                    )}
+                  />
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <Form.FormField
-                        control={form.control}
-                        name="startDate"
-                        render={({ field }) => (
-                          <Form.FormItem className="flex flex-col">
-                            <Form.FormLabel className="flex items-center text-gray-700">
-                              <CalendarIcon className="w-4 h-4 mr-2 text-amber-500" />
-                              모집 시작일
-                            </Form.FormLabel>
-                            <Form.FormControl>
-                              <Input
-                                type="date"
-                                className="bg-white border-amber-200 focus:ring-amber-500"
-                                value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                                onChange={(e) => {
-                                  const date = e.target.valueAsDate;
-                                  if (date) field.onChange(date);
-                                }}
-                              />
-                            </Form.FormControl>
-                            <Form.FormMessage />
-                          </Form.FormItem>
-                        )}
-                      />
-
-                      <Form.FormField
-                        control={form.control}
-                        name="endDate"
-                        render={({ field }) => (
-                          <Form.FormItem className="flex flex-col">
-                            <Form.FormLabel className="flex items-center text-gray-700">
-                              <CalendarIcon className="w-4 h-4 mr-2 text-amber-500" />
-                              모집 마감일
-                            </Form.FormLabel>
-                            <Form.FormControl>
-                              <Input
-                                type="date"
-                                className="bg-white border-amber-200 focus:ring-amber-500"
-                                value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                                onChange={(e) => {
-                                  const date = e.target.valueAsDate;
-                                  if (date) field.onChange(date);
-                                }}
-                              />
-                            </Form.FormControl>
-                            <Form.FormMessage />
-                          </Form.FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={() => setActiveSection('basic')}>
-                      이전 단계
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setActiveSection('content')}
-                      disabled={!watchAllFields.title || !watchAllFields.startDate || !watchAllFields.endDate}
-                      className="text-white bg-blue-600 hover:bg-blue-700">
-                      다음 단계
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* 내용 섹션 */}
-              {activeSection === 'content' && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-800">프로젝트 소개</h3>
-                  <p className="text-gray-500">어떤 스터디인지 자세히 소개해주세요</p>
-
-                  <div className="p-6 border border-green-100 rounded-xl bg-green-50">
-                    <Form.FormField
-                      control={form.control}
-                      name="content"
-                      render={({ field }) => (
-                        <Form.FormItem>
-                          <Form.FormLabel className="flex items-center text-gray-700">
-                            <BookOpen className="w-4 h-4 mr-2 text-green-500" />
-                            프로젝트 소개
-                          </Form.FormLabel>
+                  <Form.FormField
+                    control={form.control}
+                    name="recruits"
+                    render={({ field }) => (
+                      <Form.FormItem>
+                        <Form.FormLabel className="text-gray-700">
+                          모집 인원
+                          {form.formState.errors.recruits && (
+                            <span className="ml-2 text-xs font-medium text-red-500">
+                              {form.formState.errors.recruits.message}
+                            </span>
+                          )}
+                        </Form.FormLabel>
+                        <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <div className="min-h-[200px] rounded-md border border-green-200">
-                              <ReactQuill
-                                theme="snow"
-                                value={field.value}
-                                onChange={field.onChange}
-                                modules={modules}
-                                className="h-64"
-                              />
-                            </div>
+                            <Select.SelectTrigger
+                              className={cn(
+                                'rounded-lg',
+                                form.formState.errors.recruits ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                              )}>
+                              <Select.SelectValue placeholder="모집 인원을 선택하세요" />
+                            </Select.SelectTrigger>
                           </Form.FormControl>
-                          <Form.FormDescription className="mt-4 text-green-700">
-                            프로젝트 목표, 진행 방식, 예상 결과물, 필요한 기술 스택 등을 상세히 작성해주세요.
-                          </Form.FormDescription>
-                          <Form.FormMessage />
-                        </Form.FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex justify-between mt-6">
-                    <Button type="button" variant="secondary" onClick={() => setActiveSection('details')}>
-                      이전 단계
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={loading || progress < 100}
-                      className="text-white bg-green-600 hover:bg-green-700">
-                      <CheckCircle className="w-4 h-4 mr-2 text-white" />
-                      스터디 생성하기
-                    </Button>
-                  </div>
+                          <Select.SelectContent
+                            className="animate-in zoom-in-95 fade-in-50 origin-top bg-white duration-100"
+                            position="popper"
+                            sideOffset={5}>
+                            {recruitOptions.map((option) => (
+                              <Select.SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </Select.SelectItem>
+                            ))}
+                          </Select.SelectContent>
+                        </Select.Select>
+                        {/* 필드 아래 오류 메시지 제거 */}
+                      </Form.FormItem>
+                    )}
+                  />
                 </div>
-              )}
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Form.FormField
+                    control={form.control}
+                    name="expectedPeriod"
+                    render={({ field }) => (
+                      <Form.FormItem>
+                        <Form.FormLabel className="text-gray-700">
+                          진행 기간
+                          {form.formState.errors.expectedPeriod && (
+                            <span className="ml-2 text-xs font-medium text-red-500">
+                              {form.formState.errors.expectedPeriod.message}
+                            </span>
+                          )}
+                        </Form.FormLabel>
+                        <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Form.FormControl>
+                            <Select.SelectTrigger
+                              className={cn(
+                                'rounded-lg',
+                                form.formState.errors.expectedPeriod ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                              )}>
+                              <Select.SelectValue placeholder="진행 기간을 선택하세요" />
+                            </Select.SelectTrigger>
+                          </Form.FormControl>
+                          <Select.SelectContent
+                            className="animate-in zoom-in-95 fade-in-50 origin-top bg-white duration-100"
+                            position="popper"
+                            sideOffset={5}>
+                            {periodOptions.map((option) => (
+                              <Select.SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </Select.SelectItem>
+                            ))}
+                          </Select.SelectContent>
+                        </Select.Select>
+                        {/* 필드 아래 오류 메시지 제거 */}
+                      </Form.FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Form.FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <Form.FormItem>
+                        <Form.FormLabel className="text-gray-700">
+                          모집 시작일
+                          {form.formState.errors.startDate && (
+                            <span className="ml-2 text-xs font-medium text-red-500">
+                              {form.formState.errors.startDate.message}
+                            </span>
+                          )}
+                        </Form.FormLabel>
+                        <Form.FormControl>
+                          <Input
+                            type="date"
+                            className={cn(
+                              'rounded-lg',
+                              form.formState.errors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                            )}
+                            value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => {
+                              const date = e.target.valueAsDate;
+                              if (date) field.onChange(date);
+                            }}
+                          />
+                        </Form.FormControl>
+                        {/* 필드 아래 오류 메시지 제거 */}
+                      </Form.FormItem>
+                    )}
+                  />
+
+                  <Form.FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <Form.FormItem>
+                        <Form.FormLabel className="text-gray-700">
+                          모집 마감일
+                          {form.formState.errors.endDate && (
+                            <span className="ml-2 text-xs font-medium text-red-500">
+                              {form.formState.errors.endDate.message}
+                            </span>
+                          )}
+                        </Form.FormLabel>
+                        <Form.FormControl>
+                          <Input
+                            type="date"
+                            className={cn(
+                              'rounded-lg',
+                              form.formState.errors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                            )}
+                            value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => {
+                              const date = e.target.valueAsDate;
+                              if (date) field.onChange(date);
+                            }}
+                          />
+                        </Form.FormControl>
+                        {/* 필드 아래 오류 메시지 제거 */}
+                      </Form.FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* 스터디 내용 섹션 */}
+              <div className="space-y-4 pt-4">
+                <Form.FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <Form.FormItem>
+                      <Form.FormLabel className="text-gray-700">
+                        스터디 소개
+                        {form.formState.errors.content && (
+                          <span className="ml-2 text-xs font-medium text-red-500">
+                            {form.formState.errors.content.message}
+                          </span>
+                        )}
+                      </Form.FormLabel>
+                      <Form.FormControl>
+                        <div
+                          className={cn(
+                            'min-h-[200px] overflow-hidden rounded-lg',
+                            form.formState.errors.content ? 'border border-red-300 bg-red-50' : 'border border-gray-200'
+                          )}>
+                          <ReactQuill
+                            theme="snow"
+                            value={field.value}
+                            onChange={field.onChange}
+                            modules={modules}
+                            className="h-64"
+                          />
+                        </div>
+                      </Form.FormControl>
+                      {/* 필드 아래 오류 메시지 제거 */}
+                      <Form.FormDescription className="mt-2 text-sm text-gray-500">
+                        스터디의 목표, 진행 방식, 일정, 예상 결과물 등을 상세히 작성해주세요.
+                      </Form.FormDescription>
+                    </Form.FormItem>
+                  )}
+                />
+              </div>
+
+              {/* 도움말 섹션 */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <h3 className="mb-2 text-sm font-medium text-gray-700">💡 스터디 소개 작성 팁</h3>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• 스터디의 목표와 방향성을 명확히 설명해주세요</li>
+                  <li>• 진행 일정과 방식에 대해 구체적으로 작성해주세요</li>
+                  <li>• 참여자에게 기대하는 역할과 준비물이 있다면 언급해주세요</li>
+                  <li>• 스터디 종료 후 예상되는 결과물이 있다면 소개해주세요</li>
+                </ul>
+              </div>
+
+              {/* 버튼 영역 */}
+              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/study')}
+                  className="rounded-lg border-gray-300"
+                  disabled={loading}>
+                  취소
+                </Button>
+                <Button
+                  type="submit"
+                  className={`rounded-lg transition-colors duration-300 ${
+                    form.formState.isValid
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                  }`}
+                  disabled={loading}>
+                  {loading ? (
+                    <div className="flex items-center">
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <span>등록 중...</span>
+                    </div>
+                  ) : (
+                    '스터디 등록하기'
+                  )}
+                </Button>
+              </div>
             </form>
           </Form.Form>
         </Card.CardContent>

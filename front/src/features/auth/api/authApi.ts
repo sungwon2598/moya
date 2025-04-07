@@ -60,6 +60,7 @@ export const postGoogleAuth = async (
       throw new Error("No response data received");
     }
 
+    console.log(response)
     return {
       success: true,
       data: { user: response.data },

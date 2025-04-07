@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { ModalProvider } from './core/providers/context/ModalContext';
@@ -16,12 +15,10 @@ import AdminLayout from '@pages/adminator/layout/AdminLayout.tsx';
 import CategoryManagement from '@pages/category/CategoryManagement.tsx';
 import { ProtectedRoute } from '@features/auth/components/ProtectedRoute.tsx';
 import { AdminRoute } from '@features/auth/components/AdminRoute.tsx';
-// import StudyCreate from "./pages/Study/StudyPostCreate.tsx";
 
 import { StudyCreate } from './pages/study/index.ts';
 import CreateSample from '@pages/create-sample/CreateSample.tsx';
 import LearningRoad from '@pages/learningRoad/LearningRoad.tsx';
-
 
 const App: React.FC = () => {
   return (
@@ -36,8 +33,7 @@ const App: React.FC = () => {
 
               {/* 로드맵 관련 라우트 */}
               <Route path="roadmap">
-
-                <Route path="create" element={<CreatePage />} />
+                <Route path="create" element={<StudyCreate />} />
 
                 <Route path="preview" element={<RoadmapPreview />} />
                 <Route path="road" element={<LearningRoad />} />
@@ -58,10 +54,7 @@ const App: React.FC = () => {
                       <Outlet />
                     </AdminRoute>
                   </ProtectedRoute>
-
-                }
-              >
-
+                }>
                 <Route path="categorys" element={<CategoryManagement />} />
                 <Route path="create-sample" element={<CreateSample />} />
               </Route>
@@ -71,12 +64,8 @@ const App: React.FC = () => {
               <Route
                 path="*"
                 element={
-
-                  <div className="flex items-center justify-center min-h-screen">
-                    <h1 className="text-2xl font-bold text-gray-800">
-                      페이지를 찾을 수 없습니다
-                    </h1>
-
+                  <div className="flex min-h-screen items-center justify-center">
+                    <h1 className="text-2xl font-bold text-gray-800">페이지를 찾을 수 없습니다</h1>
                   </div>
                 }
               />
@@ -87,12 +76,8 @@ const App: React.FC = () => {
               <Route
                 path="*"
                 element={
-
-                  <div className="flex items-center justify-center min-h-screen">
-                    <h1 className="text-2xl font-bold text-gray-800">
-                      관리자 페이지를 찾을 수 없습니다
-                    </h1>
-
+                  <div className="flex min-h-screen items-center justify-center">
+                    <h1 className="text-2xl font-bold text-gray-800">관리자 페이지를 찾을 수 없습니다</h1>
                   </div>
                 }
               />

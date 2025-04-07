@@ -8,6 +8,7 @@ const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
+  accessToken: null,
 };
 
 // 목업 데이터임, 로컬환경에서 사용시 app에서 ProtectedRoute 태그 제거 후 사용
@@ -79,6 +80,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.error = null;
 
+        console.log(action)
         console.log(action.payload);
       })
 

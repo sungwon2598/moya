@@ -11,6 +11,7 @@ export interface AuthState {
     user: User | null;
     loading: boolean;
     error: string | null;
+    accessToken?: string | null;
 }
 
 export interface GoogleAuthResponse {

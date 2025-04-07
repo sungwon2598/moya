@@ -1,6 +1,6 @@
 import { Alert } from './Alert';
 import { Input } from './Input';
-import { LoadingSpinner } from './LoadingSpinner/indx';
+import { LoadingSpinner } from './LoadingSpinner';
 import { ModalRoot } from './Modal/ModalRoot';
 import { ProfileForm } from './profileForm';
 
