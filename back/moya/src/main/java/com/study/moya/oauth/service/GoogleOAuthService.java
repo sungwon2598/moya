@@ -89,14 +89,7 @@ public class GoogleOAuthService {
                     .build();
 
             GoogleIdToken googleIdToken = verifier.verify(idToken);
-            if (googleIdToken == null) {
-                log.error("Invalid Google ID token verification result");
-                throw OAuthException.of(OAuthErrorCode.INVALID_ID_TOKEN);
-            }
-
             return googleIdToken.getPayload();
-        } catch (OAuthException e) {
-            throw e;
         } catch (Exception e) {
             log.error("Failed to verify ID token: {}", e.getMessage(), e);
             throw OAuthException.of(OAuthErrorCode.INVALID_ID_TOKEN);

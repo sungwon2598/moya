@@ -89,7 +89,7 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, jwtTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember());
+        OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember(), authResult.getRefreshToken());
         return securityHeadersConfig.addSecurityHeaders(
                 ResponseEntity.ok(ApiResponse.of(loginResponse)));
     }
@@ -107,14 +107,13 @@ public class LoginController {
     })
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
-            @CookieValue(name = "AUTH-TOKEN", required = false) String accessToken,
+            @AuthenticationPrincipal String memberId,
             @CookieValue(name = "REFRESH-TOKEN", required = false) String refreshToken,
             HttpServletResponse response) {
 
         log.info("logout요청 받음==========================");
-        if (refreshToken != null || accessToken != null) {
-            log.info("ac, rf : {}, {}", accessToken, refreshToken);
-            memberOAuthService.logout(accessToken, refreshToken);
+        if (refreshToken != null) {
+            memberOAuthService.logout(memberId, refreshToken);
         }
 
         // 쿠키 삭제

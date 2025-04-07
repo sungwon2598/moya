@@ -28,6 +28,9 @@ public class OAuthLoginResponse {
     @Schema(description = "프로필 이미지 URL")
     private String profileImageUrl;
 
+    @Schema(description = "액세스 토큰")
+    private String accessToken;
+
     public static OAuthLoginResponse from(Member member) {
         return OAuthLoginResponse.builder()
                 .email(member.getEmail())
@@ -35,6 +38,17 @@ public class OAuthLoginResponse {
                 .roles(member.getRoles())
                 .status(member.getStatus())
                 .profileImageUrl(member.getProfileImageUrl())
+                .build();
+    }
+
+    public static OAuthLoginResponse from(Member member, String accessToken) {
+        return OAuthLoginResponse.builder()
+                .email(member.getEmail())
+                .nickname(member.getNickname())
+                .roles(member.getRoles())
+                .status(member.getStatus())
+                .profileImageUrl(member.getProfileImageUrl())
+                .accessToken(accessToken)
                 .build();
     }
 }

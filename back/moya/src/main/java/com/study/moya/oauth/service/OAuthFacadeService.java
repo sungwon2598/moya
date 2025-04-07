@@ -45,9 +45,8 @@ public class OAuthFacadeService {
         try {
             OAuthTokenResponse tokenResponse = googleOAuthService.getGoogleTokens(requestBody.getAuthCode(), requestBody.getRedirectUri());
             GoogleIdToken.Payload idTokenPayload = googleOAuthService.verifyAndGetIdToken(tokenResponse.getIdToken());
-            GoogleUserInfo userInfo = googleOAuthService.getGoogleUserInfo(tokenResponse.getAccessToken());
 
-            Member savedMember = memberOAuthService.createOrUpdateMember(idTokenPayload, userInfo, tokenResponse);
+            Member savedMember = memberOAuthService.createOrUpdateMember(idTokenPayload, tokenResponse);
 
             List<GrantedAuthority> authorities = savedMember.getAuthorities().stream()
                     .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
