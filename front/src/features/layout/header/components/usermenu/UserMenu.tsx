@@ -1,39 +1,38 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/core/store/store';
+import { RootState } from '@/store/store';
 import { UserAvatar } from './UserAvatar';
 import UserDropdown from './UserDropdown';
 
 export const UserMenu: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const { user, isLogin } = useSelector((state: RootState) => state.auth);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user, isLogin } = useSelector((state: RootState) => state.auth);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-    if (!isLogin || !user) return null;
+  if (!isLogin || !user) return null;
 
-    return (
-        <div className="relative" ref={dropdownRef}>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center focus:outline-none"
-                aria-expanded={isOpen}
-                aria-haspopup="true"
-            >
-                <UserAvatar user={user} />
-            </button>
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center focus:outline-none"
+        aria-expanded={isOpen}
+        aria-haspopup="true">
+        <UserAvatar user={user} />
+      </button>
 
-            {isOpen && <UserDropdown user={user} onClose={() => setIsOpen(false)} isLogin={isLogin} />}
-        </div>
-    );
+      {isOpen && <UserDropdown user={user} onClose={() => setIsOpen(false)} isLogin={isLogin} />}
+    </div>
+  );
 };

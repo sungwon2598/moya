@@ -105,16 +105,16 @@ const StudyPostCreate = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-blue-500 rounded-full animate-spin border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-12 bg-gray-50">
-      <div className="max-w-3xl px-6 mx-auto">
-        <div className="p-8 bg-white border border-gray-200 shadow-sm rounded-3xl">
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="mx-auto max-w-3xl px-6">
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
           <h1 className="mb-8 text-2xl font-bold">프로젝트 기본 정보를 입력해주세요</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -148,40 +148,40 @@ const StudyPostCreate = () => {
             {/* Date Selection */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">모집 시작일</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">모집 시작일</label>
                 <input
                   type="date"
                   value={formData.startDate}
                   onChange={(e) => handleChange('startDate', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">모집 마감일</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">모집 마감일</label>
                 <input
                   type="date"
                   value={formData.endDate}
                   onChange={(e) => handleChange('endDate', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             {/* Title */}
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">제목</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">제목</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
                 placeholder="글 제목을 입력해주세요"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Content */}
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">프로젝트 소개</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">프로젝트 소개</label>
               <ReactQuill
                 theme="snow"
                 value={formData.content}
@@ -196,12 +196,12 @@ const StudyPostCreate = () => {
               <button
                 type="button"
                 onClick={() => navigate('/study')}
-                className="px-6 py-3 text-gray-700 transition-colors bg-white border border-gray-300 rounded-xl hover:bg-gray-50">
+                className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-gray-700 transition-colors hover:bg-gray-50">
                 취소
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 text-white transition-colors bg-blue-500 rounded-xl hover:bg-blue-600"
+                className="rounded-xl bg-blue-500 px-6 py-3 text-white transition-colors hover:bg-blue-600"
                 disabled={loading}>
                 글쓰기
               </button>

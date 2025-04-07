@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Eye, MessageSquare, Heart, Calendar, Users, Clock, ArrowLeft } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
-import { mockStudyApiService as studyApiService } from './studyMockData';
+// import { mockStudyApiService as studyApiService } from './studyMockData';
+import { studyApiService } from '@/core/config/studyApiConfig';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 
@@ -84,6 +85,7 @@ const StudyPostDetail = () => {
       try {
         setLoading(true);
         const response = await studyApiService.getStudyDetail(parseInt(postId));
+        console.group(response.data);
         setPost(response.data);
         setIsLiked(response.data.isLiked);
       } catch (error) {

@@ -227,7 +227,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
               )}
             </div>
           ))}
-          <button type="button" onClick={addLink} className="text-moya-primary hover:text-moya-secondary text-sm">
+          <button type="button" onClick={addLink} className="text-sm text-moya-primary hover:text-moya-secondary">
             + 링크 추가
           </button>
         </div>
@@ -236,7 +236,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
       <button
         type="submit"
         disabled={isSubmitting}
-        className="bg-moya-primary hover:bg-moya-secondary w-full rounded-lg px-4 py-2 text-white transition-colors duration-200 disabled:opacity-50">
+        className="w-full px-4 py-2 text-white transition-colors duration-200 rounded-lg bg-moya-primary hover:bg-moya-secondary disabled:opacity-50">
         {isSubmitting ? '저장 중...' : '저장'}
       </button>
     </form>

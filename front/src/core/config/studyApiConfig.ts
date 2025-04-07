@@ -1,11 +1,10 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 const BASE_URL = 'https://api.moyastudy.com';
 
 // 스터디 관련 엔드포인트 정의
 export const STUDY_ENDPOINTS = {
-  LIST: `${BASE_URL}/api/posts`,
+  LIST: `${BASE_URL}/api/posts?page=1`,
   DETAIL: (postId: number) => `${BASE_URL}/api/posts/${postId}`,
   CREATE: `${BASE_URL}/api/posts`,
   UPDATE: (postId: number) => `${BASE_URL}/api/posts/${postId}`,
@@ -25,15 +24,24 @@ export interface Category {
   subCategories: Category[];
 }
 
-//카테고리 생성 dto 인터페이스
+// 카테고리 생성 dto 인터페이스
 export interface CreateCategoryRequest {
   name: string;
   parentId?: number; // Long -> number, optional로 설정
 }
 
-//카테고리 수정 dto 인터페이스
+// 카테고리 수정 dto 인터페이스
 export interface UpdateCategoryRequest {
   name: string;
+}
+
+// 필터 관련 타입 정의
+export interface StudyFilters {
+  studies?: string;
+  studyDetails?: string;
+  techStack?: string;
+  progressType?: string;
+  recruitmentStatus?: string;
 }
 
 // 스터디 게시글 관련 타입 정의
@@ -86,7 +94,7 @@ export interface StudyApiResponse<T> {
   error?: {
     code: string;
     message: string;
-    details: Record<string, unknown>;
+    details: Record<string, string>;
   };
 }
 
@@ -103,40 +111,41 @@ export const studyApiService = {
     }
   },
 
-  // 스터디 목록 조회
-  //카테고리 생성
-  createCategory: async (data: CreateCategoryRequest) => {
+  // 카테고리 생성
+  createCategory: async (data: CreateCategoryRequest): Promise<StudyApiResponse<void>> => {
     const response = await axios.post<StudyApiResponse<void>>(STUDY_ENDPOINTS.CREATE_CATEGORY, data);
     return response.data;
   },
 
-  //카테고리 삭제
-  deleteCategory: async (categoryId: number) => {
+  // 카테고리 삭제
+  deleteCategory: async (categoryId: number): Promise<StudyApiResponse<void>> => {
     const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.DELETE_CATEGORY(categoryId));
     return response.data;
   },
 
-  //카테고리 수정
-  updateCategory: async (categoryId: number, data: UpdateCategoryRequest) => {
-    const response = await axios.put(STUDY_ENDPOINTS.UPDATE_CATEGORY(categoryId), data);
+  // 카테고리 수정
+  updateCategory: async (categoryId: number, data: UpdateCategoryRequest): Promise<StudyApiResponse<void>> => {
+    const response = await axios.put<StudyApiResponse<void>>(STUDY_ENDPOINTS.UPDATE_CATEGORY(categoryId), data);
     return response.data;
   },
 
-  // 스터디 목록 조회 (Mock 데이터 사용)
-  getStudyList: async (page = 0, size = 10, filters?: Record<string, any>): Promise<StudyApiResponse<StudyPost[]>> => {
+  // 스터디 목록 조회
+  getStudyList: async (): Promise<StudyApiResponse<StudyPost[]>> => {
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        size: size.toString(),
-        ...(filters?.studies && { studies: filters.studies }),
-        ...(filters?.studyDetails && { studyDetails: filters.studyDetails }),
-        ...(filters?.techStack && { techStack: filters.techStack }),
-        ...(filters?.progressType && { progressType: filters.progressType }),
-        ...(filters?.recruitmentStatus && { recruitmentStatus: filters.recruitmentStatus }),
-      });
 
-      const response = await axios.get<StudyApiResponse<StudyPost[]>>(`${STUDY_ENDPOINTS.LIST}?${params.toString()}`);
+      //page = 0, size = 10, filters?: StudyFilters
+      // const params = new URLSearchParams({
+      //   page: page.toString(),
+      //   size: size.toString(),
+      //   ...(filters?.studies && { studies: filters.studies }),
+      //   ...(filters?.studyDetails && { studyDetails: filters.studyDetails }),
+      //   ...(filters?.techStack && { techStack: filters.techStack }),
+      //   ...(filters?.progressType && { progressType: filters.progressType }),
+      //   ...(filters?.recruitmentStatus && { recruitmentStatus: filters.recruitmentStatus }),
+      // });
 
+      const response = await axios.get<StudyApiResponse<StudyPost[]>>(`${STUDY_ENDPOINTS.LIST}`);
+      console.log(response);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -145,11 +154,12 @@ export const studyApiService = {
       throw error;
     }
   },
-  // 배포
+
   // 스터디 상세 조회
   getStudyDetail: async (postId: number): Promise<StudyApiResponse<StudyPost>> => {
     try {
       const response = await axios.get<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.DETAIL(postId));
+      console.log(response);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -160,14 +170,11 @@ export const studyApiService = {
   },
 
   // 스터디 생성
-
   createPost: async (postData: CreateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
     try {
-      const token = Cookies.get();
-      console.log(token);
       const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.CREATE, postData, {
         headers: {
-          Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxODY4OCIsImF1dGgiOiJST0xFX0FETUlOIiwiaWF0IjoxNzQyMDk4MjgxLCJleHAiOjE3NDIwOTkyODF9.onkalYxgjixgT3uYGwTD2NQPmzgWd2fZ0hAt4I14rDc'}`,
+          Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxODY4OCIsImF1dGgiOiJST0xFX0FETUlOIiwiaWF0IjoxNzQ0MDE0NTIxLCJleHAiOjE3NDQwMTU1MjF9.S_wH8F8iUBFILhW_9ZaDzrYeuIcwh-rADGtJQMs3U4A'}`,
         },
         withCredentials: true,
       });
