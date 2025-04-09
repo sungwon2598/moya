@@ -3,34 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, MessageSquare } from 'lucide-react';
 import { StudyPost, studyApiService } from '@/core/config/studyApiConfig';
 
-interface FilterOptions {
-  studies: string;
-  studyDetails: string;
-  techStack: string;
-  progressType: string;
-  recruitmentStatus: string;
-}
+// interface FilterOptions {
+//   studies: string;
+//   studyDetails: string;
+//   techStack: string;
+//   progressType: string;
+//   recruitmentStatus: string;
+// }
 
 const StudyList = () => {
   const [posts, setPosts] = useState<StudyPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters] = useState<Partial<FilterOptions>>({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // const [filters] = useState<Partial<FilterOptions>>({});
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
 
   const fetchPosts = async (page: number) => {
     try {
+      console.log(page);
       setLoading(true);
       setError(null);
 
-      const response = await studyApiService.getStudyList(page - 1, 20, {
-        studies: filters.studies,
-        studyDetails: filters.studyDetails,
-        progressType: filters.progressType,
-        techStack: filters.techStack,
-        recruitmentStatus: filters.recruitmentStatus,
-      });
+      // const response = await studyApiService.getStudyList(page - 1, 20, {
+      //   studies: filters.studies,
+      //   studyDetails: filters.studyDetails,
+      //   progressType: filters.progressType,
+      //   techStack: filters.techStack,
+      //   recruitmentStatus: filters.recruitmentStatus,
+      // });
+
+      const response = await studyApiService.getStudyList();
 
       setPosts(response.data);
 
@@ -45,14 +48,18 @@ const StudyList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPosts(currentPage);
-  }, [currentPage, filters]);
+  // useEffect(() => {
+  //   fetchPosts(currentPage);
+  // }, [currentPage, filters]);
 
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    window.scrollTo(0, 0);
-  };
+  // const handlePageChange = (newPage: number) => {
+  //   setCurrentPage(newPage);
+  //   window.scrollTo(0, 0);
+  // };
+
+  useEffect(() => {
+    fetchPosts(1);
+  }, []);
 
   const StudyCard = ({ post }: { post: StudyPost }) => {
     const navigate = useNavigate();
@@ -148,8 +155,8 @@ const StudyList = () => {
           ))}
         </div>
 
-        {totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
+        {/* {totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-8">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
@@ -161,7 +168,7 @@ const StudyList = () => {
               </button>
             ))}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -79,8 +79,9 @@ const authSlice = createSlice({
         state.isLogin = true;
         state.user = action.payload.user;
         state.error = null;
-
-        console.log(action)
+        state.accessToken = action.payload.user.accessToken
+        
+        console.log(action.payload.user.accessToken)
         console.log(action.payload);
       })
 
