@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { ModalProvider } from './core/providers/context/ModalContext';
-import RootLayout from './features/layout/RootLayout';
+import RootLayout from './components/layouts/RootLayout.tsx';
 import Main from './pages/main/MainPage.tsx';
 import RoadmapPreview from './features/roadmap/RoadmapPreview.tsx';
-import EditProfile from './features/profile/EditProfile.tsx';
+import { ProfilePage } from './pages/profile/index.tsx';
 import { store } from './store/store.ts';
 import { Provider } from 'react-redux';
 import SignInPage from './pages/auth/SignInPage.tsx';
@@ -13,8 +13,8 @@ import StudyList from './pages/study/StudyList.tsx';
 import StudyPostDetail from './pages/study/StudyPostDetail.tsx';
 import AdminLayout from '@pages/adminator/layout/AdminLayout.tsx';
 import CategoryManagement from '@pages/category/CategoryManagement.tsx';
-import { ProtectedRoute } from '@features/auth/components/ProtectedRoute.tsx';
-import { AdminRoute } from '@features/auth/components/AdminRoute.tsx';
+import { ProtectedRoute } from '@/components/features/auth/components/ProtectedRoute.tsx';
+import { AdminRoute } from '@/components/features/auth/components/AdminRoute.tsx';
 
 import { StudyCreate } from './pages/study/index.ts';
 import CreateSample from '@pages/create-sample/CreateSample.tsx';
@@ -58,7 +58,7 @@ const App: React.FC = () => {
                 <Route path="categorys" element={<CategoryManagement />} />
                 <Route path="create-sample" element={<CreateSample />} />
               </Route>
-              <Route path="settings/profile" element={<EditProfile />} />
+              <Route path="settings/profile" element={<ProfilePage />} />
 
               {/* 404 페이지 처리 */}
               <Route

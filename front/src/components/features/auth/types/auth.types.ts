@@ -4,6 +4,7 @@ export interface User {
     roles: string[];
     status: string;
     profileImageUrl: string;
+    accessToken: string;
 }
 
 export interface AuthState {

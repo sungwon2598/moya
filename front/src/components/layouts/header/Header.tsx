@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Home, Book, User, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import NavItem from './components/NavItem';
+import NavItem from './components/NavItem.tsx';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store.ts';
 import UserDropdown from './components/usermenu/UserDropdown.tsx';

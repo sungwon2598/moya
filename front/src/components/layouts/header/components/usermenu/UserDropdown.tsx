@@ -2,11 +2,11 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, User, Map, Heart, LayoutGrid, PlusSquare } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { logoutUser } from '@/features/auth/store/authSlice';
-import { User as UserType } from '@/features/auth/types/auth.types';
+import { logoutUser } from '@/components/features/auth/store/authSlice.ts';
+import { User as UserType } from '@/components/features/auth/types/auth.types.ts';
 import { AppDispatch } from '@/store/store';
-import GoogleLoginButton from '../../../../auth/components/GoogleLoginButton.tsx';
-import { useAuth } from '../../../../auth/hooks/useAuth.ts';
+import GoogleLoginButton from '../../../../features/auth/components/GoogleLoginButton.tsx';
+import { useAuth } from '../../../../features/auth/hooks/useAuth.ts';
 
 interface UserDropdownProps {
   user: UserType | null;

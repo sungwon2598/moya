@@ -8,8 +8,12 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { Card, Input, Button, Select, Form } from '@/components';
 import ReactQuill from 'react-quill';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+import { ko } from 'date-fns/locale';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
 
 import { postSchema } from '@/schema';
 
@@ -19,6 +23,8 @@ const StudyCreate = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isOpenStartDate, setIsOpenStartDate] = useState(false);
+  const [isOpenEndDate, setIsOpenEndDate] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(postSchema),
@@ -32,7 +38,7 @@ const StudyCreate = () => {
       startDate: undefined,
       endDate: undefined,
     },
-    mode: 'onChange',
+    mode: 'onSubmit', // 'onChange'에서 'onSubmit'으로 변경하여 제출할 때만 검증하도록 수정
   });
 
   // Options for form selects
@@ -65,6 +71,30 @@ const StudyCreate = () => {
 
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpenStartDate || isOpenEndDate) {
+        // 클릭된 요소가 캘린더 내부인지 확인
+        const isCalendarClick = (event.target as Element).closest('.rdp');
+
+        // 데이터 속성으로 버튼 식별
+        const isStartButton = (event.target as Element).closest('button[data-calendar="start"]');
+        const isEndButton = (event.target as Element).closest('button[data-calendar="end"]');
+        const isCalendarButton = (event.target as Element).closest('button.rdp-button');
+
+        if (!isCalendarClick && !isStartButton && !isEndButton && !isCalendarButton) {
+          setIsOpenStartDate(false);
+          setIsOpenEndDate(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpenStartDate, isOpenEndDate]);
 
   const modules = {
     toolbar: [
@@ -118,8 +148,6 @@ const StudyCreate = () => {
     categories.forEach(addOptions);
     return options;
   };
-
-  // 로딩 상태 컴포넌트는 제거하고 버튼에서 처리
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -196,10 +224,7 @@ const StudyCreate = () => {
                               <Select.SelectValue placeholder="모집 구분을 선택하세요" />
                             </Select.SelectTrigger>
                           </Form.FormControl>
-                          <Select.SelectContent
-                            className="animate-in zoom-in-95 fade-in-50 origin-top bg-white duration-100"
-                            position="popper"
-                            sideOffset={5}>
+                          <Select.SelectContent className="bg-white" position="popper" sideOffset={5}>
                             {getCategoryOptions().map((option) => (
                               <Select.SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -235,10 +260,7 @@ const StudyCreate = () => {
                               <Select.SelectValue placeholder="모집 인원을 선택하세요" />
                             </Select.SelectTrigger>
                           </Form.FormControl>
-                          <Select.SelectContent
-                            className="animate-in zoom-in-95 fade-in-50 origin-top bg-white duration-100"
-                            position="popper"
-                            sideOffset={5}>
+                          <Select.SelectContent className="bg-white" position="popper" sideOffset={5}>
                             {recruitOptions.map((option) => (
                               <Select.SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -294,11 +316,12 @@ const StudyCreate = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* 모집 시작일 (DayPicker로 대체) */}
                   <Form.FormField
                     control={form.control}
                     name="startDate"
                     render={({ field }) => (
-                      <Form.FormItem>
+                      <Form.FormItem className="flex flex-col">
                         <Form.FormLabel className="text-gray-700">
                           모집 시작일
                           {form.formState.errors.startDate && (
@@ -307,30 +330,51 @@ const StudyCreate = () => {
                             </span>
                           )}
                         </Form.FormLabel>
-                        <Form.FormControl>
-                          <Input
-                            type="date"
-                            className={cn(
-                              'rounded-lg',
-                              form.formState.errors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                            )}
-                            value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                            onChange={(e) => {
-                              const date = e.target.valueAsDate;
-                              if (date) field.onChange(date);
+                        <div className="relative">
+                          <Button
+                            variant="outline"
+                            data-calendar="start"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault(); // 폼 제출 방지
+                              const newState = !isOpenStartDate;
+                              setIsOpenStartDate(newState);
+                              if (isOpenEndDate && newState) setIsOpenEndDate(false);
                             }}
-                          />
-                        </Form.FormControl>
-                        {/* 필드 아래 오류 메시지 제거 */}
+                            className={cn(
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-gray-500',
+                              form.formState.errors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                            )}>
+                            {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+
+                          {isOpenStartDate && (
+                            <DayPicker
+                              mode="single"
+                              selected={field.value}
+                              onSelect={(date) => {
+                                field.onChange(date);
+                                setIsOpenStartDate(false);
+                              }}
+                              locale={ko}
+                              showOutsideDays
+                              fixedWeeks
+                              className="absolute left-0 top-full z-50 mt-1 rounded-md border bg-white p-3 shadow-lg"
+                            />
+                          )}
+                        </div>
                       </Form.FormItem>
                     )}
                   />
 
+                  {/* 모집 마감일 (DayPicker로 대체) */}
                   <Form.FormField
                     control={form.control}
                     name="endDate"
                     render={({ field }) => (
-                      <Form.FormItem>
+                      <Form.FormItem className="flex flex-col">
                         <Form.FormLabel className="text-gray-700">
                           모집 마감일
                           {form.formState.errors.endDate && (
@@ -339,21 +383,43 @@ const StudyCreate = () => {
                             </span>
                           )}
                         </Form.FormLabel>
-                        <Form.FormControl>
-                          <Input
-                            type="date"
-                            className={cn(
-                              'rounded-lg',
-                              form.formState.errors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                            )}
-                            value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                            onChange={(e) => {
-                              const date = e.target.valueAsDate;
-                              if (date) field.onChange(date);
+                        <div className="relative">
+                          <Button
+                            variant="outline"
+                            data-calendar="end"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault(); // 폼 제출 방지
+                              const newState = !isOpenEndDate;
+                              setIsOpenEndDate(newState);
+                              if (isOpenStartDate && newState) setIsOpenStartDate(false);
                             }}
-                          />
-                        </Form.FormControl>
-                        {/* 필드 아래 오류 메시지 제거 */}
+                            className={cn(
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-gray-500',
+                              form.formState.errors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                            )}>
+                            {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+
+                          {isOpenEndDate && (
+                            <DayPicker
+                              mode="single"
+                              selected={field.value}
+                              onSelect={(date) => {
+                                field.onChange(date);
+                                setIsOpenEndDate(false);
+                              }}
+                              locale={ko}
+                              showOutsideDays
+                              fixedWeeks
+                              className="absolute left-0 top-full z-50 mt-1 rounded-md border bg-white p-3 shadow-lg"
+                              // 시작일보다 이전 날짜는 선택 불가
+                              disabled={[{ before: form.getValues('startDate') || new Date() }]}
+                            />
+                          )}
+                        </div>
                       </Form.FormItem>
                     )}
                   />
@@ -422,11 +488,7 @@ const StudyCreate = () => {
                 </Button>
                 <Button
                   type="submit"
-                  className={`rounded-lg transition-colors duration-300 ${
-                    form.formState.isValid
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-                  }`}
+                  className="rounded-lg bg-blue-600 text-white transition-colors duration-300 hover:bg-blue-700"
                   disabled={loading}>
                   {loading ? (
                     <div className="flex items-center">

@@ -174,7 +174,7 @@ export const studyApiService = {
     try {
       const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.CREATE, postData, {
         headers: {
-          Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxODY4OCIsImF1dGgiOiJST0xFX0FETUlOIiwiaWF0IjoxNzQ0MDE0NTIxLCJleHAiOjE3NDQwMTU1MjF9.S_wH8F8iUBFILhW_9ZaDzrYeuIcwh-rADGtJQMs3U4A'}`,
+          Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxODY4OCIsImF1dGgiOiJST0xFX0FETUlOIiwiaWF0IjoxNzQ0MTI2MTYxLCJleHAiOjE3NDQxMjcxNjF9.vtnFcA6hM8aw5qS2kj1OhuHLjyacee43H_mwlpwI6Zs"}`,
         },
         withCredentials: true,
       });
