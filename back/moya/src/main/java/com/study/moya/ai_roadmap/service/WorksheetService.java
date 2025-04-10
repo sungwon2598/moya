@@ -1,6 +1,7 @@
 package com.study.moya.ai_roadmap.service;
 
 import com.study.moya.ai_roadmap.domain.DailyPlan;
+import com.study.moya.ai_roadmap.dto.request.WorkSheetRequest;
 import com.study.moya.ai_roadmap.repository.DailyPlanRepository;
 import com.study.moya.ai_roadmap.util.WorksheetResponseParser;
 import com.theokanning.openai.Usage;
@@ -40,7 +41,7 @@ public class WorksheetService {
 
     @Async
     @Transactional
-    public CompletableFuture<Void> generateAllWorksheets(Long roadmapId) {
+    public CompletableFuture<Void> generateAllWorksheets(Long roadmapId, WorkSheetRequest request) {
         return CompletableFuture.runAsync(() -> {
             log.info("로드맵 ID: {}의 전체 학습지 생성 시작", roadmapId);
 
@@ -50,7 +51,7 @@ public class WorksheetService {
 
             for (List<DailyPlan> planGroup : groupedPlans) {
                 try {
-                    generateWorksheetForGroup(planGroup);
+                    generateWorksheetForGroup(planGroup, request);
                     // API 요청 제한을 고려한 대기 시간
                     Thread.sleep(DELAY_MS);
                 } catch (Exception e) {
@@ -72,8 +73,8 @@ public class WorksheetService {
         return groups;
     }
 
-    private void generateWorksheetForGroup(List<DailyPlan> planGroup) {
-        String initialPrompt = promptService.createPrompt(planGroup);
+    private void generateWorksheetForGroup(List<DailyPlan> planGroup, WorkSheetRequest request) {
+        String initialPrompt = promptService.createPrompt(planGroup, request);
         Map<Integer, String> dayWorksheets = retryChatCompletion(initialPrompt, planGroup);
 
         updateDailyPlansWithWorksheet(planGroup, dayWorksheets);

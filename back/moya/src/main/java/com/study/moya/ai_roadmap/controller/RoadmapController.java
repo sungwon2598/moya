@@ -1,6 +1,7 @@
 package com.study.moya.ai_roadmap.controller;
 
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
+import com.study.moya.ai_roadmap.dto.request.WorkSheetRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.service.RoadmapService;
@@ -69,9 +70,9 @@ public class RoadmapController {
     }
 
     @PostMapping("/{roadmapId}/worksheets")
-    public ResponseEntity<Void> generateWorksheets(@PathVariable Long roadmapId) {
+    public ResponseEntity<Void> generateWorksheets(@PathVariable Long roadmapId, @Valid @RequestBody WorkSheetRequest request) {
         log.info("로드맵 ID: {}의 학습지 생성 시작", roadmapId);
-        worksheetService.generateAllWorksheets(roadmapId)
+        worksheetService.generateAllWorksheets(roadmapId, request)
                 .thenRun(() -> log.info("로드맵 ID: {}의 학습지 생성 완료", roadmapId))
                 .exceptionally(ex -> {
                     log.error("학습지 생성 중 오류 발생: {}", ex.getMessage());
