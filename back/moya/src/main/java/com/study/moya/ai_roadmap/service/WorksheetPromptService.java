@@ -2,6 +2,8 @@ package com.study.moya.ai_roadmap.service;
 
 import com.study.moya.ai_roadmap.domain.DailyPlan;
 import java.util.List;
+
+import com.study.moya.ai_roadmap.dto.request.WorkSheetRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,7 +14,8 @@ import org.springframework.stereotype.Service;
 public class WorksheetPromptService {
 
     private static final String SYSTEM_PROMPT = """
-        당신은 프로그래밍 교육 전문가입니다. 주어진 일차의 학습 키워드에 대해 상세한 학습 가이드를 작성해주세요.
+        %s
+        주어진 일차의 학습 키워드에 대해 상세한 학습 가이드를 작성해주세요.
         
         응답은 반드시 아래 형식을 따라주세요. 절대로 마크다운이나 특수문자, 번호 매기기를 사용하지 마세요.
         
@@ -32,7 +35,14 @@ public class WorksheetPromptService {
         - 각 일자는 반드시 === DAY {일차} === 형식으로 구분해주세요
         """;
 
-    public String createPrompt(List<DailyPlan> dailyPlans) {
+    public String createPrompt(List<DailyPlan> dailyPlans, WorkSheetRequest request) {
+
+        String firstLine;
+        if (request.subCategory() == null || request.subCategory().isEmpty()) {
+            firstLine = String.format("당신은 %s 관련 교육 전문가입니다.", request.mainCategory());
+        } else {
+            firstLine = String.format("당신은 %s 관련 %s 교육 전문가입니다.", request.subCategory(),  request.mainCategory());
+        }
 
         StringBuilder dayFormatBuilder = new StringBuilder();
         for (DailyPlan plan : dailyPlans) {
@@ -40,7 +50,7 @@ public class WorksheetPromptService {
         }
         String dayFormat = dayFormatBuilder.toString().trim();
 
-        String systemPrompt = String.format(SYSTEM_PROMPT, dayFormat);
+        String systemPrompt = String.format(SYSTEM_PROMPT, firstLine, dayFormat);
 
         StringBuilder promptBuilder = new StringBuilder();
         promptBuilder.append(systemPrompt).append("\n\n");
