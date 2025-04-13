@@ -3,13 +3,15 @@ import { RoadmapQuestionStageType } from "@/pages/roadmap/type";
 
 interface ProgressProp {
   roadmapQuestionStage: RoadmapQuestionStageType;
+  TotalQuestionsNumber: number;
 }
 
-export default function Progress({ roadmapQuestionStage }: ProgressProp) {
+export default function Progress({
+  roadmapQuestionStage,
+  TotalQuestionsNumber,
+}: ProgressProp) {
   const progressPercentage =
-    (roadmapQuestionStage.currentStatusNumber /
-      roadmapQuestionStage.lastStatusNumber) *
-    100;
+    (roadmapQuestionStage.currentStatusNumber / TotalQuestionsNumber) * 100;
 
   return (
     <section className="col-span-2 my-6">
