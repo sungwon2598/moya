@@ -75,7 +75,7 @@ export default function Select({
         AllQuestionsCompleted={AllQuestionsCompleted}
       />
       {!AllQuestionsCompleted && (
-        <section>
+        <section className="bg-moya-primary">
           <h3>{questions[currentStatusNumber - 1]?.title}</h3>
           <p>{questions[currentStatusNumber - 1]?.subQuestion}</p>
           <form className="mt-3.5 gap-4 grid grid-cols-2">
