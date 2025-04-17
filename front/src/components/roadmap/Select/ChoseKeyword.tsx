@@ -1,9 +1,12 @@
 import { Question } from "@/features/roadmap/hooks/useRoadmapQuestions";
 import { AnswerItem } from "@/pages/roadmap/CreatePage";
 import { RoadmapQuestionStageType } from "@/pages/roadmap/type";
-import type { Dispatch, SetStateAction } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/shared/ui/button";
-// import { usePostRoadmapCreate } from "@/features/roadmap/api/createRoadmap";
+import {
+  CreateFormDataType,
+  usePostRoadmapCreate,
+} from "@/features/roadmap/api/createRoadmap";
 const selectBTN =
   "inline-block px-4 py-2 mr-2 bg-blue-100 rounded min-w-32 min-h-10 hover:bg-blue-200 transition-colors";
 const pBTN = "mt-2";
@@ -21,20 +24,8 @@ export default function ChoseKeyword({
   questions,
   setRoadmapQuestionStage,
 }: ChoseKeywordProp) {
-  // const { mutate, isPending, isError, isSuccess, data } =
-  //   usePostRoadmapCreate();
-  const findSelectedAnswer = (questionName: string) => {
-    const question = questions.find((q) => q.name === questionName);
-    if (!question) return null;
-
-    const answer = answers?.find((a) => a.questionNumber === question.id);
-    if (!answer) return null;
-
-    const choice = question.choices.find(
-      (c) => c.id.toString() === answer.choiceId.toString()
-    );
-    return choice?.name || null;
-  };
+  const { mutate, isPending, isError, isSuccess, data } =
+    usePostRoadmapCreate();
 
   const navigateToQuestion = (questionName: string) => {
     const question = questions.find((q) => q.name === questionName);
@@ -49,26 +40,48 @@ export default function ChoseKeyword({
       alert("이전 질문에 대답해주세요.");
     }
   };
+  const findSelectedAnswer = (questionName: string) => {
+    const question = questions.find((q) => q.name === questionName);
+    if (!question) return null;
+
+    const answer = answers?.find((a) => a.questionNumber === question.id);
+    if (!answer) return null;
+
+    const choice = question.choices.find(
+      (c) => c.id.toString() === answer.choiceId.toString()
+    );
+    return choice?.name || null;
+  };
   const learningObjective = findSelectedAnswer("learningObjective");
   const learningDuration = findSelectedAnswer("duration");
   const mainCategory = findSelectedAnswer("mainCategory");
   const subCategory = findSelectedAnswer("subCategory");
-
   const handlerReset = () => {
     navigateToQuestion("learningObjective");
     setAnswers(null);
   };
-  const handleRoadmapCreateSubmit = () => {
-    console.log(answers);
-    // const formData = {
-    //   mainCategory: answers,
-    //   subCategory: "C#",
-    //   currentLevel: "1",
-    //   duration: 8,
-    //   learningObjective: "BASIC_UNDERSTANDING",
-    // };
 
-    // mutate(formData);
+  const handleRoadmapCreateSubmit = () => {
+    const formData: CreateFormDataType = {
+      mainCategory: String(
+        answers?.find((answer) => answer.name === "mainCategory")
+          ?.choiceValue ?? ""
+      ),
+      subCategory: String(
+        answers?.find((answer) => answer.name === "subCategory")?.choiceValue ??
+          ""
+      ),
+      currentLevel: "1",
+      duration: Number(
+        answers?.find((answer) => answer.name === "duration")?.choiceValue ?? ""
+      ),
+      learningObjective: String(
+        answers?.find((answer) => answer.name === "learningObjective")
+          ?.choiceId ?? ""
+      ),
+    };
+    console.log(formData);
+    mutate(formData);
   };
   return (
     <article
