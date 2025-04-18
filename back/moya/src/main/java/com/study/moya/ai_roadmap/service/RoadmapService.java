@@ -76,14 +76,14 @@ public class RoadmapService {
                     .requestData(prompt)
                     .build();
 
-            try {
-                AiUsageResponse usageResponse = tokenFacadeService.useTokenForAiService(memberId, tokenRequest);
-                usageId = usageResponse.getId();
-                log.info("토큰 차감 완료. 사용 ID: {}", usageId);
-            } catch (Exception e) {
-                log.error("토큰 차감 실패: {}", e.getMessage());
-                throw new RuntimeException("토큰 차감 실패", e);
-            }
+//            try {
+//                AiUsageResponse usageResponse = tokenFacadeService.useTokenForAiService(memberId, tokenRequest);
+//                usageId = usageResponse.getId();
+//                log.info("토큰 차감 완료. 사용 ID: {}", usageId);
+//            } catch (Exception e) {
+//                log.error("토큰 차감 실패: {}", e.getMessage());
+//                throw new RuntimeException("토큰 차감 실패", e);
+//            }
 
             ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
                     .model(roadmapModel)
