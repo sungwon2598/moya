@@ -21,6 +21,8 @@ import CreateSample from "@pages/create-sample/CreateSample.tsx";
 import LearningRoad from "@pages/learningRoad/LearningRoad.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CreatePage from "./pages/roadmap/CreatePage.tsx";
+import RoadmapPending from "./pages/roadmap/RoadmapPending.tsx";
+import WeeklyPlan from "./pages/roadmap/WeeklyPlan.tsx";
 
 const App: React.FC = () => {
   const queryClient = new QueryClient();
@@ -39,6 +41,8 @@ const App: React.FC = () => {
                 {/* 로드맵 관련 라우트 */}
                 <Route path="roadmap">
                   <Route path="create" element={<CreatePage />} />
+                  <Route path="pending" element={<RoadmapPending />} />
+                  <Route path="weeklyPlan" element={<WeeklyPlan />} />
 
                   <Route path="preview" element={<RoadmapPreview />} />
                   <Route path="road" element={<LearningRoad />} />

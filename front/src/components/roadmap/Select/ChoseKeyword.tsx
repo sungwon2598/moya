@@ -7,6 +7,7 @@ import {
   CreateFormDataType,
   usePostRoadmapCreate,
 } from "@/features/roadmap/api/createRoadmap";
+import { useNavigate } from "react-router-dom";
 const selectBTN =
   "inline-block px-4 py-2 mr-2 bg-blue-100 rounded min-w-32 min-h-10 hover:bg-blue-200 transition-colors";
 const pBTN = "mt-2";
@@ -24,8 +25,9 @@ export default function ChoseKeyword({
   questions,
   setRoadmapQuestionStage,
 }: ChoseKeywordProp) {
-  const { mutate, isPending, isError, isSuccess, data } =
-    usePostRoadmapCreate();
+  const navigate = useNavigate();
+
+  const { mutate } = usePostRoadmapCreate();
 
   const navigateToQuestion = (questionName: string) => {
     const question = questions.find((q) => q.name === questionName);
@@ -61,7 +63,7 @@ export default function ChoseKeyword({
     setAnswers(null);
   };
 
-  const handleRoadmapCreateSubmit = () => {
+  const handleRoadmapCreateSubmit = async () => {
     const formData: CreateFormDataType = {
       mainCategory: String(
         answers?.find((answer) => answer.name === "mainCategory")
@@ -80,8 +82,15 @@ export default function ChoseKeyword({
           ?.choiceId ?? ""
       ),
     };
-    console.log(formData);
-    mutate(formData);
+    navigate("roadmap/pending");
+    mutate(formData, {
+      onSuccess: () => {
+        navigate("roadmap/success");
+      },
+      onError: (error) => {
+        console.error("API 요청 중 오류 발생:", error);
+      },
+    });
   };
   return (
     <article
