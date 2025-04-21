@@ -1,21 +1,13 @@
-import { useEffect, useState } from "react";
+import { useRotatingMessage } from "@/features/roadmap/hooks/useRotatingMessage";
 
 export default function RoadmapPending() {
-  const [pendingMessageIndex, setPendingMessageIndex] = useState<number>(0);
-  const pendingMessage = [
+  const pendingMessages = [
     "최상의 학습 경로를 준비하고 있습니다.",
     "더 나은 학습을 위한 완벽한 로드맵을 생성중입니다.",
     "당신만을 위한 맞춤형 로드맵을 생성하고 있습니다.",
   ];
-  useEffect(() => {
-    const pendingMessageInterval = setInterval(() => {
-      setPendingMessageIndex((prev) => {
-        const newIndex = prev + 1;
-        return newIndex >= pendingMessage.length ? 0 : newIndex;
-      });
-    }, 5000);
-    return () => clearInterval(pendingMessageInterval);
-  }, []);
+
+  const { currentMessage } = useRotatingMessage(pendingMessages, 5000);
 
   return (
     <div className="@container mx-auto p-4 text-center">
@@ -24,7 +16,7 @@ export default function RoadmapPending() {
           <div className="absolute inset-0 border-4 border-transparent rounded-full border-t-blue-500 border-r-blue-500 border-b-blue-500 animate-spin-custom" />
           <div className="flex flex-col justify-center h-full p-8 m-auto ">
             <h3>로드맵 생성 중</h3>
-            <p className="h-8 pt-2">{pendingMessage[pendingMessageIndex]}</p>
+            <p className="h-8 pt-2">{currentMessage}</p>
           </div>
         </div>
       </div>

@@ -82,10 +82,10 @@ export default function ChoseKeyword({
           ?.choiceId ?? ""
       ),
     };
-    navigate("roadmap/pending");
+    navigate("/roadmap/pending");
     mutate(formData, {
       onSuccess: () => {
-        navigate("roadmap/success");
+        navigate("/roadmap/weeklyPlan");
       },
       onError: (error) => {
         console.error("API 요청 중 오류 발생:", error);
@@ -119,6 +119,7 @@ export default function ChoseKeyword({
             onClick={() => navigateToQuestion("duration")}
           >
             {learningDuration}
+            {learningDuration && "일"}
           </button>
           동안
         </p>
