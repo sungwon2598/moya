@@ -2,6 +2,9 @@
 
 @custom-variant dark (&:is(.dark *));
 @theme {
+  --color-moya-primary: #0752cd;
+  --moya-secondary: #2a83fc;
+  --moya-background: #f5f5f8;
   --font-sans: "Pretendard Variable", Pretendard, -apple-system,
     BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji",
@@ -292,4 +295,29 @@
       @apply text-lg;
     }
   }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spin-reverse {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.animate-spin-custom {
+  animation: spin 1s linear infinite;
+}
+.animate-spin-reverse {
+  animation: spin-reverse 1.5s linear infinite;
+}
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
 }

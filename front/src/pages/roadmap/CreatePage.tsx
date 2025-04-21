@@ -9,6 +9,7 @@ export type AnswerItem = {
   questionNumber: number | string;
   name?: string;
   choiceId: string;
+  choiceValue: string | number;
 };
 
 export default function CreatePage() {

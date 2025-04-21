@@ -29,11 +29,9 @@ export function useRoadmapQuestions() {
 
   useEffect(() => {
     if (!roadmapData) return;
-
-    // Find selected category if we have one
     const selectedCategory = selectedCategoryId
       ? roadmapData.categories.find(
-          (cat: CategoryType) => cat.id.toString() === selectedCategoryId
+          (cat: CategoryType) => cat.id === selectedCategoryId
         )
       : null;
 
@@ -51,10 +49,10 @@ export function useRoadmapQuestions() {
         title: "학습 목표를 달성하기까지 얼마의 시간을 투자할 계획인가요?",
         subQuestion: "기간을 선택해주세요.",
         choices: [
-          { id: "ONE_WEEK", name: "일주일" },
-          { id: "ONE_MONTH", name: "1개월" },
-          { id: "THREE_MONTHS", name: "3개월" },
-          { id: "CUSTOM_INPUT", name: "직접입력" },
+          { id: "ONE_WEEK", name: 7 },
+          { id: "ONE_MONTH", name: 30 },
+          { id: "THREE_MONTHS", name: 90 },
+          { id: "CUSTOM_INPUT", name: 0 },
         ],
       },
       {

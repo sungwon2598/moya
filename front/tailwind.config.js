@@ -2,15 +2,9 @@
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-
   theme: {
     extend: {
       colors: {
-        moya: {
-          primary: "#0752cd",
-          secondary: "#2a83fc",
-          background: "#f5f5f8",
-        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -69,8 +63,8 @@ export default {
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
+        },
       },
-    },
     },
   },
   plugins: [require("tailwindcss-animate")],

@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@core/config/apiConfig";
 
-interface CreateFormDataType {
+export interface CreateFormDataType {
   mainCategory: string;
   subCategory: string;
   currentLevel: string;

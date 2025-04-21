@@ -13,7 +13,10 @@ interface SelectProp {
   roadmapQuestionStage: RoadmapQuestionStageType;
   setRoadmapQuestionStage: Dispatch<SetStateAction<RoadmapQuestionStageType>>;
 }
-
+interface SelectedValue {
+  id: string;
+  name: string | number;
+}
 export default function Select({
   answers,
   setAnswers,
@@ -22,8 +25,8 @@ export default function Select({
   setRoadmapQuestionStage,
 }: SelectProp) {
   const { currentStatusNumber } = roadmapQuestionStage;
-  const [selectedValue, setSelectedValue] = useState<string | null>(null);
-  const handleChoiceSubmit = (choiceId: string) => {
+  const [selectedValue, setSelectedValue] = useState<SelectedValue | null>();
+  const handleChoiceSubmit = (choiceId: SelectedValue) => {
     // 현재 질문 정보 가져오기
     const currentQuestion = questions[currentStatusNumber - 1];
 
@@ -37,14 +40,16 @@ export default function Select({
       if (existingAnswerIndex !== -1) {
         newAnswers[existingAnswerIndex] = {
           ...newAnswers[existingAnswerIndex],
-          choiceId,
+          choiceId: choiceId.id,
           name: currentQuestion.name,
+          choiceValue: choiceId.name,
         };
       } else {
         newAnswers.push({
           questionNumber: currentStatusNumber,
-          choiceId,
+          choiceId: choiceId.id,
           name: currentQuestion.name,
+          choiceValue: choiceId.name,
         });
       }
 
@@ -90,11 +95,11 @@ export default function Select({
                     value={item.id}
                     name="roadmap"
                     className="hidden"
-                    onChange={() => setSelectedValue(String(item.id))}
+                    onChange={() => setSelectedValue(item)}
                     checked={
                       answers?.find(
                         (a) => a.questionNumber === currentStatusNumber
-                      )?.choiceId === item.id || selectedValue === item.id
+                      )?.choiceId === item.id || selectedValue?.id === item.id
                     }
                   />
                   <span>{item.name}</span>
@@ -106,7 +111,9 @@ export default function Select({
               <Button
                 type="button"
                 className="w-44"
-                onClick={() => handleChoiceSubmit(String(selectedValue))}
+                onClick={() =>
+                  selectedValue && handleChoiceSubmit(selectedValue)
+                }
                 disabled={disableBtn()}
               >
                 계속하기
