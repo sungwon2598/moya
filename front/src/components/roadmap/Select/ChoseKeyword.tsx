@@ -82,15 +82,13 @@ export default function ChoseKeyword({
           ?.choiceId ?? ""
       ),
     };
-    navigate("/roadmap/pending");
     mutate(formData, {
-      onSuccess: () => {
-        navigate("/roadmap/weeklyPlan");
-      },
       onError: (error) => {
         console.error("API 요청 중 오류 발생:", error);
+        navigate("/roadmap/create");
       },
     });
+    navigate("/roadmap/pending");
   };
   return (
     <article

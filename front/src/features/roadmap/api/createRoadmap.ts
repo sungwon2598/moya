@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@core/config/apiConfig";
 
 export interface CreateFormDataType {
@@ -21,6 +21,7 @@ const postRoadmapFormData = async (createFormData: CreateFormDataType) => {
   );
   return data;
 };
+
 export const useRoadmapFormData = () => {
   return useQuery({
     queryKey: ["roadmapForm"],
@@ -30,7 +31,20 @@ export const useRoadmapFormData = () => {
 };
 
 export const usePostRoadmapCreate = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: postRoadmapFormData,
+    onMutate: () => console.log("로드맵 생성 시도"),
+    onSuccess: (data) => {
+      console.log("로드맵 생성 성공", data);
+      queryClient.setQueryData(["roadmapStatus"], {
+        status: "success",
+        data,
+      });
+    },
+    onError: () => {
+      console.log("로드맵 생성 실패");
+    },
   });
 };

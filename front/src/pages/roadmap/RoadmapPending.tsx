@@ -1,4 +1,7 @@
 import { useRotatingMessage } from "@/features/roadmap/hooks/useRotatingMessage";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function RoadmapPending() {
   const pendingMessages = [
@@ -6,9 +9,19 @@ export default function RoadmapPending() {
     "더 나은 학습을 위한 완벽한 로드맵을 생성중입니다.",
     "당신만을 위한 맞춤형 로드맵을 생성하고 있습니다.",
   ];
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { currentMessage } = useRotatingMessage(pendingMessages, 5000);
-
+  const roadmapStatus = queryClient.getQueryData<{
+    status: string;
+    data?: unknown;
+  }>(["roadmapStatus"]);
+  useEffect(() => {
+    if ((roadmapStatus?.status as string) === "success") {
+      navigate("/roadmap/weeklyPlan");
+    }
+  }, [roadmapStatus]);
   return (
     <div className="@container mx-auto p-4 text-center">
       <div>
