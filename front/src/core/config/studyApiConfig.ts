@@ -4,7 +4,7 @@ const BASE_URL = 'https://api.moyastudy.com';
 
 // 스터디 관련 엔드포인트 정의
 export const STUDY_ENDPOINTS = {
-  LIST: `${BASE_URL}/api/posts?page=1`,
+  LIST: `${BASE_URL}/api/posts?page=0`,
   DETAIL: (postId: number) => `${BASE_URL}/api/posts/${postId}`,
   CREATE: `${BASE_URL}/api/posts`,
   UPDATE: (postId: number) => `${BASE_URL}/api/posts/${postId}`,

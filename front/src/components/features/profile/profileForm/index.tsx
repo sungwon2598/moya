@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/shared/Input';
 import { Alert } from '@/components/shared/Alert';
-import { Card } from '../ui';
+import { Card } from '../../../shared/ui';
 import {
   ProfileFormData,
   ProfileFormProps,
@@ -124,7 +124,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
   };
 
   return (
-    <Card.Card className="w-xl rounded-2xl border-0 bg-white px-4 py-6 shadow-sm">
+    <Card.Card className="w-xl mt-10 rounded-2xl border-0 bg-white px-4 py-6 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.submit && <Alert variant="error">{errors.submit}</Alert>}
 

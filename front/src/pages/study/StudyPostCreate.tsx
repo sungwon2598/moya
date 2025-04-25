@@ -76,10 +76,9 @@ const StudyPostCreate = () => {
 
   const handleChange = (field: keyof CreateStudyDTO, value: any) => {
     if (field === 'studies') {
-      // Ensure studies is always treated as an array
       setFormData((prev) => ({
         ...prev,
-        [field]: [value], // Wrap the value in an array
+        [field]: [value],
       }));
     } else {
       setFormData((prev) => ({
@@ -87,10 +86,6 @@ const StudyPostCreate = () => {
         [field]: value,
       }));
     }
-    //  setFormData(prev => ({
-    //         ...prev,
-    //         [field]: value
-    //     }));
   };
 
   const modules = {
