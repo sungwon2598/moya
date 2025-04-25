@@ -1,23 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, MessageSquare } from 'lucide-react';
 import { StudyPost, studyApiService } from '@/core/config/studyApiConfig';
-
-// interface FilterOptions {
-//   studies: string;
-//   studyDetails: string;
-//   techStack: string;
-//   progressType: string;
-//   recruitmentStatus: string;
-// }
+import { Eye, MessageSquare } from 'lucide-react';
 
 const StudyList = () => {
   const [posts, setPosts] = useState<StudyPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const [filters] = useState<Partial<FilterOptions>>({});
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const [totalPages, setTotalPages] = useState(1);
 
   const fetchPosts = async (page: number) => {
     try {
@@ -25,37 +14,17 @@ const StudyList = () => {
       setLoading(true);
       setError(null);
 
-      // const response = await studyApiService.getStudyList(page - 1, 20, {
-      //   studies: filters.studies,
-      //   studyDetails: filters.studyDetails,
-      //   progressType: filters.progressType,
-      //   techStack: filters.techStack,
-      //   recruitmentStatus: filters.recruitmentStatus,
-      // });
-
       const response = await studyApiService.getStudyList();
 
       setPosts(response.data);
 
       console.log(response.data);
-      // if (response.meta.pagination) {
-      //     setTotalPages(response.meta.pagination.totalPages);
-      // }
     } catch (error) {
       setError(error instanceof Error ? error.message : '데이터를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   fetchPosts(currentPage);
-  // }, [currentPage, filters]);
-
-  // const handlePageChange = (newPage: number) => {
-  //   setCurrentPage(newPage);
-  //   window.scrollTo(0, 0);
-  // };
 
   useEffect(() => {
     fetchPosts(1);
@@ -154,21 +123,6 @@ const StudyList = () => {
             <StudyCard key={post.postId} post={post} />
           ))}
         </div>
-
-        {/* {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`rounded px-4 py-2 ${
-                  currentPage === page ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}>
-                {page}
-              </button>
-            ))}
-          </div>
-        )} */}
       </div>
     </div>
   );

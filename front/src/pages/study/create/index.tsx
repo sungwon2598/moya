@@ -151,11 +151,10 @@ const StudyCreate = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      {/* 헤더 */}
       <div className="mx-auto mb-6 max-w-3xl px-4">
         <button
           onClick={() => navigate('/study')}
-          className="flex items-center text-gray-600 transition-colors hover:text-gray-900">
+          className="text-moyaPrimary hover:text-moya-primary flex items-center transition-colors">
           <ArrowLeft className="mr-2 h-4 w-4" />
           <span>스터디 목록으로 돌아가기</span>
         </button>
@@ -170,7 +169,6 @@ const StudyCreate = () => {
         <Card.CardContent className="px-6">
           <Form.Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* 기본 정보 섹션 */}
               <div className="space-y-4">
                 <Form.FormField
                   control={form.control}
@@ -191,11 +189,10 @@ const StudyCreate = () => {
                           {...field}
                           className={cn(
                             'rounded-lg',
-                            form.formState.errors.title ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                            form.formState.errors.title ? 'border-red-300' : 'border-gray-200'
                           )}
                         />
                       </Form.FormControl>
-                      {/* 필드 아래 오류 메시지 제거 */}
                     </Form.FormItem>
                   )}
                 />
@@ -219,7 +216,7 @@ const StudyCreate = () => {
                             <Select.SelectTrigger
                               className={cn(
                                 'rounded-lg',
-                                form.formState.errors.studies ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                                form.formState.errors.studies ? 'border-red-300' : 'border-gray-200'
                               )}>
                               <Select.SelectValue placeholder="모집 구분을 선택하세요" />
                             </Select.SelectTrigger>
@@ -255,7 +252,7 @@ const StudyCreate = () => {
                             <Select.SelectTrigger
                               className={cn(
                                 'rounded-lg',
-                                form.formState.errors.recruits ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                                form.formState.errors.recruits ? 'border-red-300' : 'border-gray-200'
                               )}>
                               <Select.SelectValue placeholder="모집 인원을 선택하세요" />
                             </Select.SelectTrigger>
@@ -293,7 +290,7 @@ const StudyCreate = () => {
                             <Select.SelectTrigger
                               className={cn(
                                 'rounded-lg',
-                                form.formState.errors.expectedPeriod ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                                form.formState.errors.expectedPeriod ? 'border-red-300' : 'border-gray-200'
                               )}>
                               <Select.SelectValue placeholder="진행 기간을 선택하세요" />
                             </Select.SelectTrigger>
@@ -344,7 +341,7 @@ const StudyCreate = () => {
                             className={cn(
                               'w-full pl-3 text-left font-normal',
                               !field.value && 'text-gray-500',
-                              form.formState.errors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                              form.formState.errors.startDate ? 'border-red-300' : 'border-gray-200'
                             )}>
                             {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
@@ -361,7 +358,7 @@ const StudyCreate = () => {
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
-                              className="absolute left-0 top-full z-50 mt-1 rounded-md border bg-white p-3 shadow-lg"
+                              className="absolute left-0 top-full z-50 rounded-md border bg-white p-3 shadow-lg"
                             />
                           )}
                         </div>
@@ -397,7 +394,7 @@ const StudyCreate = () => {
                             className={cn(
                               'w-full pl-3 text-left font-normal',
                               !field.value && 'text-gray-500',
-                              form.formState.errors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                              form.formState.errors.endDate ? 'border-red-300' : 'border-gray-200'
                             )}>
                             {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
@@ -445,7 +442,7 @@ const StudyCreate = () => {
                         <div
                           className={cn(
                             'min-h-[200px] overflow-hidden rounded-lg',
-                            form.formState.errors.content ? 'border border-red-300 bg-red-50' : 'border border-gray-200'
+                            form.formState.errors.content ? 'border border-red-300' : 'border border-gray-200'
                           )}>
                           <ReactQuill
                             theme="snow"
@@ -465,7 +462,6 @@ const StudyCreate = () => {
                 />
               </div>
 
-              {/* 도움말 섹션 */}
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <h3 className="mb-2 text-sm font-medium text-gray-700">💡 스터디 소개 작성 팁</h3>
                 <ul className="space-y-1 text-sm text-gray-600">
@@ -476,7 +472,6 @@ const StudyCreate = () => {
                 </ul>
               </div>
 
-              {/* 버튼 영역 */}
               <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
                 <Button
                   type="button"
