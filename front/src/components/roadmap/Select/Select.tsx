@@ -13,7 +13,7 @@ interface SelectProp {
   roadmapQuestionStage: RoadmapQuestionStageType;
   setRoadmapQuestionStage: Dispatch<SetStateAction<RoadmapQuestionStageType>>;
 }
-interface SelectedValue {
+export interface SelectedValue {
   id: string;
   name: string | number;
 }
@@ -78,6 +78,7 @@ export default function Select({
         questions={questions}
         setRoadmapQuestionStage={setRoadmapQuestionStage}
         AllQuestionsCompleted={AllQuestionsCompleted}
+        setSelectedValue={setSelectedValue}
       />
       {!AllQuestionsCompleted && (
         <section>
@@ -102,7 +103,10 @@ export default function Select({
                       )?.choiceId === item.id || selectedValue?.id === item.id
                     }
                   />
-                  <span>{item.name}</span>
+                  <span>
+                    {item.name}
+                    {currentStatusNumber === 2 && "일"}
+                  </span>
                 </label>
               );
             })}

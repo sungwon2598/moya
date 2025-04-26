@@ -3,9 +3,19 @@ import { FC } from "react";
 import { RoadmapCard } from "./RoadmapCard.tsx";
 import { roadmapSamples } from "./data/roadmap-samples.ts";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/features/auth/hooks/useAuth.ts";
 
 const RoadmapPreview: FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated: isLoggedIn } = useAuth(); // isLogin을 isLoggedIn으로 alias
+  const roadmapCreatePageMoveHandler = () => {
+    if (!isLoggedIn) {
+      return alert("로그인이 필요한 서비스입니다.");
+    } else {
+      navigate("/roadmap/create");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl px-4 py-8 mx-auto">
@@ -37,7 +47,7 @@ const RoadmapPreview: FC = () => {
             <div className="flex flex-col items-center justify-center">
               <p className="mb-4 text-gray-600">맞춤 로드맵을 만들고 싶다면?</p>
               <button
-                onClick={() => navigate("/roadmap/create")}
+                onClick={roadmapCreatePageMoveHandler}
                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition-all duration-300 bg-blue-600 rounded-lg group hover:bg-blue-700"
               >
                 나만의 로드맵 생성하기
