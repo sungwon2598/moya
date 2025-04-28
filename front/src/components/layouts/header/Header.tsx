@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Home, Book, User, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
+import { Home, Book, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavItem from './components/NavItem.tsx';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../store/store.ts';
 import UserDropdown from './components/usermenu/UserDropdown.tsx';
+import { useAuth } from '../../features/auth/hooks/useAuth.ts';
+import GoogleLoginButton from '../../features/auth/components/GoogleLoginButton.tsx';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/shared/ui/dropdown-menu';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
+import { useAuthStore } from '../../features/auth/store/auth';
+import { GoogleAuthResponse } from '../../features/auth/types/auth.types';
 
 const navigationItems = [
   {
@@ -31,18 +35,14 @@ const authNavigationItems = [
 ];
 
 export const Header: React.FC = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const { isLogin, user } = useSelector((state: RootState) => state.auth);
+  const { isLogin, user } = useAuthStore();
   const navigate = useNavigate();
+  const { handleGoogleLogin } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setIsMobileMenuOpen(false);
       }
@@ -68,6 +68,15 @@ export const Header: React.FC = () => {
     navigate('/study/create');
   };
 
+  const handleLoginSuccess = async (authData: GoogleAuthResponse) => {
+    try {
+      await handleGoogleLogin(authData);
+      navigate('/');
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
+  };
+
   return (
     <>
       <header className="border-moya-primary/10 fixed top-0 z-50 w-full border-b bg-white">
@@ -85,7 +94,7 @@ export const Header: React.FC = () => {
                 <span className="text-moya-primary text-xl font-bold">MOYA</span>
               </Link>
 
-              <div className="ml-8 hidden items-center md:flex">
+              <div className="ml-8 hidden items-center gap-1 md:flex">
                 {navigationItems.map((item) => (
                   <NavItem key={item.path} {...item} />
                 ))}
@@ -93,31 +102,39 @@ export const Header: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleCreateStudy}
-                className="hidden rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-emerald-600 md:flex">
-                스터디 모집하기
-              </button>
-
-              <div ref={dropdownRef}>
-                <button
-                  className="hover:text-moya-primary flex items-center space-x-1 text-gray-600 transition-colors duration-200"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  aria-expanded={isDropdownOpen}
-                  aria-haspopup="true">
-                  {isLogin && user?.profileImageUrl ? (
-                    <img src={user.profileImageUrl} alt="프로필" className="h-5 w-5 rounded-full" />
-                  ) : (
-                    <User className="h-5 w-5" />
-                  )}
-                  <span className="text-sm font-medium">{isLogin ? user?.nickname : '게스트'}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-                {isDropdownOpen && (
-                  <UserDropdown user={user} isLogin={isLogin} onClose={() => setIsDropdownOpen(false)} />
-                )}
-              </div>
+            <div className="relative flex items-center space-x-4">
+              {isLogin ? (
+                <>
+                  <button
+                    onClick={handleCreateStudy}
+                    className="hidden rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-emerald-600 md:flex">
+                    스터디 모집하기
+                  </button>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger className="flex items-center space-x-2 outline-none">
+                      <Avatar className="h-8 w-8">
+                        {user?.profileImageUrl ? (
+                          <AvatarImage src={user.profileImageUrl} alt={user.nickname} />
+                        ) : (
+                          <AvatarFallback>{user?.nickname?.charAt(0).toUpperCase()}</AvatarFallback>
+                        )}
+                      </Avatar>
+                      <span className="text-sm font-medium">{user?.nickname}</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="mt-3.5 w-56">
+                      <UserDropdown user={user} isLogin={isLogin} onClose={() => {}} />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <GoogleLoginButton
+                  theme="filled_blue"
+                  size="large"
+                  onSuccess={handleLoginSuccess}
+                  onError={(error) => console.error('로그인 실패:', error)}
+                />
+              )}
             </div>
           </nav>
         </div>
@@ -159,7 +176,7 @@ export const Header: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className="hover:text-moya-primary flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50"
+              className="hover:text-moya-primary flex items-center px-4 py-3 text-gray-600 transition-colors duration-200 hover:bg-gray-50"
               onClick={handleMobileMenuItemClick}>
               <item.icon className="mr-3 h-5 w-5" />
               <span>{item.label}</span>
@@ -170,7 +187,7 @@ export const Header: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className="hover:text-moya-primary flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50"
+                className="hover:text-moya-primary flex items-center px-4 py-3 text-gray-600 transition-colors duration-200 hover:bg-gray-50"
                 onClick={handleMobileMenuItemClick}>
                 <item.icon className="mr-3 h-5 w-5" />
                 <span>{item.label}</span>

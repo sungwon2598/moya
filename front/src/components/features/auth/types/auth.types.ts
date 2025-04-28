@@ -5,6 +5,9 @@ export interface User {
     status: string;
     profileImageUrl: string;
     accessToken: string;
+    data: {
+        accessToken: string;
+    }
 }
 
 export interface AuthState {
@@ -29,5 +32,5 @@ export interface GoogleCodeResponse {
 }
 
 export interface AuthResponseData {
-    user: User;
+    data: User;
 }

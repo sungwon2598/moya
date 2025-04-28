@@ -57,9 +57,9 @@ export class ApiError extends Error {
 
 // Token management
 const TokenManager = {
-  getToken: () => localStorage.getItem("token"),
-  setToken: (token: string) => localStorage.setItem("token", token),
-  removeToken: () => localStorage.removeItem("token"),
+  getToken: () =>sessionStorage.getItem("token"),
+  setToken: (token: string) =>sessionStorage.setItem("token", token),
+  removeToken: () =>sessionStorage.removeItem("token"),
 
   isTokenExpired: (token: string): boolean => {
     try {

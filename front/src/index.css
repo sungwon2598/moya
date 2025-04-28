@@ -229,8 +229,9 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 text-neutral-900;
+    @apply border-border outline-ring/50 ;
   }
+  /* text-neutral-900 - hover로 인해 제거 */
 
   body {
     @apply bg-background text-foreground;

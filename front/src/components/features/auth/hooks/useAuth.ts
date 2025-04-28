@@ -1,19 +1,10 @@
-import { useDispatch, useSelector } from 'react-redux';
 import { GoogleAuthResponse } from '../types/auth.types';
-import {
-  authenticateWithGoogleThunk,
-  logoutUser,
-  checkLoginStatus,
-  selectIsAuthenticated,
-  selectUser,
-  selectAuthLoading,
-  selectAuthError,
-} from '../store/authSlice';
-import type { AppDispatch } from '@/store/store';
+import { useAuthStore } from '../store/auth';
+import type { User } from '../types/auth.types';
 
 export interface UseAuthReturn {
   isAuthenticated: boolean;
-  user: ReturnType<typeof selectUser>;
+  user: User | null;
   loading: boolean;
   error: string | null;
   handleGoogleLogin: (authData: GoogleAuthResponse) => Promise<void>;
@@ -22,38 +13,15 @@ export interface UseAuthReturn {
 }
 
 export const useAuth = (): UseAuthReturn => {
-  const dispatch = useDispatch<AppDispatch>();
-  const isAuthenticated = useSelector(selectIsAuthenticated);
-  const user = useSelector(selectUser);
-  const loading = useSelector(selectAuthLoading);
-  const error = useSelector(selectAuthError);
-
-  const handleGoogleLogin = async (authData: GoogleAuthResponse) => {
-    try {
-      await dispatch(authenticateWithGoogleThunk(authData)).unwrap();
-    } catch (error) {
-      console.error('Google login failed:', error);
-      throw error;
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser()).unwrap();
-    } catch (error) {
-      console.error('Logout failed:', error);
-      throw error;
-    }
-  };
-
-  const checkAuth = async () => {
-    try {
-      await dispatch(checkLoginStatus()).unwrap();
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      throw error;
-    }
-  };
+  const {
+    isLogin: isAuthenticated,
+    user,
+    loading,
+    error,
+    authenticateWithGoogle: handleGoogleLogin,
+    logoutUser: handleLogout,
+    checkLoginStatus: checkAuth
+  } = useAuthStore();
 
   return {
     isAuthenticated,

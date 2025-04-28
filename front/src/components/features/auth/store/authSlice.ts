@@ -82,7 +82,7 @@ const authSlice = createSlice({
         state.accessToken = action.payload.user.accessToken
         
         console.log(action.payload.user.accessToken)
-        console.log(action.payload);
+        console.log(action.payload.user.data.accessToken);
       })
 
       .addCase(authenticateWithGoogleThunk.rejected, (state, action) => {

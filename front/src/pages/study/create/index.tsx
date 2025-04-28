@@ -6,7 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Card, Input, Button, Select, Form } from '@/components';
+import { Card, Input, Button, Form } from '@/components';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import ReactQuill from 'react-quill';
 import { ArrowLeft, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
 
 import { postSchema } from '@/schema';
+import { toast } from 'sonner';
 
 type FormValues = z.infer<typeof postSchema>;
 
@@ -123,14 +125,19 @@ const StudyCreate = () => {
 
       await studyApiService.createPost(postData);
       navigate('/study');
+      toast('스터디 등록이 완료되었습니다', {
+        description: '',
+      });
     } catch (error) {
       console.error('스터디 생성에 실패했습니다:', error);
+      toast('스터디 등록에 실패했습니다.', {
+        description: '',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Create a flattened option list from categories
   const getCategoryOptions = () => {
     const options: { value: string; label: string }[] = [];
 
@@ -150,20 +157,21 @@ const StudyCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="mx-auto mb-6 max-w-3xl px-4">
+    <div className="min-h-screen px-5 py-10 bg-gray-50">
+      {/* 헤더 부분 */}
+      <div className="max-w-3xl mx-auto mb-5">
         <button
           onClick={() => navigate('/study')}
-          className="text-moyaPrimary hover:text-moya-primary flex items-center transition-colors">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          className="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 bg-gray-100 rounded-lg hover:text-moya-primary">
+          <ArrowLeft className="w-4 h-4 mr-2" />
           <span>스터디 목록으로 돌아가기</span>
         </button>
       </div>
 
-      <Card.Card className="mx-auto max-w-3xl rounded-2xl border-0 bg-white px-4 py-6 shadow-sm">
-        <Card.CardHeader className="px-6 pb-4">
+      <Card.Card className="max-w-3xl px-4 py-6 mx-auto bg-white border-0 shadow-sm rounded-2xl">
+        <Card.CardHeader className="px-6 pb-8">
           <Card.CardTitle className="text-2xl font-bold text-gray-800">스터디 모집하기</Card.CardTitle>
-          <p className="text-gray-500">필요한 정보를 입력하여 새로운 스터디를 등록해보세요</p>
+          <p className="text-gray-600">필요한 정보를 입력하여 새로운 스터디를 등록해보세요</p>
         </Card.CardHeader>
 
         <Card.CardContent className="px-6">
@@ -175,7 +183,7 @@ const StudyCreate = () => {
                   name="title"
                   render={({ field }) => (
                     <Form.FormItem>
-                      <Form.FormLabel className="text-gray-700">
+                      <Form.FormLabel className="text-gray-600">
                         제목
                         {form.formState.errors.title && (
                           <span className="ml-2 text-xs font-medium text-red-500">
@@ -187,10 +195,7 @@ const StudyCreate = () => {
                         <Input
                           placeholder="스터디 제목을 입력해주세요"
                           {...field}
-                          className={cn(
-                            'rounded-lg',
-                            form.formState.errors.title ? 'border-red-300' : 'border-gray-200'
-                          )}
+                          className="border-gray-200 rounded-lg"
                         />
                       </Form.FormControl>
                     </Form.FormItem>
@@ -211,25 +216,20 @@ const StudyCreate = () => {
                             </span>
                           )}
                         </Form.FormLabel>
-                        <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <Select.SelectTrigger
-                              className={cn(
-                                'rounded-lg',
-                                form.formState.errors.studies ? 'border-red-300' : 'border-gray-200'
-                              )}>
-                              <Select.SelectValue placeholder="모집 구분을 선택하세요" />
-                            </Select.SelectTrigger>
+                            <SelectTrigger className="border-gray-200 rounded-lg focus:border-gray-200 focus:ring-0">
+                              <SelectValue placeholder="모집 구분을 선택하세요" />
+                            </SelectTrigger>
                           </Form.FormControl>
-                          <Select.SelectContent className="bg-white" position="popper" sideOffset={5}>
+                          <SelectContent>
                             {getCategoryOptions().map((option) => (
-                              <Select.SelectItem key={option.value} value={option.value}>
+                              <SelectItem key={option.value} value={option.value}>
                                 {option.label}
-                              </Select.SelectItem>
+                              </SelectItem>
                             ))}
-                          </Select.SelectContent>
-                        </Select.Select>
-                        {/* 필드 아래 오류 메시지 제거 */}
+                          </SelectContent>
+                        </Select>
                       </Form.FormItem>
                     )}
                   />
@@ -247,25 +247,20 @@ const StudyCreate = () => {
                             </span>
                           )}
                         </Form.FormLabel>
-                        <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <Select.SelectTrigger
-                              className={cn(
-                                'rounded-lg',
-                                form.formState.errors.recruits ? 'border-red-300' : 'border-gray-200'
-                              )}>
-                              <Select.SelectValue placeholder="모집 인원을 선택하세요" />
-                            </Select.SelectTrigger>
+                            <SelectTrigger className="border-gray-200 rounded-lg focus:border-gray-200 focus:ring-0">
+                              <SelectValue placeholder="모집 인원을 선택하세요" />
+                            </SelectTrigger>
                           </Form.FormControl>
-                          <Select.SelectContent className="bg-white" position="popper" sideOffset={5}>
+                          <SelectContent>
                             {recruitOptions.map((option) => (
-                              <Select.SelectItem key={option.value} value={option.value}>
+                              <SelectItem key={option.value} value={option.value}>
                                 {option.label}
-                              </Select.SelectItem>
+                              </SelectItem>
                             ))}
-                          </Select.SelectContent>
-                        </Select.Select>
-                        {/* 필드 아래 오류 메시지 제거 */}
+                          </SelectContent>
+                        </Select>
                       </Form.FormItem>
                     )}
                   />
@@ -285,28 +280,20 @@ const StudyCreate = () => {
                             </span>
                           )}
                         </Form.FormLabel>
-                        <Select.Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <Select.SelectTrigger
-                              className={cn(
-                                'rounded-lg',
-                                form.formState.errors.expectedPeriod ? 'border-red-300' : 'border-gray-200'
-                              )}>
-                              <Select.SelectValue placeholder="진행 기간을 선택하세요" />
-                            </Select.SelectTrigger>
+                            <SelectTrigger className="border-gray-200 rounded-lg focus:border-gray-200 focus:ring-0">
+                              <SelectValue placeholder="진행 기간을 선택하세요" />
+                            </SelectTrigger>
                           </Form.FormControl>
-                          <Select.SelectContent
-                            className="animate-in zoom-in-95 fade-in-50 origin-top bg-white duration-100"
-                            position="popper"
-                            sideOffset={5}>
+                          <SelectContent>
                             {periodOptions.map((option) => (
-                              <Select.SelectItem key={option.value} value={option.value}>
+                              <SelectItem key={option.value} value={option.value}>
                                 {option.label}
-                              </Select.SelectItem>
+                              </SelectItem>
                             ))}
-                          </Select.SelectContent>
-                        </Select.Select>
-                        {/* 필드 아래 오류 메시지 제거 */}
+                          </SelectContent>
+                        </Select>
                       </Form.FormItem>
                     )}
                   />
@@ -341,10 +328,10 @@ const StudyCreate = () => {
                             className={cn(
                               'w-full pl-3 text-left font-normal',
                               !field.value && 'text-gray-500',
-                              form.formState.errors.startDate ? 'border-red-300' : 'border-gray-200'
+                              'border-gray-200'
                             )}>
                             {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="w-4 h-4 ml-auto opacity-50" />
                           </Button>
 
                           {isOpenStartDate && (
@@ -358,7 +345,7 @@ const StudyCreate = () => {
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
-                              className="absolute left-0 top-full z-50 rounded-md border bg-white p-3 shadow-lg"
+                              className="absolute left-0 z-50 p-3 bg-white border rounded-md shadow-lg top-full"
                             />
                           )}
                         </div>
@@ -394,10 +381,10 @@ const StudyCreate = () => {
                             className={cn(
                               'w-full pl-3 text-left font-normal',
                               !field.value && 'text-gray-500',
-                              form.formState.errors.endDate ? 'border-red-300' : 'border-gray-200'
+                              'border-gray-200'
                             )}>
                             {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="w-4 h-4 ml-auto opacity-50" />
                           </Button>
 
                           {isOpenEndDate && (
@@ -411,7 +398,7 @@ const StudyCreate = () => {
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
-                              className="absolute left-0 top-full z-50 mt-1 rounded-md border bg-white p-3 shadow-lg"
+                              className="absolute left-0 z-50 p-3 mt-1 bg-white border rounded-md shadow-lg top-full"
                               // 시작일보다 이전 날짜는 선택 불가
                               disabled={[{ before: form.getValues('startDate') || new Date() }]}
                             />
@@ -424,7 +411,7 @@ const StudyCreate = () => {
               </div>
 
               {/* 스터디 내용 섹션 */}
-              <div className="space-y-4 pt-4">
+              <div className="pt-4 space-y-4">
                 <Form.FormField
                   control={form.control}
                   name="content"
@@ -439,11 +426,7 @@ const StudyCreate = () => {
                         )}
                       </Form.FormLabel>
                       <Form.FormControl>
-                        <div
-                          className={cn(
-                            'min-h-[200px] overflow-hidden rounded-lg',
-                            form.formState.errors.content ? 'border border-red-300' : 'border border-gray-200'
-                          )}>
+                        <div className="min-h-[200px] overflow-hidden rounded-lg border border-gray-200">
                           <ReactQuill
                             theme="snow"
                             value={field.value}
@@ -453,7 +436,6 @@ const StudyCreate = () => {
                           />
                         </div>
                       </Form.FormControl>
-                      {/* 필드 아래 오류 메시지 제거 */}
                       <Form.FormDescription className="mt-2 text-sm text-gray-500">
                         스터디의 목표, 진행 방식, 일정, 예상 결과물 등을 상세히 작성해주세요.
                       </Form.FormDescription>
@@ -462,7 +444,7 @@ const StudyCreate = () => {
                 />
               </div>
 
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                 <h3 className="mb-2 text-sm font-medium text-gray-700">💡 스터디 소개 작성 팁</h3>
                 <ul className="space-y-1 text-sm text-gray-600">
                   <li>• 스터디의 목표와 방향성을 명확히 설명해주세요</li>
@@ -472,22 +454,27 @@ const StudyCreate = () => {
                 </ul>
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/study')}
-                  className="rounded-lg border-gray-300"
+                  onClick={() => {
+                    navigate('/study');
+                    toast('스터디 등록이 취소되었습니다', {
+                      description: '',
+                    });
+                  }}
+                  className="border-gray-300 rounded-lg"
                   disabled={loading}>
                   취소
                 </Button>
                 <Button
                   type="submit"
-                  className="rounded-lg bg-blue-600 text-white transition-colors duration-300 hover:bg-blue-700"
+                  className="text-white transition-colors duration-300 bg-blue-600 rounded-lg hover:bg-blue-700"
                   disabled={loading}>
                   {loading ? (
                     <div className="flex items-center">
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <div className="w-4 h-4 mr-2 border-2 border-white rounded-full animate-spin border-t-transparent"></div>
                       <span>등록 중...</span>
                     </div>
                   ) : (

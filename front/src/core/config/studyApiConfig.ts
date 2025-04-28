@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { TokenStorage } from '../../components/features/auth/utils/tokenUtils';
 
 const BASE_URL = 'https://api.moyastudy.com';
 
 // 스터디 관련 엔드포인트 정의
 export const STUDY_ENDPOINTS = {
-  LIST: `${BASE_URL}/api/posts?page=0`,
+  LIST: (page: number) => `${BASE_URL}/api/posts?page=${page}`,
   DETAIL: (postId: number) => `${BASE_URL}/api/posts/${postId}`,
   CREATE: `${BASE_URL}/api/posts`,
   UPDATE: (postId: number) => `${BASE_URL}/api/posts/${postId}`,
@@ -98,6 +99,7 @@ export interface StudyApiResponse<T> {
   };
 }
 
+
 // 스터디 API 서비스 객체
 export const studyApiService = {
   // 카테고리 계층 구조 조회
@@ -130,9 +132,8 @@ export const studyApiService = {
   },
 
   // 스터디 목록 조회
-  getStudyList: async (): Promise<StudyApiResponse<StudyPost[]>> => {
+  getStudyList: async (page: number): Promise<StudyApiResponse<StudyPost[]>> => {
     try {
-
       //page = 0, size = 10, filters?: StudyFilters
       // const params = new URLSearchParams({
       //   page: page.toString(),
@@ -144,8 +145,9 @@ export const studyApiService = {
       //   ...(filters?.recruitmentStatus && { recruitmentStatus: filters.recruitmentStatus }),
       // });
 
-      const response = await axios.get<StudyApiResponse<StudyPost[]>>(`${STUDY_ENDPOINTS.LIST}`);
-      console.log(response);
+      // const response = await axios.get<StudyApiResponse<StudyPost[]>>(`${STUDY_ENDPOINTS.LIST}`);
+      // console.log(response);
+      const response = await axios.get<StudyApiResponse<StudyPost[]>>(STUDY_ENDPOINTS.LIST(page));
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -171,10 +173,12 @@ export const studyApiService = {
 
   // 스터디 생성
   createPost: async (postData: CreateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
+    const token = TokenStorage.getAccessToken();
+    console.log(token);
     try {
       const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.CREATE, postData, {
         headers: {
-          Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxODY4OCIsImF1dGgiOiJST0xFX0FETUlOIiwiaWF0IjoxNzQ0MTI2MTYxLCJleHAiOjE3NDQxMjcxNjF9.vtnFcA6hM8aw5qS2kj1OhuHLjyacee43H_mwlpwI6Zs"}`,
+          Authorization: `Bearer ${token}`,
         },
         withCredentials: true,
       });
