@@ -29,13 +29,22 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
   };
 
   return (
-    <>
-      <DropdownMenuLabel className="flex items-center space-x-2">
-        {user?.profileImageUrl ? (
-          <img src={user.profileImageUrl} alt="프로필" className="h-10 w-10 rounded-full" />
-        ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-            <User className="h-6 w-6 text-gray-600" />
+    <div className="absolute right-0 top-[64px] z-50 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+      {isAuthenticated && user ? (
+        <>
+          <div className="flex items-center px-4 py-3 space-x-3 border-b border-gray-100">
+            {user?.profileImageUrl ? (
+              <img src={user.profileImageUrl} alt="프로필" className="w-10 h-10 rounded-full" />
+            ) : (
+              <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
+                <User className="w-6 h-6 text-gray-600" />
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
+              <p className="text-sm text-gray-600">{user.email}</p>
+            </div>
+
           </div>
         )}
         <div>
@@ -45,11 +54,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
 
-      <DropdownMenuItem asChild>
-        <Link to="/my-roadmap" className="flex items-center">
-          <Map className="mr-2 h-4 w-4" />내 로드맵
-        </Link>
-      </DropdownMenuItem>
+
+          <div className="py-1">
+            <MenuItem icon={Map} text="내 로드맵" href="/my-info/roadmap" onClick={onClose} />
+            <MenuItem icon={Heart} text="내 관심 로드맵" href="/my-favorite-roadmap" onClick={onClose} />
+            <MenuItem icon={Settings} text="프로필 설정" href="/settings/profile" onClick={onClose} />
+
 
       <DropdownMenuItem asChild>
         <Link to="/my-favorite-roadmap" className="flex items-center">
@@ -79,6 +89,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
               샘플 제작
             </Link>
           </DropdownMenuItem>
+
         </>
       )}
 

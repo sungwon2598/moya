@@ -8,6 +8,7 @@ import {
   usePostRoadmapCreate,
 } from "@/features/roadmap/api/createRoadmap";
 import { useNavigate } from "react-router-dom";
+import { SelectedValue } from "./Select";
 const selectBTN =
   "inline-block px-4 py-2 mr-2 bg-blue-100 rounded min-w-32 min-h-10 hover:bg-blue-200 transition-colors";
 const pBTN = "mt-2";
@@ -17,6 +18,7 @@ interface ChoseKeywordProp {
   setAnswers: Dispatch<SetStateAction<AnswerItem[] | null>>;
   questions: Question[];
   setRoadmapQuestionStage: Dispatch<SetStateAction<RoadmapQuestionStageType>>;
+  setSelectedValue: (item: SelectedValue | null) => void;
 }
 export default function ChoseKeyword({
   AllQuestionsCompleted,
@@ -24,6 +26,7 @@ export default function ChoseKeyword({
   setAnswers,
   questions,
   setRoadmapQuestionStage,
+  setSelectedValue,
 }: ChoseKeywordProp) {
   const navigate = useNavigate();
 
@@ -38,6 +41,7 @@ export default function ChoseKeyword({
     ).every((id) => answers?.some((answer) => answer.questionNumber === id));
     if (allPreviousQuestionsAnswered) {
       setRoadmapQuestionStage({ currentStatusNumber: question.id });
+      setSelectedValue(null);
     } else {
       alert("이전 질문에 대답해주세요.");
     }

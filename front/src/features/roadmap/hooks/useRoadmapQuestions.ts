@@ -52,7 +52,6 @@ export function useRoadmapQuestions() {
           { id: "ONE_WEEK", name: 7 },
           { id: "ONE_MONTH", name: 30 },
           { id: "THREE_MONTHS", name: 90 },
-          { id: "CUSTOM_INPUT", name: 0 },
         ],
       },
       {
