@@ -6,7 +6,7 @@ import Footer from './footer/Footer.tsx';
 
 const RootLayout: React.FC = () => {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1">
         <Outlet />

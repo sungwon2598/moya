@@ -2,7 +2,7 @@
 export const TokenStorage = {
     getAccessToken: () => {
         try {
-            return localStorage.getItem('accessToken');
+            return sessionStorage.getItem('accessToken');
         } catch (error) {
             console.error('Failed to get access token:', error);
             return null;
@@ -10,7 +10,7 @@ export const TokenStorage = {
     },
     getRefreshToken: () => {
         try {
-            return localStorage.getItem('refreshToken');
+            return sessionStorage.getItem('refreshToken');
         } catch (error) {
             console.error('Failed to get refresh token:', error);
             return null;
@@ -21,20 +21,20 @@ export const TokenStorage = {
             if (!accessToken) {
                 throw new Error('Access token is required');
             }
-            localStorage.setItem('accessToken', accessToken);
+            sessionStorage.setItem('accessToken', accessToken);
             if (refreshToken) {
-                localStorage.setItem('refreshToken', refreshToken);
+                sessionStorage.setItem('refreshToken', refreshToken);
             }
             console.log('Tokens stored successfully');
         } catch (error) {
             console.error('Failed to store tokens:', error);
-            throw new Error('Failed to store tokens in localStorage');
+            throw new Error('Failed to store tokens in sessionStorage');
         }
     },
     clearTokens: () => {
         try {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
             console.log('Tokens cleared');
         } catch (error) {
             console.error('Failed to clear tokens:', error);

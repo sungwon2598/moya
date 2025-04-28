@@ -14,7 +14,7 @@ const StudyList = () => {
       setLoading(true);
       setError(null);
 
-      const response = await studyApiService.getStudyList();
+      const response = await studyApiService.getStudyList(0);
 
       setPosts(response.data);
 
