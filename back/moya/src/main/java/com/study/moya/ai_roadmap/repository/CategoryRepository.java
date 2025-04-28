@@ -2,6 +2,8 @@ package com.study.moya.ai_roadmap.repository;
 
 import com.study.moya.ai_roadmap.domain.Category;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT c FROM Category c WHERE c.depth = :depth")
     List<Category> findByDepth(@Param("depth") int depth);
+
+    // 이름으로 카테고리 ID 찾기 (Optional 반환)
+    Optional<Category> findByName(String name);
 }

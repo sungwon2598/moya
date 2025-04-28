@@ -1,12 +1,14 @@
 package com.study.moya.ai_roadmap.service;
 
 import com.study.moya.ai_roadmap.constants.LearningObjective;
+import com.study.moya.ai_roadmap.domain.Category;
 import com.study.moya.ai_roadmap.domain.DailyPlan;
 import com.study.moya.ai_roadmap.domain.RoadMap;
 import com.study.moya.ai_roadmap.domain.WeeklyPlan;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
+import com.study.moya.ai_roadmap.repository.CategoryRepository;
 import com.study.moya.ai_roadmap.repository.DailyPlanRepository;
 import com.study.moya.ai_roadmap.repository.RoadMapRepository;
 import com.study.moya.ai_roadmap.repository.WeeklyPlanRepository;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +57,7 @@ public class RoadmapService {
     private final WeeklyPlanRepository weeklyPlanRepository;
     private final DailyPlanRepository dailyPlanRepository;
     private final TokenFacadeService tokenFacadeService;
+    private final CategoryRepository categoryRepository;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -118,9 +122,12 @@ public class RoadmapService {
                 // 응답 파싱
                 WeeklyRoadmapResponse response = responseParser.parseResponse(apiResponse);
 
+                Category category = categoryRepository.findByName(request.getMainCategory())
+                        .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + request.getMainCategory()));
+
                 // 파싱된 응답을 엔티티로 저장
                 saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1, request.getSubCategory(),
-                        request.getDuration(), request.getLearningObjective(), response);
+                        request.getDuration(), request.getLearningObjective(), response, category);
 
                 // 9. AI 사용 내역 완료 처리
                 try {
@@ -151,7 +158,7 @@ public class RoadmapService {
     }
 
     public Long saveCurriculum(int goalLevel, String topic, int duration, LearningObjective learningObjective,
-                               WeeklyRoadmapResponse response) {
+                               WeeklyRoadmapResponse response, Category category) {
         log.info("커리큘럼 저장 시작");
 
         // RoadMap 생성
@@ -162,6 +169,7 @@ public class RoadmapService {
                 .evaluation(response.getCurriculumEvaluation())
                 .overallTips(response.getOverallTips())
                 .learningObjective(learningObjective)
+                .category(category)
                 .build();
 
         // 먼저 RoadMap을 저장하여 ID를 확보
@@ -197,7 +205,7 @@ public class RoadmapService {
 
 
 
-//    @Transactional
+    //    @Transactional
 //    public Long saveCurriculum(int goalLevel, String topic, int duration, WeeklyRoadmapResponse response) {
 //        log.info("커리큘럼 벌크 저장 시작");
 //
