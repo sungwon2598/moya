@@ -123,7 +123,7 @@ export const Header: React.FC = () => {
                       <ChevronDown className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="mt-3.5 w-56">
-                      <UserDropdown user={user} isLogin={isLogin} onClose={() => {}} />
+                      <UserDropdown user={user} isLogin={isLogin} />
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </>
