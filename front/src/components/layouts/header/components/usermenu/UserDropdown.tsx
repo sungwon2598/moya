@@ -1,27 +1,24 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, User, Map, Heart, LayoutGrid, PlusSquare } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { logoutUser } from '@/components/features/auth/store/authSlice.ts';
 import { User as UserType } from '@/components/features/auth/types/auth.types.ts';
-import { AppDispatch } from '@/store/store';
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/shared/ui/dropdown-menu';
+import { useAuthStore } from '@/components/features/auth/store/auth';
 
 interface UserDropdownProps {
   user: UserType | null;
   isLogin: boolean;
-  onClose: () => void;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { logoutUser } = useAuthStore();
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutUser()).unwrap();
+      await logoutUser();
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -29,37 +26,29 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
   };
 
   return (
-    <div className="absolute right-0 top-[64px] z-50 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-      {isAuthenticated && user ? (
-        <>
-          <div className="flex items-center px-4 py-3 space-x-3 border-b border-gray-100">
-            {user?.profileImageUrl ? (
-              <img src={user.profileImageUrl} alt="프로필" className="w-10 h-10 rounded-full" />
-            ) : (
-              <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
-                <User className="w-6 h-6 text-gray-600" />
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-semibold text-gray-800">{user.nickname}</p>
-              <p className="text-sm text-gray-600">{user.email}</p>
+    <>
+      <DropdownMenuLabel>
+        <div className="flex items-center space-x-3">
+          {user?.profileImageUrl ? (
+            <img src={user.profileImageUrl} alt="프로필" className="h-10 w-10 rounded-full" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+              <User className="h-6 w-6 text-gray-600" />
             </div>
-
+          )}
+          <div>
+            <p className="text-sm font-semibold">{user?.nickname}</p>
+            <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
-        )}
-        <div>
-          <p className="text-sm font-semibold">{user?.nickname}</p>
-          <p className="text-sm text-gray-500">{user?.email}</p>
         </div>
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
 
-
-          <div className="py-1">
-            <MenuItem icon={Map} text="내 로드맵" href="/my-info/roadmap" onClick={onClose} />
-            <MenuItem icon={Heart} text="내 관심 로드맵" href="/my-favorite-roadmap" onClick={onClose} />
-            <MenuItem icon={Settings} text="프로필 설정" href="/settings/profile" onClick={onClose} />
-
+      <DropdownMenuItem asChild>
+        <Link to="/my-info/roadmap" className="flex items-center">
+          <Map className="mr-2 h-4 w-4" />내 로드맵
+        </Link>
+      </DropdownMenuItem>
 
       <DropdownMenuItem asChild>
         <Link to="/my-favorite-roadmap" className="flex items-center">
@@ -89,7 +78,6 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
               샘플 제작
             </Link>
           </DropdownMenuItem>
-
         </>
       )}
 
