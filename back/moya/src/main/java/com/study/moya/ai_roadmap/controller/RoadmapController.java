@@ -3,6 +3,7 @@ package com.study.moya.ai_roadmap.controller;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.request.WorkSheetRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
+import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import com.study.moya.ai_roadmap.service.WorksheetService;
@@ -61,6 +62,7 @@ public class RoadmapController {
             @Valid @RequestBody RoadmapRequest request, @AuthenticationPrincipal Long memberId
     ) {
         log.info("작동해버리기~============================");
+        log.info("현재 로그인한 회원 ID: {}", memberId);
         return roadMapService.generateWeeklyRoadmapAsync(request, memberId)
                 .thenApply(response -> ResponseEntity.ok(response))
                 .exceptionally(ex -> {
@@ -84,5 +86,17 @@ public class RoadmapController {
     @GetMapping("/categories/{categoryId}/roadmaps")
     public List<RoadMapSimpleDto> getRoadMaps(@PathVariable Long categoryId) {
         return roadMapService.getRoadMapsByCategory(categoryId);
+    }
+
+    @GetMapping("/myroadmaps")
+    public ResponseEntity<List<RoadMapSummaryDTO>> getMyRoadmaps(@AuthenticationPrincipal Long memberId){
+//        memberId = 87L; //빠른 테스트용
+        List<RoadMapSummaryDTO> roadMapSummaryDTOS = roadMapService.getMemberRoadMapSummaries(memberId);
+        return ResponseEntity.ok(roadMapSummaryDTOS);
+    }
+
+    @GetMapping("/roadmaps/{roadMapId}")
+    public ResponseEntity<WeeklyRoadmapResponse> getRoadMap(@PathVariable Long roadMapId){
+        return ResponseEntity.ok(roadMapService.getRoadmapById(roadMapId));
     }
 }
