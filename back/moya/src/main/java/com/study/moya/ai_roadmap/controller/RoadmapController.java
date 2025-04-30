@@ -7,15 +7,23 @@ import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import com.study.moya.ai_roadmap.service.WorksheetService;
+import com.study.moya.error.constants.CommonErrorCode;
+import com.study.moya.swagger.annotation.SwaggerErrorDescription;
+import com.study.moya.swagger.annotation.SwaggerErrorDescriptions;
+import com.study.moya.swagger.annotation.SwaggerSuccessResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -88,9 +96,23 @@ public class RoadmapController {
         return roadMapService.getRoadMapsByCategory(categoryId);
     }
 
+    @Operation(summary = "내 로드맵 목록 조회", description = "현재 로그인한 회원의 로드맵 목록을 조회합니다.")
+    @SwaggerSuccessResponse(value = List.class, name = "내 로드맵 목록 조회 성공")
+    @SwaggerErrorDescriptions({
+            @SwaggerErrorDescription(name = "인증 필요", description = "로그인이 필요한 서비스입니다.", value = CommonErrorCode.class, code = "UNAUTHORIZED")
+    })
     @GetMapping("/myroadmaps")
-    public ResponseEntity<List<RoadMapSummaryDTO>> getMyRoadmaps(@AuthenticationPrincipal Long memberId){
-//        memberId = 87L; //빠른 테스트용
+    public ResponseEntity<?> getMyRoadmaps(@AuthenticationPrincipal Long memberId) {
+//        memberId = 87L; //급하게 테스트 할 때
+
+        // memberId가 null인 경우 비인증 사용자로 간주
+        if (memberId == null) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "로그인이 필요한 서비스입니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+
+        // 인증된 사용자인 경우 정상 처리
         List<RoadMapSummaryDTO> roadMapSummaryDTOS = roadMapService.getMemberRoadMapSummaries(memberId);
         return ResponseEntity.ok(roadMapSummaryDTOS);
     }
