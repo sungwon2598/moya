@@ -45,6 +45,10 @@ public class RoadmapService {
     @Value("${openai.api.models.roadmap_generation.model}")
     private String roadmapModel;
 
+    // etc 타입 상수 정의
+    public static final int MAIN_CATEGORY = 1;    // 대분류(etc1)
+    public static final int SUB_CATEGORY = 2;     // 중분류(etc2)
+
     private final OpenAiService openAiService;
     private final RoadmapPromptService promptService;
     private final RoadmapResponseParser responseParser;
