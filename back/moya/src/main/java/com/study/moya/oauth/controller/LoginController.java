@@ -61,9 +61,8 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<OAuthLoginResponse>> LoginWithGoogleOauth2(@RequestBody OAuthLoginRequest requestBody,
                                                                                  HttpServletResponse response) {
-        log.info("authCode : {}, credential: {}, redirectUrl : {}",
+        log.info("authCode : {}, redirectUrl : {}",
                 requestBody.getAuthCode(),
-                requestBody.getCredential(),
                 requestBody.getRedirectUri());
         if (requestBody == null || requestBody.getAuthCode() == null) {
             throw new IllegalArgumentException("ID Token is required");
@@ -89,7 +88,7 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, jwtTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember(), authResult.getRefreshToken());
+        OAuthLoginResponse loginResponse = OAuthLoginResponse.from(authResult.getMember(), authResult.getJwtToken(), authResult.getRefreshToken());
         return securityHeadersConfig.addSecurityHeaders(
                 ResponseEntity.ok(ApiResponse.of(loginResponse)));
     }
