@@ -12,6 +12,7 @@ export interface User {
         email: string;
         nickname: string;
         roles: [string];
+        status: string;
     }
 }
 

@@ -32,7 +32,7 @@ export const UserMenu: React.FC = () => {
         <UserAvatar user={user} />
       </button>
 
-      {isOpen && <UserDropdown user={user} onClose={() => setIsOpen(false)} isLogin={isLogin} />}
+      {isOpen && <UserDropdown user={user} isLogin={isLogin} />}
     </div>
   );
 };

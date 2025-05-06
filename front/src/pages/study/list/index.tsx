@@ -17,6 +17,15 @@ const StudyList = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
 
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 20,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    last: false,
+  });
+
   const fetchPosts = async (page: number) => {
     try {
       setLoading(true);
@@ -25,6 +34,13 @@ const StudyList = () => {
       const response = await studyApiService.getStudyList(page);
 
       setPosts(response.data);
+      if (response.pagination) {
+        setPagination(response.pagination);
+        console.log('페이지네이션:', response.pagination);
+      } else {
+        console.warn('pagination 정보가 없습니다:', response);
+      }
+      console.log(response.data);
     } catch (error) {
       setError(error instanceof Error ? error.message : '데이터를 불러오는데 실패했습니다.');
     } finally {
@@ -102,23 +118,22 @@ const StudyList = () => {
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
-                className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                className={pagination.first ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
               />
             </PaginationItem>
-            <PaginationItem>
-              <PaginationLink onClick={() => handlePageChange(0)} isActive={currentPage === 0}>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
-                2
-              </PaginationLink>
-            </PaginationItem>
+
+            {Array.from({ length: pagination.totalPages }).map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink onClick={() => handlePageChange(index)} isActive={currentPage === index}>
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
             <PaginationItem>
               <PaginationNext
-                onClick={() => handlePageChange(Math.min(1, currentPage + 1))}
-                className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, currentPage + 1))}
+                className={pagination.last ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
               />
             </PaginationItem>
           </PaginationContent>
