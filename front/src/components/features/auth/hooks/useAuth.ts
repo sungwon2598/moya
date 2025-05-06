@@ -1,6 +1,7 @@
 import { GoogleAuthResponse } from '../types/auth.types';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '@/store/auth';
 import type { User } from '../types/auth.types';
+
 
 export interface UseAuthReturn {
   isAuthenticated: boolean;
@@ -22,6 +23,7 @@ export const useAuth = (): UseAuthReturn => {
     logoutUser: handleLogout,
     checkLoginStatus: checkAuth
   } = useAuthStore();
+
 
   return {
     isAuthenticated,

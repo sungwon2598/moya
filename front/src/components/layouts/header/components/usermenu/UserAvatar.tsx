@@ -33,7 +33,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({ user, size = 32, classNa
             onError={handleImageError}
           />
           {/* Fallback hidden by default */}
-          <div className="flex hidden h-full w-full items-center justify-center bg-gray-200">
+          <div className="flex h-full w-full items-center justify-center bg-gray-200">
             <UserIcon size={size * 0.75} className="text-gray-600" />
           </div>
         </>

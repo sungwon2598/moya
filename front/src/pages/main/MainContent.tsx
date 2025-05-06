@@ -57,7 +57,7 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* 메인 포스터 섹션 */}
         <div className="mb-12">

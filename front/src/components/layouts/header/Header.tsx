@@ -7,7 +7,7 @@ import { useAuth } from '../../features/auth/hooks/useAuth.ts';
 import GoogleLoginButton from '../../features/auth/components/GoogleLoginButton.tsx';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/shared/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
-import { useAuthStore } from '../../features/auth/store/auth';
+import { useAuthStore } from '@/store/auth.ts';
 import { GoogleAuthResponse } from '../../features/auth/types/auth.types';
 
 const navigationItems = [
@@ -40,6 +40,19 @@ export const Header: React.FC = () => {
   const { isLogin, user } = useAuthStore();
   const navigate = useNavigate();
   const { handleGoogleLogin } = useAuth();
+  const [showBorder, setShowBorder] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBorder(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,7 +60,6 @@ export const Header: React.FC = () => {
         setIsMobileMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -79,7 +91,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="border-moya-primary/10 fixed top-0 z-50 w-full border-b bg-white">
+      <header className={`fixed top-0 z-50 w-full bg-white ${showBorder ? 'border-moya-black/10 border-b' : ''}`}>
         <div className="container mx-auto">
           <nav className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center">
@@ -107,19 +119,19 @@ export const Header: React.FC = () => {
                 <>
                   <button
                     onClick={handleCreateStudy}
-                    className="hidden rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-emerald-600 md:flex">
+                    className="bg-moya-secondary hover:bg-moya-secondary/90 hidden rounded-full px-4 py-2 text-sm font-medium text-white transition-colors duration-200 md:flex">
                     스터디 모집하기
                   </button>
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger className="flex items-center space-x-2 outline-none">
                       <Avatar className="h-8 w-8">
-                        {user?.profileImageUrl ? (
-                          <AvatarImage src={user.profileImageUrl} alt={user.nickname} />
+                        {user?.data.profileImageUrl ? (
+                          <AvatarImage src={user?.data.profileImageUrl} alt={user.data.nickname} />
                         ) : (
                           <AvatarFallback>{user?.nickname?.charAt(0).toUpperCase()}</AvatarFallback>
                         )}
                       </Avatar>
-                      <span className="text-sm font-medium">{user?.nickname}</span>
+                      {/* <span className="text-sm font-medium">{user?.data.nickname}</span> */}
                       <ChevronDown className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="mt-3.5 w-56">

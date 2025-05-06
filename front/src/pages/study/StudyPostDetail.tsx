@@ -7,6 +7,8 @@ import { studyApiService } from '@/core/config/studyApiConfig';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 
+import { useAuth } from '../../components/features/auth/hooks/useAuth.ts';
+
 // Quill 에디터 스타일 설정
 const quillStyles = `
 .ql-editor {
@@ -79,7 +81,11 @@ const StudyPostDetail = () => {
     };
   }, []);
 
+  const { isAuthenticated: isLoggedIn, user } = useAuth();
+
   useEffect(() => {
+    console.log(isLoggedIn);
+    console.log(user);
     const fetchPost = async () => {
       if (!postId) return;
       try {
@@ -218,9 +224,13 @@ const StudyPostDetail = () => {
             <div className="flex items-center gap-3 text-gray-700">
               <Calendar className="h-6 w-6 text-gray-500" />
               <div>
-                <div className="mb-1 font-medium">모집 기간</div>
-                <div className="text-sm">
-                  {new Date(post.startDate).toLocaleDateString()} ~ {new Date(post.endDate).toLocaleDateString()}
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">스터디 시작</p>
+                  <p className="text-sm text-gray-600">{new Date(post.startDate).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">모집 마감</p>
+                  <p className="text-sm text-gray-600"> {new Date(post.endDate).toLocaleDateString()}</p>
                 </div>
               </div>
             </div>
@@ -259,14 +269,25 @@ const StudyPostDetail = () => {
 
         {/* 하단 버튼 섹션 */}
         <div className="flex justify-center gap-4">
-          <button
-            onClick={() => navigate(`/study/${post.postId}/edit`)}
-            className="rounded-xl border-2 border-gray-200 bg-white px-8 py-4 font-semibold text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50">
-            수정하기
-          </button>
           <button className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600">
             참여 신청하기
           </button>
+          {user?.data.nickname === post.authorName ? (
+            <button
+              onClick={() => navigate(`/study/${post.postId}/edit`)}
+              className="rounded-xl border-2 border-gray-200 bg-white px-8 py-4 font-semibold text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50">
+              수정하기
+            </button>
+          ) : (
+            <></>
+          )}
+          {user?.data.nickname === post.authorName ? (
+            <button className="rounded-xl bg-red-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600">
+              삭제하기
+            </button>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>

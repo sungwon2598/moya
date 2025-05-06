@@ -9,7 +9,9 @@ import { format } from 'date-fns';
 import { Card, Input, Button, Form } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import ReactQuill from 'react-quill';
-import { ArrowLeft, CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ChevronLeft } from 'lucide-react';
+import Cookies from 'js-cookie';
+
 import { cn } from '@/lib/utils';
 
 import { ko } from 'date-fns/locale';
@@ -18,6 +20,7 @@ import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
 
 import { postSchema } from '@/schema';
 import { toast } from 'sonner';
+// import { axiosInstance } from '../../../core/config/apiConfig';
 
 type FormValues = z.infer<typeof postSchema>;
 
@@ -62,6 +65,9 @@ const StudyCreate = () => {
   ];
 
   useEffect(() => {
+    const parsedToken = Cookies.get('AUTH_TOKEN');
+    console.log(parsedToken);
+
     const fetchCategories = async () => {
       try {
         const response = await studyApiService.getCategoriesHierarchy();
@@ -108,6 +114,11 @@ const StudyCreate = () => {
     ],
   };
 
+  // const postRoadmapFormData = async (postData: any) => {
+  //   const { data } = await axiosInstance.post('/api/posts', postData);
+  //   return data;
+  // };
+
   const onSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
@@ -122,6 +133,8 @@ const StudyCreate = () => {
         startDate: values.startDate.toISOString(),
         endDate: values.endDate.toISOString(),
       };
+
+      // await postRoadmapFormData(postData);
 
       await studyApiService.createPost(postData);
       navigate('/study');
@@ -157,18 +170,18 @@ const StudyCreate = () => {
   };
 
   return (
-    <div className="min-h-screen px-5 py-10 bg-gray-50">
+    <div className="min-h-screen bg-gray-50 px-5 py-10">
       {/* 헤더 부분 */}
-      <div className="max-w-3xl mx-auto mb-5">
+      <div className="mx-auto mb-5 max-w-3xl">
         <button
           onClick={() => navigate('/study')}
-          className="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 bg-gray-100 rounded-lg hover:text-moya-primary">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          <span>스터디 목록으로 돌아가기</span>
+          className="duration-400 flex items-center gap-1 rounded-lg px-4 py-2 text-gray-500 transition-colors hover:text-gray-600">
+          <ChevronLeft className="h-4 w-4" />
+          <span>스터디 목록</span>
         </button>
       </div>
 
-      <Card.Card className="max-w-3xl px-4 py-6 mx-auto bg-white border-0 shadow-sm rounded-2xl">
+      <Card.Card className="mx-auto max-w-3xl rounded-2xl border-0 bg-white px-4 py-6 shadow-sm">
         <Card.CardHeader className="px-6 pb-8">
           <Card.CardTitle className="text-2xl font-bold text-gray-800">스터디 모집하기</Card.CardTitle>
           <p className="text-gray-600">필요한 정보를 입력하여 새로운 스터디를 등록해보세요</p>
@@ -195,7 +208,7 @@ const StudyCreate = () => {
                         <Input
                           placeholder="스터디 제목을 입력해주세요"
                           {...field}
-                          className="border-gray-200 rounded-lg"
+                          className="rounded-lg border-gray-200"
                         />
                       </Form.FormControl>
                     </Form.FormItem>
@@ -218,7 +231,7 @@ const StudyCreate = () => {
                         </Form.FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <SelectTrigger className="border-gray-200 rounded-lg focus:border-gray-200 focus:ring-0">
+                            <SelectTrigger className="rounded-lg border-gray-200 focus:border-gray-200 focus:ring-0">
                               <SelectValue placeholder="모집 구분을 선택하세요" />
                             </SelectTrigger>
                           </Form.FormControl>
@@ -249,7 +262,7 @@ const StudyCreate = () => {
                         </Form.FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <SelectTrigger className="border-gray-200 rounded-lg focus:border-gray-200 focus:ring-0">
+                            <SelectTrigger className="rounded-lg border-gray-200 focus:border-gray-200 focus:ring-0">
                               <SelectValue placeholder="모집 인원을 선택하세요" />
                             </SelectTrigger>
                           </Form.FormControl>
@@ -282,7 +295,7 @@ const StudyCreate = () => {
                         </Form.FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <Form.FormControl>
-                            <SelectTrigger className="border-gray-200 rounded-lg focus:border-gray-200 focus:ring-0">
+                            <SelectTrigger className="rounded-lg border-gray-200 focus:border-gray-200 focus:ring-0">
                               <SelectValue placeholder="진행 기간을 선택하세요" />
                             </SelectTrigger>
                           </Form.FormControl>
@@ -300,14 +313,13 @@ const StudyCreate = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {/* 모집 시작일 (DayPicker로 대체) */}
                   <Form.FormField
                     control={form.control}
                     name="startDate"
                     render={({ field }) => (
                       <Form.FormItem className="flex flex-col">
                         <Form.FormLabel className="text-gray-700">
-                          모집 시작일
+                          스터디 시작일
                           {form.formState.errors.startDate && (
                             <span className="ml-2 text-xs font-medium text-red-500">
                               {form.formState.errors.startDate.message}
@@ -331,7 +343,7 @@ const StudyCreate = () => {
                               'border-gray-200'
                             )}>
                             {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
-                            <CalendarIcon className="w-4 h-4 ml-auto opacity-50" />
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
 
                           {isOpenStartDate && (
@@ -345,7 +357,8 @@ const StudyCreate = () => {
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
-                              className="absolute left-0 z-50 p-3 bg-white border rounded-md shadow-lg top-full"
+                              className="absolute left-0 top-full z-50 rounded-md border bg-white p-3 shadow-lg"
+                              disabled={[{ before: form.getValues('endDate') || new Date() }]}
                             />
                           )}
                         </div>
@@ -353,7 +366,6 @@ const StudyCreate = () => {
                     )}
                   />
 
-                  {/* 모집 마감일 (DayPicker로 대체) */}
                   <Form.FormField
                     control={form.control}
                     name="endDate"
@@ -384,7 +396,7 @@ const StudyCreate = () => {
                               'border-gray-200'
                             )}>
                             {field.value ? format(field.value, 'PPP', { locale: ko }) : <span>날짜 선택</span>}
-                            <CalendarIcon className="w-4 h-4 ml-auto opacity-50" />
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
 
                           {isOpenEndDate && (
@@ -398,9 +410,8 @@ const StudyCreate = () => {
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
-                              className="absolute left-0 z-50 p-3 mt-1 bg-white border rounded-md shadow-lg top-full"
-                              // 시작일보다 이전 날짜는 선택 불가
-                              disabled={[{ before: form.getValues('startDate') || new Date() }]}
+                              className="absolute left-0 top-full z-50 mt-1 rounded-md border bg-white p-3 shadow-lg"
+                              // disabled={[{ before: form.getValues('startDate') || new Date() }]}
                             />
                           )}
                         </div>
@@ -411,7 +422,7 @@ const StudyCreate = () => {
               </div>
 
               {/* 스터디 내용 섹션 */}
-              <div className="pt-4 space-y-4">
+              <div className="space-y-4 pt-4">
                 <Form.FormField
                   control={form.control}
                   name="content"
@@ -444,7 +455,7 @@ const StudyCreate = () => {
                 />
               </div>
 
-              <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <h3 className="mb-2 text-sm font-medium text-gray-700">💡 스터디 소개 작성 팁</h3>
                 <ul className="space-y-1 text-sm text-gray-600">
                   <li>• 스터디의 목표와 방향성을 명확히 설명해주세요</li>
@@ -454,7 +465,7 @@ const StudyCreate = () => {
                 </ul>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -464,17 +475,17 @@ const StudyCreate = () => {
                       description: '',
                     });
                   }}
-                  className="border-gray-300 rounded-lg"
+                  className="rounded-lg border-gray-300"
                   disabled={loading}>
                   취소
                 </Button>
                 <Button
                   type="submit"
-                  className="text-white transition-colors duration-300 bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="rounded-lg bg-blue-600 text-white transition-colors duration-300 hover:bg-blue-700"
                   disabled={loading}>
                   {loading ? (
                     <div className="flex items-center">
-                      <div className="w-4 h-4 mr-2 border-2 border-white rounded-full animate-spin border-t-transparent"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                       <span>등록 중...</span>
                     </div>
                   ) : (
