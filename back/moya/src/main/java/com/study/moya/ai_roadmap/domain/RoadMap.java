@@ -30,13 +30,20 @@ public class RoadMap extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String evaluation;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "learning_objective")
-    private LearningObjective learningObjective;
+    private String learningObjective;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToOne
+    @JoinColumn(name = "etc1_id")
+    private Etc etc1;
+
+    @OneToOne
+    @JoinColumn(name = "etc2_id")
+    private Etc etc2;
 
     @ElementCollection
     @CollectionTable(name = "roadmap_tips", joinColumns = @JoinColumn(name = "roadmap_id"))
@@ -45,7 +52,7 @@ public class RoadMap extends BaseEntity {
 
     @Builder
     private RoadMap(int goalLevel, String topic, int duration, String evaluation, List<String> overallTips,
-                    Category category, LearningObjective learningObjective) {
+                    Category category, String learningObjective, Etc etc1, Etc etc2) {
         this.duration = duration;
         this.goalLevel = goalLevel;
         this.topic = topic;
@@ -55,6 +62,8 @@ public class RoadMap extends BaseEntity {
         if (overallTips != null) {
             this.overallTips = overallTips;
         }
+        this.etc1 = etc1;
+        this.etc2 = etc2;
     }
 
     public void updateTopic(String topic) {
@@ -69,7 +78,7 @@ public class RoadMap extends BaseEntity {
         this.category = category;
     }
 
-    public void updateLearningObjective(LearningObjective learningObjective) {
+    public void updateLearningObjective(String learningObjective) {
         this.learningObjective = learningObjective;
     }
 }
