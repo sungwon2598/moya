@@ -57,9 +57,9 @@ export class ApiError extends Error {
 
 // Token management
 const TokenManager = {
-  getToken: () =>sessionStorage.getItem("token"),
-  setToken: (token: string) =>sessionStorage.setItem("token", token),
-  removeToken: () =>sessionStorage.removeItem("token"),
+  getToken: () =>sessionStorage.getItem("accessToken"),
+  setToken: (token: string) =>sessionStorage.setItem("refreshToken", token),
+  removeToken: () =>sessionStorage.removeItem("refreshToken"),
 
   isTokenExpired: (token: string): boolean => {
     try {
@@ -85,7 +85,7 @@ export const createAxiosInstance = (): AxiosInstance => {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    withCredentials: true,
+    // withCredentials: true,
     timeout: 30000, // 10 seconds timeout
   });
 
@@ -152,7 +152,6 @@ export const createAxiosInstance = (): AxiosInstance => {
 
         if (originalRequest._retry <= MAX_RETRIES) {
           await sleep(RETRY_DELAY * originalRequest._retry);
-
           try {
             const newToken = await AUTH_API.refreshToken();
             TokenManager.setToken(newToken.token);
@@ -164,7 +163,8 @@ export const createAxiosInstance = (): AxiosInstance => {
           } catch (refreshError) {
             TokenManager.removeToken();
             history.replace("/login");
-            throw new ApiError("Authentication failed", 401);
+            console.log(refreshError)
+            throw new ApiError("Authentication failed", 401,);
           }
         }
       }

@@ -4,7 +4,6 @@ import { ModalProvider } from './core/providers/context/ModalContext';
 import RootLayout from './components/layouts/RootLayout.tsx';
 import Main from './pages/main/MainPage.tsx';
 
-
 // import RoadmapPreview from "./features/roadmap/RoadmapPreview.tsx";
 // import LearningRoad from '@pages/learningRoad/LearningRoad.tsx';
 
@@ -21,7 +20,6 @@ import CategoryManagement from '@pages/category/CategoryManagement.tsx';
 import { ProtectedRoute } from '@/components/features/auth/components/ProtectedRoute.tsx';
 import { AdminRoute } from '@/components/features/auth/components/AdminRoute.tsx';
 
-
 import { StudyCreate } from './pages/study/index.ts';
 import CreateSample from '@pages/create-sample/CreateSample.tsx';
 
@@ -31,10 +29,30 @@ import RoadmapPending from './pages/roadmap/RoadmapPending.tsx';
 import WeeklyPlan from './pages/roadmap/WeeklyPlan.tsx';
 
 import MyRoadmap from './pages/my-info/MyRoadmap.tsx';
+import { MyPage } from './pages/my-info/MyPage.tsx';
 
+import { useEffect } from 'react';
+import { useAuth } from '@/components/features/auth/hooks/useAuth.ts';
+import { TokenStorage } from '@/utils/tokenUtils';
 
 const App: React.FC = () => {
   const queryClient = new QueryClient();
+
+  const { checkAuth } = useAuth();
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = TokenStorage.getAccessToken();
+
+      if (token) {
+        // const payload = JSON.parse(atob(token.split('.')[1]));
+        // console.log(payload);
+        await checkAuth();
+      }
+    };
+
+    initAuth();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -48,6 +66,7 @@ const App: React.FC = () => {
                 <Route path="signup" element={<SignUpPage />} />
                 {/* 내정보 라우트 */}
                 <Route path="my-info">
+                  <Route index element={<MyPage />} />
                   <Route path="roadmap" element={<MyRoadmap />} />
                 </Route>
                 {/* 로드맵 관련 라우트 */}
@@ -85,9 +104,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-
                     <div className="flex items-center justify-center min-h-screen">
-
                       <h1 className="text-2xl font-bold text-gray-800">페이지를 찾을 수 없습니다</h1>
                     </div>
                   }
@@ -99,9 +116,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-
                     <div className="flex items-center justify-center min-h-screen">
-
                       <h1 className="text-2xl font-bold text-gray-800">관리자 페이지를 찾을 수 없습니다</h1>
                     </div>
                   }

@@ -8,7 +8,7 @@ interface NavItemProps {
   icon: LucideIcon;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ label, path, icon: Icon }) => {
+const NavItem: React.FC<NavItemProps> = ({ label, path }) => {
   const location = useLocation();
   const isActive = location.pathname.startsWith(path);
 
@@ -18,8 +18,8 @@ const NavItem: React.FC<NavItemProps> = ({ label, path, icon: Icon }) => {
       className={`hover:text-moya-primary flex items-center space-x-2 px-3 py-2 text-gray-600 transition-colors duration-300 hover:rounded-md hover:bg-gray-50 ${
         isActive ? 'text-moya-primary rounded-md bg-gray-50' : ''
       }`}>
-      <Icon className="h-5 w-5" />
-      <span className="text-sm font-medium">{label}</span>
+      {/* <Icon className="w-5 h-5" /> */}
+      <span className="font-mono text-sm">{label}</span>
     </Link>
   );
 };

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TokenStorage } from '../../components/features/auth/utils/tokenUtils';
+import { TokenStorage } from '@/utils/tokenUtils';
 
 const BASE_URL = 'https://api.moyastudy.com';
 
@@ -92,6 +92,14 @@ export interface StudyApiResponse<T> {
       last: boolean;
     };
   };
+  pagination?: {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+  };
   error?: {
     code: string;
     message: string;
@@ -148,6 +156,7 @@ export const studyApiService = {
       // const response = await axios.get<StudyApiResponse<StudyPost[]>>(`${STUDY_ENDPOINTS.LIST}`);
       // console.log(response);
       const response = await axios.get<StudyApiResponse<StudyPost[]>>(STUDY_ENDPOINTS.LIST(page));
+      console.log(response.data)
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -171,10 +180,12 @@ export const studyApiService = {
     }
   },
 
+
+
   // 스터디 생성
   createPost: async (postData: CreateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
     const token = TokenStorage.getAccessToken();
-    console.log(token);
+    // console.log(token);
     try {
       const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.CREATE, postData, {
         headers: {

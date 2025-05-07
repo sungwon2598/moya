@@ -15,9 +15,6 @@ public class OAuthLoginRequest {
     @Schema(description = "OAuth 인증 코드", required = true)
     private String authCode;
 
-    @Schema(description = "OAuth 자격 증명")
-    private String credential;
-
     @Schema(description = "OAuth 리다이렉트 URI", required = true)
     private String redirectUri;
 }

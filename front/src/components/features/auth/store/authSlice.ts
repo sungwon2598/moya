@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { AuthState, GoogleAuthResponse, User } from '../types/auth.types';
-import { getUserInfo, postGoogleAuth, logout } from '../api/authApi';
-import type { AuthResponseData } from '../api/authApi';
+import { getUserInfo, postGoogleAuth, logout } from '../../../../api/authApi';
+import type { AuthResponseData } from '../../../../api/authApi';
 
 const initialState: AuthState = {
   isLogin: false,

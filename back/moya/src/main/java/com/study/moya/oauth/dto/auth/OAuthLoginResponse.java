@@ -31,6 +31,9 @@ public class OAuthLoginResponse {
     @Schema(description = "액세스 토큰")
     private String accessToken;
 
+    @Schema(description = "리프레쉬 토큰")
+    private String refreshToken;
+
     public static OAuthLoginResponse from(Member member) {
         return OAuthLoginResponse.builder()
                 .email(member.getEmail())
@@ -41,7 +44,7 @@ public class OAuthLoginResponse {
                 .build();
     }
 
-    public static OAuthLoginResponse from(Member member, String accessToken) {
+    public static OAuthLoginResponse from(Member member, String accessToken, String refreshToken) {
         return OAuthLoginResponse.builder()
                 .email(member.getEmail())
                 .nickname(member.getNickname())
@@ -49,6 +52,7 @@ public class OAuthLoginResponse {
                 .status(member.getStatus())
                 .profileImageUrl(member.getProfileImageUrl())
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }
