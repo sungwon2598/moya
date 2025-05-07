@@ -20,7 +20,7 @@ public class RoadmapPromptService {
                 request.getSubCategory(),
                 request.getCurrentLevel(),
                 request.getDuration(),
-                request.getLearningObjective().getDescription()
+                request.getLearningObjective()
         );
     }
 
@@ -36,7 +36,7 @@ public class RoadmapPromptService {
                 request.getSubCategory(),
                 request.getCurrentLevel(),
                 request.getDuration(),
-                request.getLearningObjective().getDescription()
+                request.getLearningObjective()
         );
     }
 

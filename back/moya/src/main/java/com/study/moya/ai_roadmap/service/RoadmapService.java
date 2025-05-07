@@ -45,10 +45,6 @@ public class RoadmapService {
     @Value("${openai.api.models.roadmap_generation.model}")
     private String roadmapModel;
 
-    // etc 타입 상수 정의
-    public static final int MAIN_CATEGORY = 1;    // 대분류(etc1)
-    public static final int SUB_CATEGORY = 2;     // 중분류(etc2)
-
     private final OpenAiService openAiService;
     private final RoadmapPromptService promptService;
     private final RoadmapResponseParser responseParser;
@@ -60,10 +56,14 @@ public class RoadmapService {
     private final CategoryRepository categoryRepository;
     private final MemberRoadMapRepository memberRoadMapRepository;
     private final MemberRepository memberRepository;
+    private final EtcRepository etcRepository;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private static final Long ROADMAP_SERVICE_ID = 1L;
+    // etc 타입 상수 정의
+    public static final Long MAIN_CATEGORY = 1L;    // 대분류(etc1)
+    public static final Long SUB_CATEGORY = 2L;     // 중분류(etc2)
 
     @Async
     public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request, Long memberId) {
@@ -124,12 +124,17 @@ public class RoadmapService {
                 // 응답 파싱
                 WeeklyRoadmapResponse response = responseParser.parseResponse(apiResponse);
 
-                Category category = categoryRepository.findByName(request.getMainCategory())
-                        .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + request.getMainCategory()));
+                Category category = null;
+                if (request.getMainCategory() != null && !request.getMainCategory().trim().isEmpty()) {
+                    // 카테고리가 있는 경우만 찾기
+                    category = categoryRepository.findByName(request.getMainCategory())
+                            .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + request.getMainCategory()));
+                }
 
                 // 파싱된 응답을 엔티티로 저장
                 saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1, request.getSubCategory(),
-                        request.getDuration(), request.getLearningObjective(), response, category, memberId);
+                        request.getDuration(), request.getLearningObjective(), response,
+                        category, memberId, request.getEtc1(), request.getEtc2());
 
                 // 9. AI 사용 내역 완료 처리
                 try {
@@ -159,9 +164,14 @@ public class RoadmapService {
         });
     }
 
-    public Long saveCurriculum(int goalLevel, String topic, int duration, LearningObjective learningObjective,
-                               WeeklyRoadmapResponse response, Category category, Long memberId) {
+    public Long saveCurriculum(int goalLevel, String topic, int duration, String learningObjective,
+                               WeeklyRoadmapResponse response, Category category,
+                               Long memberId, String etc1Name, String etc2Name) {
         log.info("커리큘럼 저장 시작");
+
+        Etc etc1 = createEtc(etc1Name, MAIN_CATEGORY);
+        Etc etc2 = createEtc(etc2Name, SUB_CATEGORY);
+
 
         // RoadMap 생성
         RoadMap roadMap = RoadMap.builder()
@@ -172,6 +182,8 @@ public class RoadmapService {
                 .overallTips(response.getOverallTips())
                 .learningObjective(learningObjective)
                 .category(category)
+                .etc1(etc1)
+                .etc2(etc2)
                 .build();
 
         // 먼저 RoadMap을 저장하여 ID를 확보
@@ -333,6 +345,19 @@ public class RoadmapService {
                 roadMap.getEvaluation(),
                 "없음" // 금지된 주제 여부는 별도 필드가 없어 기본값으로 설정
         );
+    }
+
+    private Etc createEtc(String name, Long etcType){
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+
+        Etc etc = Etc.builder()
+                .name(name)
+                .etcType(etcType)
+                .build();
+
+        return etcRepository.save(etc);
     }
 
     //    @Transactional
