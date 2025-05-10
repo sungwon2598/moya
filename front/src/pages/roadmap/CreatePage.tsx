@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import Title from '../../components/roadmap/Title.tsx';
-import Select from '../../components/roadmap/Select/Select';
+import Title from '../../components/features/roadmap/Title.tsx';
+import Select from '../../components/features/roadmap/Select/Select.tsx';
 import { useRoadmapQuestions } from '@/features/roadmap/hooks/useRoadmapQuestions';
-import Progress from '@/components/roadmap/Progress';
+import Progress from '@/components/features/roadmap/Progress.tsx';
 export interface RoadmapQuestionStageType {
   currentStatusNumber: number;
 }
 
 export type AnswerItem = {
-  questionNumber: number | string;
-  name?: string;
-  choiceId: string;
-  choiceValue: string | number;
+  questionNumber: number | string; //질문 인덱스 +1
+  name?: string; //질문 id
+  choiceId: string; // 선택 값 Id
+  choiceValue: string | number; // 선택값
 };
 
 export default function CreatePage() {
