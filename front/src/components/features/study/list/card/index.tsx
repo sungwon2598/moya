@@ -2,6 +2,7 @@ import { Card, Button, Avatar } from '@/components/shared/ui';
 import { Badge } from '@/components/shared/ui/badge';
 import { CalendarDays, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/components/features/auth/hooks/useAuth';
 
 interface StudyCardProps {
   title: string;
@@ -61,6 +62,8 @@ export const StudyCard = ({
     }
   };
 
+  const { user } = useAuth();
+
   return (
     <Card.Card
       className="transition-shadow duration-200 border-none w-m hover:shadow-lg"
@@ -101,7 +104,7 @@ export const StudyCard = ({
         </Card.CardContent>
         <Card.CardFooter className="flex h-[60px] items-center justify-between">
           <Avatar.Avatar>
-            <Avatar.AvatarImage src={creator.avatar} />
+            <Avatar.AvatarImage src={user?.data.profileImageUrl} />
             <Avatar.AvatarFallback>{creator.name[0]}</Avatar.AvatarFallback>
           </Avatar.Avatar>
           <Button variant="outline">상세보기</Button>

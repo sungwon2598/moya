@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Category, CreateStudyDTO, studyApiService } from '@/core/config/studyApiConfig';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Category, StudyPost, studyApiService, UpdateStudyDTO } from '@/core/config/studyApiConfig';
 import 'react-quill/dist/quill.snow.css';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,20 +15,23 @@ import { cn } from '@/lib/utils';
 
 import { ko } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
-import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
+import 'react-day-picker/dist/style.css';
 
 import { postSchema } from '@/schema';
 import { toast } from 'sonner';
-// import { axiosInstance } from '../../../core/config/apiConfig';
+import { useAuth } from '@/components/features/auth/hooks/useAuth';
 
 type FormValues = z.infer<typeof postSchema>;
 
-const StudyCreate = () => {
+const StudyEdit = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { postId } = useParams<{ postId: string }>();
   const [loading, setLoading] = useState(false);
   const [isOpenStartDate, setIsOpenStartDate] = useState(false);
   const [isOpenEndDate, setIsOpenEndDate] = useState(false);
+  const [post, setPost] = useState<StudyPost | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const { isAuthenticated, user } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(postSchema),
@@ -64,6 +67,44 @@ const StudyCreate = () => {
   ];
 
   useEffect(() => {
+    const fetchPost = async () => {
+      if (!postId) return;
+      try {
+        setLoading(true);
+        const response = await studyApiService.getStudyDetail(parseInt(postId));
+        setPost(response.data);
+
+        // 본인이 작성한 글이 아니면 리디렉션
+        if (user?.data.nickname !== response.data.authorName) {
+          toast('자신이 작성한 글만 수정할 수 있습니다.', {
+            description: '',
+          });
+          navigate(`/study/${postId}`);
+          return;
+        }
+
+        // 폼에 데이터 설정
+        form.reset({
+          title: response.data.title,
+          content: response.data.content,
+          recruits: response.data.recruits.toString(),
+          expectedPeriod: response.data.expectedPeriod,
+          studies: Array.isArray(response.data.studies) ? response.data.studies[0] : response.data.studies,
+          studyDetails: response.data.studyDetails || [],
+          startDate: new Date(response.data.startDate),
+          endDate: new Date(response.data.endDate),
+        });
+      } catch (error) {
+        console.error('스터디 정보를 불러오는데 실패했습니다:', error);
+        toast('스터디 정보를 불러오는데 실패했습니다', {
+          description: '잠시 후 다시 시도해주세요',
+        });
+        navigate('/study');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const fetchCategories = async () => {
       try {
         const response = await studyApiService.getCategoriesHierarchy();
@@ -73,8 +114,18 @@ const StudyCreate = () => {
       }
     };
 
+    // 로그인 상태 확인
+    if (!isAuthenticated) {
+      toast('로그인이 필요한 서비스입니다.', {
+        description: '',
+      });
+      navigate('/login');
+      return;
+    }
+
+    fetchPost();
     fetchCategories();
-  }, []);
+  }, [postId, form, navigate, isAuthenticated, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,16 +161,14 @@ const StudyCreate = () => {
     ],
   };
 
-  // const postRoadmapFormData = async (postData: any) => {
-  //   const { data } = await axiosInstance.post('/api/posts', postData);
-  //   return data;
-  // };
-
   const onSubmit = async (values: FormValues) => {
     try {
+      if (!postId || !post) return;
+
       setLoading(true);
 
-      const postData: CreateStudyDTO = {
+      const updateData: UpdateStudyDTO = {
+        postId: parseInt(postId),
         title: values.title,
         content: values.content,
         recruits: parseInt(values.recruits),
@@ -130,22 +179,32 @@ const StudyCreate = () => {
         endDate: values.endDate.toISOString(),
       };
 
-      // await postRoadmapFormData(postData);
+      await studyApiService.updatePost(parseInt(postId), updateData);
 
-      await studyApiService.createPost(postData);
-      navigate('/study');
-      toast('스터디 등록이 완료되었습니다', {
+      navigate(`/study/${postId}`);
+      toast('스터디 수정이 완료되었습니다', {
         description: '',
       });
     } catch (error) {
-      console.error('스터디 생성에 실패했습니다:', error);
-      toast('스터디 등록에 실패했습니다.', {
-        description: '',
+      console.error('스터디 수정에 실패했습니다:', error);
+      toast('스터디 수정에 실패했습니다.', {
+        description: '잠시 후 다시 시도해주세요',
       });
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading || !post) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-8 h-8 mx-auto mb-3 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div>
+          <p className="text-gray-600">스터디 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   const getCategoryOptions = () => {
     const options: { value: string; label: string }[] = [];
@@ -170,17 +229,17 @@ const StudyCreate = () => {
       {/* 헤더 부분 */}
       <div className="max-w-3xl mx-auto mb-5">
         <button
-          onClick={() => navigate('/study')}
+          onClick={() => navigate(`/study/${postId}`)}
           className="flex items-center gap-1 px-4 py-2 text-gray-500 transition-colors rounded-lg duration-400 hover:text-gray-600">
           <ChevronLeft className="w-4 h-4" />
-          <span>스터디 목록</span>
+          <span>스터디 상세로 돌아가기</span>
         </button>
       </div>
 
       <Card.Card className="max-w-3xl px-4 py-6 mx-auto bg-white border-0 shadow-sm rounded-2xl">
         <Card.CardHeader className="px-6 pb-8">
-          <Card.CardTitle className="text-2xl font-bold text-gray-800">스터디 모집하기</Card.CardTitle>
-          <p className="text-gray-600">필요한 정보를 입력하여 새로운 스터디를 등록해보세요</p>
+          <Card.CardTitle className="text-2xl font-bold text-gray-800">스터디 수정하기</Card.CardTitle>
+          <p className="text-gray-600">스터디 정보를 수정할 수 있습니다</p>
         </Card.CardHeader>
 
         <Card.CardContent className="px-6">
@@ -328,7 +387,7 @@ const StudyCreate = () => {
                             data-calendar="start"
                             type="button"
                             onClick={(e) => {
-                              e.preventDefault(); // 폼 제출 방지
+                              e.preventDefault();
                               const newState = !isOpenStartDate;
                               setIsOpenStartDate(newState);
                               if (isOpenEndDate && newState) setIsOpenEndDate(false);
@@ -347,14 +406,15 @@ const StudyCreate = () => {
                               mode="single"
                               selected={field.value}
                               onSelect={(date) => {
-                                field.onChange(date);
-                                setIsOpenStartDate(false);
+                                if (date) {
+                                  field.onChange(date);
+                                  setIsOpenStartDate(false);
+                                }
                               }}
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
                               className="absolute left-0 z-50 p-3 bg-white border rounded-md shadow-lg top-full"
-                              disabled={[{ before: form.getValues('endDate') || new Date() }]}
                             />
                           )}
                         </div>
@@ -381,7 +441,7 @@ const StudyCreate = () => {
                             data-calendar="end"
                             type="button"
                             onClick={(e) => {
-                              e.preventDefault(); // 폼 제출 방지
+                              e.preventDefault();
                               const newState = !isOpenEndDate;
                               setIsOpenEndDate(newState);
                               if (isOpenStartDate && newState) setIsOpenStartDate(false);
@@ -400,14 +460,15 @@ const StudyCreate = () => {
                               mode="single"
                               selected={field.value}
                               onSelect={(date) => {
-                                field.onChange(date);
-                                setIsOpenEndDate(false);
+                                if (date) {
+                                  field.onChange(date);
+                                  setIsOpenEndDate(false);
+                                }
                               }}
                               locale={ko}
                               showOutsideDays
                               fixedWeeks
                               className="absolute left-0 z-50 p-3 mt-1 bg-white border rounded-md shadow-lg top-full"
-                              // disabled={[{ before: form.getValues('startDate') || new Date() }]}
                             />
                           )}
                         </div>
@@ -444,7 +505,7 @@ const StudyCreate = () => {
                         </div>
                       </Form.FormControl>
                       <Form.FormDescription className="mt-2 text-sm text-gray-500">
-                        스터디의 목표, 진행 방식, 일정, 예상 결과물 등을 상세히 작성해주세요.
+                        스터디 내용을 수정해주세요.
                       </Form.FormDescription>
                     </Form.FormItem>
                   )}
@@ -452,12 +513,15 @@ const StudyCreate = () => {
               </div>
 
               <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <h3 className="mb-2 text-sm font-medium text-gray-700">💡 스터디 소개 작성 팁</h3>
+                <h3 className="mb-2 text-sm font-medium text-gray-700">💡 수정 가능한 항목</h3>
                 <ul className="space-y-1 text-sm text-gray-600">
-                  <li>• 스터디의 목표와 방향성을 명확히 설명해주세요</li>
-                  <li>• 진행 일정과 방식에 대해 구체적으로 작성해주세요</li>
-                  <li>• 참여자에게 기대하는 역할과 준비물이 있다면 언급해주세요</li>
-                  <li>• 스터디 종료 후 예상되는 결과물이 있다면 소개해주세요</li>
+                  <li>• 제목: 스터디 제목을 수정할 수 있습니다</li>
+                  <li>• 모집 구분: 스터디 카테고리를 변경할 수 있습니다</li>
+                  <li>• 모집인원: 필요한 인원 수를 조정할 수 있습니다</li>
+                  <li>• 예상 진행 기간: 스터디 진행 예상 기간을 변경할 수 있습니다</li>
+                  <li>• 스터디 시작일: 스터디 시작 날짜를 변경할 수 있습니다</li>
+                  <li>• 모집 마감일: 모집 마감일을 연장하거나 단축할 수 있습니다</li>
+                  <li>• 내용: 스터디 상세 내용을 수정할 수 있습니다</li>
                 </ul>
               </div>
 
@@ -466,8 +530,8 @@ const StudyCreate = () => {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    navigate('/study');
-                    toast('스터디 등록이 취소되었습니다', {
+                    navigate(`/study/${postId}`);
+                    toast('스터디 수정이 취소되었습니다', {
                       description: '',
                     });
                   }}
@@ -482,10 +546,10 @@ const StudyCreate = () => {
                   {loading ? (
                     <div className="flex items-center">
                       <div className="w-4 h-4 mr-2 border-2 border-white rounded-full animate-spin border-t-transparent"></div>
-                      <span>등록 중...</span>
+                      <span>수정 중...</span>
                     </div>
                   ) : (
-                    '스터디 등록하기'
+                    '스터디 수정하기'
                   )}
                 </Button>
               </div>
@@ -497,4 +561,4 @@ const StudyCreate = () => {
   );
 };
 
-export { StudyCreate };
+export { StudyEdit };

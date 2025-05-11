@@ -34,6 +34,7 @@ import { MyPage } from './pages/my-info/MyPage.tsx';
 import { useEffect } from 'react';
 import { useAuth } from '@/components/features/auth/hooks/useAuth.ts';
 import { TokenStorage } from '@/utils/tokenUtils';
+import { StudyEdit } from './pages/study/edit/index.tsx';
 
 const App: React.FC = () => {
   const queryClient = new QueryClient();
@@ -43,6 +44,9 @@ const App: React.FC = () => {
   useEffect(() => {
     const initAuth = async () => {
       const token = TokenStorage.getAccessToken();
+      if (token) {
+        console.log('토큰 만료? ', TokenStorage.isTokenExpired(token));
+      }
 
       if (token) {
         // const payload = JSON.parse(atob(token.split('.')[1]));
@@ -84,6 +88,7 @@ const App: React.FC = () => {
                   <Route index element={<StudyList />} />
                   <Route path=":postId" element={<StudyPostDetail />} />
                   <Route path="create" element={<StudyCreate />} />
+                  <Route path=":postId/edit" element={<StudyEdit />} />
                 </Route>
 
                 <Route

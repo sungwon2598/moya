@@ -59,7 +59,7 @@ export const createAxiosInstance = (): AxiosInstance => {
       const token = TokenStorage.getAccessToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        
+      
         // 토큰이 만료된 경우 갱신 시도
         if (
           TokenStorage.isTokenExpired(token) &&

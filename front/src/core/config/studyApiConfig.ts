@@ -191,7 +191,7 @@ export const studyApiService = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        withCredentials: true,
+        // withCredentials: true,
       });
       console.log('게시글 생성완료');
       console.log(response);
@@ -207,8 +207,14 @@ export const studyApiService = {
 
   // 스터디 수정
   updatePost: async (postId: number, postData: UpdateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
+    const token = TokenStorage.getAccessToken();
+    
     try {
-      const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.UPDATE(postId), postData);
+      const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.UPDATE(postId), postData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -220,8 +226,13 @@ export const studyApiService = {
 
   // 스터디 삭제
   deletePost: async (postId: number): Promise<StudyApiResponse<void>> => {
+    const token = TokenStorage.getAccessToken();
     try {
-      const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.DELETE(postId));
+      const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.DELETE(postId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -233,8 +244,13 @@ export const studyApiService = {
 
   // 좋아요 추가
   addLike: async (postId: number): Promise<StudyApiResponse<void>> => {
+    const token = TokenStorage.getAccessToken();
     try {
-      const response = await axios.post<StudyApiResponse<void>>(STUDY_ENDPOINTS.LIKE(postId));
+      const response = await axios.post<StudyApiResponse<void>>(STUDY_ENDPOINTS.LIKE(postId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
