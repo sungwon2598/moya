@@ -138,9 +138,9 @@ export default function Select({
                 }
               }
             }}>
-            {questions[currentStatusNumber - 1]?.choices.map((item) => {
+            {questions[currentStatusNumber - 1]?.choices.map((item, i) => {
               return item.id === 'custom' ? (
-                <>
+                <div key={i}>
                   {currentStatusNumber === 2 && (
                     <>
                       <h5>{customSliderValue}</h5>
@@ -191,7 +191,7 @@ export default function Select({
                       )}
                     </label>
                   )}
-                </>
+                </div>
               ) : (
                 <label
                   key={item.id}

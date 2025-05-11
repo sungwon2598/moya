@@ -18,7 +18,7 @@ export default function MyRoadmap() {
   };
   return (
     <div className="@container mx-auto p-4">
-      {roadmapList ? (
+      {roadmapList?.length > 0 ? (
         <div>
           <h3>내 로드맵</h3>
           <section className="mt-6 grid grid-cols-4">
