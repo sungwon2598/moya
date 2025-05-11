@@ -65,7 +65,7 @@ public class RoadmapService {
     public static final Long MAIN_CATEGORY = 1L;    // 대분류(etc1)
     public static final Long SUB_CATEGORY = 2L;     // 중분류(etc2)
 
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request, Long memberId) {
         return CompletableFuture.supplyAsync(() -> {
             log.info("로드맵 생성 시작");

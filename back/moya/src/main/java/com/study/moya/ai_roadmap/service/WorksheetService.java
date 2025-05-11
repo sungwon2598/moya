@@ -10,18 +10,20 @@ import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
 import com.theokanning.openai.service.OpenAiService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -38,30 +40,49 @@ public class WorksheetService {
     private final WorksheetPromptService promptService;
     private final WorksheetResponseParser worksheetResponseParser;
     private final DailyPlanRepository dailyPlanRepository;
+    @Qualifier("taskExecutor")
+    private final ThreadPoolTaskExecutor taskExecutor;
 
-    @Async
+    @Async("taskExecutor")
     @Transactional
     public CompletableFuture<Void> generateAllWorksheets(Long roadmapId, WorkSheetRequest request) {
-        return CompletableFuture.runAsync(() -> {
-            log.info("로드맵 ID: {}의 전체 학습지 생성 시작", roadmapId);
+        log.info("로드맵 ID: {}의 전체 학습지 생성 시작", roadmapId);
+        log.info("현재 스레드: {}, 활성 스레드 수: {}, 풀 크기: {}",
+                Thread.currentThread().getName(), taskExecutor.getActiveCount(), taskExecutor.getPoolSize());
 
-            List<DailyPlan> allDailyPlans = dailyPlanRepository.findAllByWeeklyPlan_RoadMap_IdOrderByDayNumber(
-                    roadmapId);
+        try {
+            List<DailyPlan> allDailyPlans = dailyPlanRepository.findAllByWeeklyPlan_RoadMap_IdOrderByDayNumber(roadmapId);
             List<List<DailyPlan>> groupedPlans = splitIntoGroups(allDailyPlans, 3);
 
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
             for (List<DailyPlan> planGroup : groupedPlans) {
-                try {
-                    generateWorksheetForGroup(planGroup, request);
-                    // API 요청 제한을 고려한 대기 시간
-                    Thread.sleep(DELAY_MS);
-                } catch (Exception e) {
-                    log.error("그룹 학습지 생성 중 오류 발생: {}일차 그룹, 오류: {}",
-                            planGroup.getFirst().getDayNumber(), e.getMessage());
-                }
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    log.info("그룹 처리 시작 - 스레드: {}, 일차: {} ~ {}",
+                            Thread.currentThread().getName(),
+                            planGroup.getFirst().getDayNumber(),
+                            planGroup.getLast().getDayNumber());
+
+                    try {
+                        generateWorksheetForGroup(planGroup, request);
+                    } catch (Exception e) {
+                        log.error("그룹 학습지 생성 중 오류: {}일차 그룹, 오류: {}",
+                                planGroup.getFirst().getDayNumber(), e.getMessage(), e);
+                    }
+
+                    log.info("그룹 처리 완료 - 스레드: {}", Thread.currentThread().getName());
+                }, taskExecutor); // 중요: 동일한 taskExecutor 사용
+
+                futures.add(future);
             }
 
-            log.info("로드맵 ID: {}의 전체 학습지 생성 완료", roadmapId);
-        });
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        } catch (Exception e) {
+            log.error("학습지 생성 준비 중 오류: {}", e.getMessage(), e);
+            CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+            failedFuture.completeExceptionally(e);
+            return failedFuture;
+        }
     }
 
     private List<List<DailyPlan>> splitIntoGroups(List<DailyPlan> allPlans, int groupSize) {

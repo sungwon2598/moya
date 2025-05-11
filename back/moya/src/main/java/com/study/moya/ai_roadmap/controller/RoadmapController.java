@@ -5,6 +5,7 @@ import com.study.moya.ai_roadmap.dto.request.WorkSheetRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
+import com.study.moya.ai_roadmap.dto.response.WorksheetStatusResponse;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import com.study.moya.ai_roadmap.service.WorksheetService;
 import com.study.moya.error.constants.CommonErrorCode;
@@ -120,5 +121,19 @@ public class RoadmapController {
     @GetMapping("/roadmaps/{roadMapId}")
     public ResponseEntity<WeeklyRoadmapResponse> getRoadMap(@PathVariable Long roadMapId){
         return ResponseEntity.ok(roadMapService.getRoadmapById(roadMapId));
+    }
+
+    @GetMapping("/{roadmapId}/worksheets/status")
+    public ResponseEntity<WorksheetStatusResponse> getWorksheetStatus(@PathVariable Long roadmapId) {
+        long progress = worksheetService.getWorksheetProgress(roadmapId);
+        boolean isCompleted = progress >= 100;
+
+        WorksheetStatusResponse response = new WorksheetStatusResponse(
+                isCompleted,
+                progress,
+                isCompleted ? "완료" : "진행 중"
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
