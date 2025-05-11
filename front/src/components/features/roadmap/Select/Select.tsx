@@ -1,7 +1,7 @@
 import { Button } from '@/components/shared/ui/button';
 import { Question } from '@/features/roadmap/hooks/useRoadmapQuestions';
 import { AnswerItem, RoadmapQuestionStageType } from '@/pages/roadmap/CreatePage';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import ChoseKeyword from './ChoseKeyword';
 import { Slider } from '@/components/shared/ui/slider';
@@ -138,9 +138,9 @@ export default function Select({
                 }
               }
             }}>
-            {questions[currentStatusNumber - 1]?.choices.map((item, i) => {
+            {questions[currentStatusNumber - 1]?.choices.map((item) => {
               return item.id === 'custom' ? (
-                <div key={i}>
+                <Fragment key={item.id}>
                   {currentStatusNumber === 2 && (
                     <>
                       <h5>{customSliderValue}</h5>
@@ -156,42 +156,40 @@ export default function Select({
                   {currentStatusNumber !== 2 && (
                     <label
                       key={item.id}
-                      className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 group w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50 p-6 transition hover:border-neutral-900 hover:bg-neutral-100">
-                      {currentStatusNumber !== 2 && (
-                        <>
-                          <input
-                            type="radio"
-                            name="roadmap"
-                            className="hidden"
-                            onChange={() => setSelectedValue({ id: item.id, name: customInputValue })}
-                            checked={
-                              answers?.find((a) => a.questionNumber === currentStatusNumber)?.choiceId === item.id ||
-                              selectedValue?.id === item.id
+                      className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 group cursor-pointer rounded-lg border border-neutral-500 bg-amber-200 bg-neutral-50 p-6 transition hover:border-neutral-900 hover:bg-neutral-100">
+                      <>
+                        <input
+                          type="radio"
+                          name="roadmap"
+                          className="hidden"
+                          onChange={() => setSelectedValue({ id: item.id, name: customInputValue })}
+                          checked={
+                            answers?.find((a) => a.questionNumber === currentStatusNumber)?.choiceId === item.id ||
+                            selectedValue?.id === item.id
+                          }
+                        />
+                        <input
+                          type={currentStatusNumber === 2 ? 'number' : 'text'}
+                          className="inline w-full bg-transparent focus:outline-none"
+                          placeholder={item.name}
+                          value={
+                            selectedValue?.id === item.id
+                              ? customInputValue
+                              : (answers?.find(
+                                  (a) => a.questionNumber === currentStatusNumber && a.choiceId === item.id
+                                )?.choiceValue as string) || ''
+                          }
+                          onChange={handleCustomInputChange}
+                          onClick={() => {
+                            if (selectedValue?.id !== item.id) {
+                              setSelectedValue({ id: item.id, name: customInputValue });
                             }
-                          />
-                          <input
-                            type={currentStatusNumber === 2 ? 'number' : 'text'}
-                            className="inline w-full bg-transparent focus:outline-none"
-                            placeholder={item.name}
-                            value={
-                              selectedValue?.id === item.id
-                                ? customInputValue
-                                : (answers?.find(
-                                    (a) => a.questionNumber === currentStatusNumber && a.choiceId === item.id
-                                  )?.choiceValue as string) || ''
-                            }
-                            onChange={handleCustomInputChange}
-                            onClick={() => {
-                              if (selectedValue?.id !== item.id) {
-                                setSelectedValue({ id: item.id, name: customInputValue });
-                              }
-                            }}
-                          />
-                        </>
-                      )}
+                          }}
+                        />
+                      </>
                     </label>
                   )}
-                </div>
+                </Fragment>
               ) : (
                 <label
                   key={item.id}

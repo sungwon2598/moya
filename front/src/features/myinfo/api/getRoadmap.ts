@@ -3,12 +3,22 @@ import { useQuery } from '@tanstack/react-query';
 
 const getMyRoadmapListData = async () => {
   const { data } = await axiosInstance.get('/api/roadmap/myroadmaps');
-  console.log(data);
+  return data;
+};
+const getMyRoadmapDetailData = async (id: number) => {
+  const { data } = await axiosInstance.get(`/api/roadmap/myroadmaps/${id}`);
   return data;
 };
 export const useMyRoadmapList = () => {
   return useQuery({
-    queryKey: ['myRoadmapForm'],
+    queryKey: ['myRoadmapList'],
     queryFn: getMyRoadmapListData,
+  });
+};
+export const useRoadmapDetail = (id: number) => {
+  return useQuery({
+    queryKey: ['RoadmapDetail', id],
+    queryFn: () => getMyRoadmapDetailData(id),
+    enabled: !!id,
   });
 };

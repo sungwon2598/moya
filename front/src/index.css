@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -7,15 +7,17 @@
   --color-moya-secondary: #2a83fc;
   --color-moya-background: #f5f5f8;
   --color-moya-black: #333;
-  --font-sans: "Pretendard Variable", Pretendard, -apple-system,
-    BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
-    "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "sans-serif";
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'sans-serif';
 }
 
 @layer base {
   body:not(.adminator-body) {
-    @apply pt-16 bg-gray-50;
+    @apply bg-gray-50 pt-16;
+  }
+  :lang(ko) {
+    word-break: keep-all;
   }
 
   :root {
@@ -230,7 +232,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 ;
+    @apply border-border outline-ring/50;
   }
   /* text-neutral-900 - hover로 인해 제거 */
 
@@ -347,4 +349,3 @@
 .animate-spin-slow {
   animation: spin 2s linear infinite;
 }
-
