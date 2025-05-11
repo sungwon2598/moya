@@ -28,13 +28,14 @@ import CreatePage from './pages/roadmap/CreatePage.tsx';
 import RoadmapPending from './pages/roadmap/RoadmapPending.tsx';
 import WeeklyPlan from './pages/roadmap/WeeklyPlan.tsx';
 
-import MyRoadmap from './pages/my-info/MyRoadmap.tsx';
+import MyRoadmap from './pages/my-info/Roadmap/MyRoadmap.tsx';
 import { MyPage } from './pages/my-info/MyPage.tsx';
 
 import { useEffect } from 'react';
 import { useAuth } from '@/components/features/auth/hooks/useAuth.ts';
 import { TokenStorage } from '@/utils/tokenUtils';
 import { StudyEdit } from './pages/study/edit/index.tsx';
+import RoadmapDetail from './pages/my-info/Roadmap/RoadmapDetail.tsx';
 
 const App: React.FC = () => {
   const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App: React.FC = () => {
                 <Route path="my-info">
                   <Route index element={<MyPage />} />
                   <Route path="roadmap" element={<MyRoadmap />} />
+                  <Route path="roadmap/:roadmapId" element={<RoadmapDetail />} />
                 </Route>
                 {/* 로드맵 관련 라우트 */}
                 <Route path="roadmap">
@@ -109,7 +111,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex items-center justify-center min-h-screen">
+                    <div className="flex min-h-screen items-center justify-center">
                       <h1 className="text-2xl font-bold text-gray-800">페이지를 찾을 수 없습니다</h1>
                     </div>
                   }
@@ -121,7 +123,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex items-center justify-center min-h-screen">
+                    <div className="flex min-h-screen items-center justify-center">
                       <h1 className="text-2xl font-bold text-gray-800">관리자 페이지를 찾을 수 없습니다</h1>
                     </div>
                   }

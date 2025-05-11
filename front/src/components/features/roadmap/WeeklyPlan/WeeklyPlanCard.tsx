@@ -47,8 +47,14 @@ export default function WeeklyPlanCard({ weeks }: CardProps) {
       setTimeout(() => {
         gone.clear();
         api.start((i) => to(i));
-      }, 600);
+      }, 300);
   });
+
+  //다시보기
+  const resetCards = () => {
+    gone.clear();
+    api.start((i) => to(i));
+  };
   //더블클릭했을때
   const HandlerCardDoubleClick = (i: number) => {
     gone.add(i);
@@ -66,40 +72,40 @@ export default function WeeklyPlanCard({ weeks }: CardProps) {
     });
     if (gone.size === weeks.length) {
       setTimeout(() => {
-        gone.clear();
-        api.start((i) => to(i));
+        resetCards();
       }, 600);
     }
   };
-  //다시보기
-  const resetCards = () => {
-    gone.clear();
-  };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="relative flex h-screen items-center justify-center">
       {props.map(({ x, y, rot, scale }, i) => {
         const isGone = gone.has(i);
         return (
           <animated.div
             key={i}
             style={{
+              zIndex: weeks.length - i,
               x,
               y,
-            }}>
+            }}
+            className={'absolute top-12 w-3/5'}>
             <animated.div
               {...bind(i)}
               onDoubleClick={() => HandlerCardDoubleClick(i)}
               style={{
-                zIndex: i,
                 transform: interpolate([rot, scale], trans),
                 display: isGone ? 'none' : 'block',
                 touchAction: 'none',
               }}
-              className="w-full cursor-grab select-none rounded border border-neutral-200 bg-amber-300 px-3 pt-4 shadow-lg">
+              className="w-full cursor-grab select-none rounded-xl border bg-white p-6 px-3 pt-4 shadow-lg">
               <div className="border-b">
-                <h6 className="text-moya-primary">{weeks[i].week}주차</h6>
-                <h5 className="py-2">{weeks[i].weeklyKeyword}</h5>
+                <h6 className="text-moya-primary">
+                  <span className="text-sm">{weeks[i].week}주차</span>
+                </h6>
+                <h5 className="py-2">
+                  <span className="text-2xl">{weeks[i].weeklyKeyword}</span>
+                </h5>
                 {weeks[i].dailyPlans.map((day, index) => (
                   <p key={day.day} className={`flex ${index < weeks[i].dailyPlans.length - 1 ? 'border-b' : ''}`}>
                     <span className="mr-2 inline-block basis-1/5 border-r py-1 text-center text-neutral-700">
@@ -113,9 +119,10 @@ export default function WeeklyPlanCard({ weeks }: CardProps) {
           </animated.div>
         );
       })}
-      <Button onClick={resetCards} className="mt-4">
-        다시 보기
-      </Button>
+      <div className="mt-60 text-center">
+        <p className="p-3 text-sm text-neutral-600">더블클릭하거나 드레그 하면 다음 주차 내용이 보여요.</p>
+        <Button onClick={resetCards}>1주차 다시 보기</Button>
+      </div>
     </div>
   );
 }
