@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Title from '../../components/features/roadmap/Title.tsx';
 import Select from '../../components/features/roadmap/Select/Select.tsx';
 import { useRoadmapQuestions } from '@/features/roadmap/hooks/useRoadmapQuestions';
-import Progress from '@/components/features/roadmap/Progress.tsx';
+import Progress from '@/components/features/roadmap/Select/Progress.tsx';
 export interface RoadmapQuestionStageType {
   currentStatusNumber: number;
 }

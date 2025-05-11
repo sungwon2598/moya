@@ -1,45 +1,46 @@
-import { defineConfig, loadEnv, UserConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
+import { defineConfig, loadEnv, UserConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
-import path from "path";
+import path from 'path';
 
 export default defineConfig(({ mode }): UserConfig => {
-  const env = loadEnv(mode, process.cwd(), "");
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react(), tailwindcss()],
+    base: '/',
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
-        "@core": path.resolve(__dirname, "./src/core"),
-        "@features": path.resolve(__dirname, "./src/features"),
-        "@pages": path.resolve(__dirname, "./src/pages"),
-        "@shared": path.resolve(__dirname, "./src/shared"),
-        "@styles": path.resolve(__dirname, "./src/styles"),
-        "@types": path.resolve(__dirname, "./src/core/types"),
-        "@store": path.resolve(__dirname, "./src/core/store"),
-        "@config": path.resolve(__dirname, "./src/core/config"),
+        '@': path.resolve(__dirname, './src'),
+        '@core': path.resolve(__dirname, './src/core'),
+        '@features': path.resolve(__dirname, './src/features'),
+        '@pages': path.resolve(__dirname, './src/pages'),
+        '@shared': path.resolve(__dirname, './src/shared'),
+        '@styles': path.resolve(__dirname, './src/styles'),
+        '@types': path.resolve(__dirname, './src/core/types'),
+        '@store': path.resolve(__dirname, './src/core/store'),
+        '@config': path.resolve(__dirname, './src/core/config'),
       },
     },
     define: {
-      "process.env": JSON.stringify(env),
+      'process.env': JSON.stringify(env),
     },
     build: {
-      outDir: "dist",
+      outDir: 'dist',
       emptyOutDir: true,
       sourcemap: true, // 개발 디버깅을 위해 true로 설정
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ["react", "react-dom", "react-router-dom"],
+            vendor: ['react', 'react-dom', 'react-router-dom'],
           },
-          chunkFileNames: "assets/js/[name]-[hash].js",
-          entryFileNames: "assets/js/[name]-[hash].js",
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
           assetFileNames: (assetInfo) => {
-            if (!assetInfo.name) return "assets/[name]-[hash][extname]";
+            if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
 
-            const info = assetInfo.name.split(".");
+            const info = assetInfo.name.split('.');
             const extType = info[info.length - 1];
 
             if (/\.(png|jpe?g|gif|svg|webp|ico)$/.test(assetInfo.name)) {
@@ -55,7 +56,7 @@ export default defineConfig(({ mode }): UserConfig => {
           },
         },
         input: {
-          main: path.resolve(__dirname, "index.html"),
+          main: path.resolve(__dirname, 'index.html'),
         },
       },
       chunkSizeWarningLimit: 1000,
@@ -66,7 +67,6 @@ export default defineConfig(({ mode }): UserConfig => {
       open: true,
       cors: true,
       proxy: {
-
         '/api': {
           target: 'https://api.moyastudy.com',
 

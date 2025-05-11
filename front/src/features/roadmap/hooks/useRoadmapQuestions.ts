@@ -90,10 +90,6 @@ export function useRoadmapQuestions() {
         choices: [
           { id: 0, name: '입문자' },
           { id: 1, name: '초급자' },
-          { id: 2, name: '중급자' },
-          { id: 3, name: '상급자' },
-          { id: 4, name: '전문가' },
-          { id: 5, name: '마스터' },
         ],
       },
     ]);
