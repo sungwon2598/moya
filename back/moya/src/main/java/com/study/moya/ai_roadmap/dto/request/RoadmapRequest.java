@@ -18,7 +18,6 @@ public class RoadmapRequest {
     @Schema(description = "중분류", example = "프로그래밍 언어")
     private String mainCategory; // 중분류
 
-    @NotBlank(message = "Subcategory is required")
     @Schema(description = "주제", example = "C#")
     private String subCategory; // 주제
 
