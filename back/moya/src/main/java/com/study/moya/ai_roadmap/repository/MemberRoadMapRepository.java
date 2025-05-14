@@ -23,10 +23,13 @@ public interface MemberRoadMapRepository extends JpaRepository<MemberRoadMap, Lo
 
     @Query("SELECT new com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO(" +
             "r.id, " +                // 1번째 파라미터 (id)
-            "r.category.name, " +     // 2번째 파라미터 (mainCategory)
+//            "r.category.name, " +     // 2번째 파라미터 (mainCategory)
+            "COALESCE(r.category.name, r.etc2.name), " +
             "r.topic, " +             // 3번째 파라미터 (subCategory)
             "r.duration) " +          // 4번째 파라미터 (duration)
             "FROM MemberRoadMap mr JOIN mr.roadMap r " +
+            "LEFT JOIN r.category " +
+            "LEFT JOIN r.etc2 " +
             "WHERE mr.member.id = :memberId")
     List<RoadMapSummaryDTO> findRoadMapSummariesByMemberId(@Param("memberId") Long memberId);
 
