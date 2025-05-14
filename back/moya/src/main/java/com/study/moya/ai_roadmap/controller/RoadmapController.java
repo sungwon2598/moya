@@ -8,6 +8,7 @@ import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.dto.response.WorksheetStatusResponse;
 import com.study.moya.ai_roadmap.service.RoadmapService;
 import com.study.moya.ai_roadmap.service.WorksheetService;
+import com.study.moya.error.constants.AuthErrorCode;
 import com.study.moya.error.constants.CommonErrorCode;
 import com.study.moya.swagger.annotation.SwaggerErrorDescription;
 import com.study.moya.swagger.annotation.SwaggerErrorDescriptions;
@@ -100,7 +101,7 @@ public class RoadmapController {
     @Operation(summary = "내 로드맵 목록 조회", description = "현재 로그인한 회원의 로드맵 목록을 조회합니다.")
     @SwaggerSuccessResponse(value = List.class, name = "내 로드맵 목록 조회 성공")
     @SwaggerErrorDescriptions({
-            @SwaggerErrorDescription(name = "인증 필요", description = "로그인이 필요한 서비스입니다.", value = CommonErrorCode.class, code = "UNAUTHORIZED")
+            @SwaggerErrorDescription(name = "인증 필요", description = "로그인이 필요한 서비스입니다.", value = AuthErrorCode.class, code = "UNAUTHORIZED")
     })
     @GetMapping("/myroadmaps")
     public ResponseEntity<?> getMyRoadmaps(@AuthenticationPrincipal Long memberId) {

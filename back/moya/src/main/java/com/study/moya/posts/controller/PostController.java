@@ -2,10 +2,7 @@ package com.study.moya.posts.controller;
 
 import com.study.moya.global.api.ApiResponse;
 import com.study.moya.posts.dto.like.LikeResponse;
-import com.study.moya.posts.dto.post.PostCreateRequest;
-import com.study.moya.posts.dto.post.PostDetailResponse;
-import com.study.moya.posts.dto.post.PostListResponse;
-import com.study.moya.posts.dto.post.PostUpdateRequest;
+import com.study.moya.posts.dto.post.*;
 import com.study.moya.posts.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,5 +102,12 @@ public class PostController {
                                                                 @AuthenticationPrincipal Long memberId) {
         LikeResponse likeResponse = postService.removeLike(postId, memberId);
         return ResponseEntity.ok(ApiResponse.of(likeResponse));
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<ApiResponse<List<PopularListResponse>>> getPopularPosts() {
+        log.info("인기 게시글 조회");
+        List<PopularListResponse> popularPosts = postService.getPopularPosts();
+        return ResponseEntity.ok(ApiResponse.of(popularPosts));
     }
 }
