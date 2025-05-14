@@ -17,7 +17,8 @@ import java.util.Set;
 @Table(name = "posts",
         indexes = {
                 @Index(name = "idx_created_at", columnList = "createdAt"),
-                @Index(name = "idx_title", columnList = "title")
+                @Index(name = "idx_title", columnList = "title"),
+                @Index(name = "idx_is_deleted_views", columnList = "isDeleted, views")  // 추가된 복합 인덱스
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
