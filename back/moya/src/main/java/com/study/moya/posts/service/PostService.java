@@ -13,7 +13,6 @@ import com.study.moya.posts.exception.PostErrorCode;
 import com.study.moya.posts.exception.PostException;
 import com.study.moya.posts.repository.LikeRepository;
 import com.study.moya.posts.repository.PostRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +69,7 @@ public class PostService {
         return saved.getId();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ApiResponse<List<PostListResponse>> getPostList(int page, Long memberId) {
 
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by("createdAt").descending());
@@ -284,6 +284,7 @@ public class PostService {
     /**
      * 5분마다 인기 글 저장 (조회수 기준)
      */
+    @Transactional(readOnly = true)
     @Scheduled(fixedRate = 300000)
     public void refreshPopularPosts() {
         // 인기글 Top 10 조회 (인덱스 활용)
