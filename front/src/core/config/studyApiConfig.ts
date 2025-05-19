@@ -16,6 +16,7 @@ export const STUDY_ENDPOINTS = {
   CREATE_CATEGORY: `${BASE_URL}/api/categories`,
   DELETE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
   UPDATE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
+  HOTSTUDYLIST: `${BASE_URL}/api/posts/popular`,
 } as const;
 
 // 카테고리 관련 타입 정의
@@ -64,6 +65,15 @@ export interface StudyPost {
   tags?: string[];
 }
 
+export interface HotPost {
+  postId: number;
+  title: string;
+  views: number;
+  studies: string[];
+  studyDetails: string[];
+  endDate: string;
+}
+
 export interface CreateStudyDTO {
   title: string;
   content: string;
@@ -107,7 +117,6 @@ export interface StudyApiResponse<T> {
   };
 }
 
-
 // 스터디 API 서비스 객체
 export const studyApiService = {
   // 카테고리 계층 구조 조회
@@ -142,21 +151,8 @@ export const studyApiService = {
   // 스터디 목록 조회
   getStudyList: async (page: number): Promise<StudyApiResponse<StudyPost[]>> => {
     try {
-      //page = 0, size = 10, filters?: StudyFilters
-      // const params = new URLSearchParams({
-      //   page: page.toString(),
-      //   size: size.toString(),
-      //   ...(filters?.studies && { studies: filters.studies }),
-      //   ...(filters?.studyDetails && { studyDetails: filters.studyDetails }),
-      //   ...(filters?.techStack && { techStack: filters.techStack }),
-      //   ...(filters?.progressType && { progressType: filters.progressType }),
-      //   ...(filters?.recruitmentStatus && { recruitmentStatus: filters.recruitmentStatus }),
-      // });
-
-      // const response = await axios.get<StudyApiResponse<StudyPost[]>>(`${STUDY_ENDPOINTS.LIST}`);
-      // console.log(response);
       const response = await axios.get<StudyApiResponse<StudyPost[]>>(STUDY_ENDPOINTS.LIST(page));
-      console.log(response.data)
+      console.log(response.data);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -179,8 +175,6 @@ export const studyApiService = {
       throw error;
     }
   },
-
-
 
   // 스터디 생성
   createPost: async (postData: CreateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
@@ -208,7 +202,7 @@ export const studyApiService = {
   // 스터디 수정
   updatePost: async (postId: number, postData: UpdateStudyDTO): Promise<StudyApiResponse<StudyPost>> => {
     const token = TokenStorage.getAccessToken();
-    
+
     try {
       const response = await axios.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.UPDATE(postId), postData, {
         headers: {
@@ -268,6 +262,19 @@ export const studyApiService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data?.message || '좋아요 취소에 실패했습니다.');
+      }
+      throw error;
+    }
+  },
+
+  getHotStudyList: async (): Promise<StudyApiResponse<HotPost[]>> => {
+    try {
+      const response = await axios.get<StudyApiResponse<HotPost[]>>(STUDY_ENDPOINTS.HOTSTUDYLIST);
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || '핫 스터디 조회 실패.');
       }
       throw error;
     }

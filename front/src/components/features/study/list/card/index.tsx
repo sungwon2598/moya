@@ -2,7 +2,7 @@ import { Card, Button, Avatar } from '@/components/shared/ui';
 import { Badge } from '@/components/shared/ui/badge';
 import { CalendarDays, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/components/features/auth/hooks/useAuth';
+// import { useAuth } from '@/components/features/auth/hooks/useAuth';
 
 interface StudyCardProps {
   title: string;
@@ -43,32 +43,32 @@ export const StudyCard = ({
 
     if (now < start) {
       return (
-        <Badge variant="secondary" className="text-blue-600 bg-blue-50">
+        <Badge variant="secondary" className="bg-blue-50 text-blue-600">
           🔜 모집 예정
         </Badge>
       );
     } else if (now > end) {
       return (
-        <Badge variant="secondary" className="text-gray-600 bg-gray-100">
+        <Badge variant="secondary" className="bg-gray-100 text-gray-600">
           🔒 모집 마감
         </Badge>
       );
     } else {
       return (
-        <Badge variant="secondary" className="text-green-600 bg-green-50">
+        <Badge variant="secondary" className="bg-green-50 text-green-600">
           ✨ 모집 중
         </Badge>
       );
     }
   };
 
-  const { user } = useAuth();
+  // const { user } = useAuth();
 
   return (
     <Card.Card
-      className="transition-shadow duration-200 border-none w-m hover:shadow-lg"
+      className="w-m border-none transition-shadow duration-200 hover:shadow-lg"
       onClick={() => navigate(`/study/${postId}`)}>
-      <div className="flex flex-col justify-between h-full">
+      <div className="flex h-full flex-col justify-between">
         <Card.CardHeader className="mb-1 h-[80px]">
           <div className="flex items-center justify-between">
             <Card.CardTitle className="line-clamp-2 h-[56px] text-xl">{title}</Card.CardTitle>
@@ -76,17 +76,17 @@ export const StudyCard = ({
         </Card.CardHeader>
         <Card.CardContent className="flex-1">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="w-4 h-4" />
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CalendarDays className="h-4 w-4" />
               <span>스터디 시작일 {startDate}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="w-4 h-4" />
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CalendarDays className="h-4 w-4" />
               <span>모집 마감일 {endDate}</span>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="w-4 h-4" />
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4" />
               <span>
                 {currentParticipants} / {maxParticipants}명
               </span>
@@ -104,7 +104,7 @@ export const StudyCard = ({
         </Card.CardContent>
         <Card.CardFooter className="flex h-[60px] items-center justify-between">
           <Avatar.Avatar>
-            <Avatar.AvatarImage src={user?.data.profileImageUrl} />
+            <Avatar.AvatarImage src={creator.avatar} />
             <Avatar.AvatarFallback>{creator.name[0]}</Avatar.AvatarFallback>
           </Avatar.Avatar>
           <Button variant="outline">상세보기</Button>

@@ -40,19 +40,22 @@ import RoadmapDetail from './pages/my-info/Roadmap/RoadmapDetail.tsx';
 const App: React.FC = () => {
   const queryClient = new QueryClient();
 
-  const { checkAuth } = useAuth();
+  const { checkAuth, handleLogout } = useAuth();
 
   useEffect(() => {
     const initAuth = async () => {
       const token = TokenStorage.getAccessToken();
       if (token) {
-        console.log('토큰 만료? ', TokenStorage.isTokenExpired(token));
-      }
+        const isExpired = TokenStorage.isTokenExpired(token);
+        console.log('토큰 만료? ', isExpired);
 
-      if (token) {
-        // const payload = JSON.parse(atob(token.split('.')[1]));
-        // console.log(payload);
-        await checkAuth();
+        if (isExpired) {
+          // 토큰이 만료되었을 경우 로그아웃 처리
+          console.log('토큰이 만료되었습니다. 자동 로그아웃 처리합니다.');
+          await handleLogout();
+        } else {
+          await checkAuth();
+        }
       }
     };
 
@@ -111,7 +114,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex min-h-screen items-center justify-center">
+                    <div className="flex items-center justify-center min-h-screen">
                       <h1 className="text-2xl font-bold text-gray-800">페이지를 찾을 수 없습니다</h1>
                     </div>
                   }
@@ -123,7 +126,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex min-h-screen items-center justify-center">
+                    <div className="flex items-center justify-center min-h-screen">
                       <h1 className="text-2xl font-bold text-gray-800">관리자 페이지를 찾을 수 없습니다</h1>
                     </div>
                   }

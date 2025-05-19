@@ -144,19 +144,19 @@ const StudyPostDetail = () => {
 
     if (now < start) {
       return (
-        <span className="inline-flex items-center gap-1 px-4 py-2 font-medium text-blue-600 rounded-full bg-blue-50">
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-4 py-2 font-medium text-blue-600">
           🔜 모집 예정
         </span>
       );
     } else if (now > end) {
       return (
-        <span className="inline-flex items-center gap-1 px-4 py-2 font-medium text-gray-600 bg-gray-100 rounded-full">
+        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-4 py-2 font-medium text-gray-600">
           🔒 모집 마감
         </span>
       );
     } else {
       return (
-        <span className="inline-flex items-center gap-1 px-4 py-2 font-medium text-green-600 rounded-full bg-green-50">
+        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-4 py-2 font-medium text-green-600">
           ✨ 모집 중
         </span>
       );
@@ -165,36 +165,36 @@ const StudyPostDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-blue-500 rounded-full animate-spin border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
   if (error || !post) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-lg text-red-500">
+      <div className="flex min-h-screen items-center justify-center text-lg text-red-500">
         {error || '게시글을 찾을 수 없습니다.'}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-12 bg-gray-50">
-      <div className="max-w-5xl px-6 mx-auto">
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="mx-auto max-w-5xl px-6">
         {/* 뒤로가기 버튼 */}
         <button
           onClick={() => navigate('/study')}
-          className="flex items-center mb-8 font-medium text-gray-600 transition-colors hover:text-gray-900">
-          <ArrowLeft className="w-5 h-5 mr-2" />
+          className="mb-8 flex items-center font-medium text-gray-600 transition-colors hover:text-gray-900">
+          <ArrowLeft className="mr-2 h-5 w-5" />
           스터디 목록으로
         </button>
 
         {/* 헤더 섹션 */}
-        <div className="p-10 mb-8 bg-white border border-gray-200 shadow-sm rounded-3xl">
+        <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-10 shadow-sm">
           {/* 카테고리 및 상태 배지 */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            <span className="px-4 py-2 font-medium text-gray-700 bg-gray-100 rounded-full">
+          <div className="mb-8 flex flex-wrap gap-3">
+            <span className="rounded-full bg-gray-100 px-4 py-2 font-medium text-gray-700">
               🎯 {post.studies} {post.studyDetails && `- ${post.studyDetails}`}
             </span>
             {getStatusBadge()}
@@ -203,12 +203,12 @@ const StudyPostDetail = () => {
           <h1 className="mb-8 text-4xl font-bold leading-tight text-gray-900">{post.title}</h1>
 
           {/* 작성자 정보 및 메타데이터 */}
-          <div className="flex items-center justify-between pb-8 mb-8 border-b border-gray-100">
+          <div className="mb-8 flex items-center justify-between border-b border-gray-100 pb-8">
             <div className="flex items-center gap-4">
               <img
-                src={user?.data.profileImageUrl}
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}`}
                 alt="avatar"
-                className="w-12 h-12 border-2 border-gray-100 rounded-full"
+                className="h-12 w-12 rounded-full border-2 border-gray-100"
               />
               <div>
                 <div className="text-lg font-semibold text-gray-900">{post.authorName}</div>
@@ -218,11 +218,11 @@ const StudyPostDetail = () => {
 
             <div className="flex items-center gap-6 text-gray-500">
               <div className="flex items-center gap-2">
-                <Eye className="w-5 h-5" />
+                <Eye className="h-5 w-5" />
                 <span className="font-medium">{post.views}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="h-5 w-5" />
                 <span className="font-medium">{post.totalComments}</span>
               </div>
               <button
@@ -236,9 +236,9 @@ const StudyPostDetail = () => {
           </div>
 
           {/* 모집 정보 */}
-          <div className="grid grid-cols-1 gap-6 pb-8 mb-8 border-b border-gray-100 md:grid-cols-3">
+          <div className="mb-8 grid grid-cols-1 gap-6 border-b border-gray-100 pb-8 md:grid-cols-3">
             <div className="flex items-center gap-3 text-gray-700">
-              <Calendar className="w-6 h-6 text-gray-500" />
+              <Calendar className="h-6 w-6 text-gray-500" />
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">스터디 시작</p>
@@ -251,14 +251,14 @@ const StudyPostDetail = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 text-gray-700">
-              <Users className="w-6 h-6 text-gray-500" />
+              <Users className="h-6 w-6 text-gray-500" />
               <div>
                 <div className="mb-1 font-medium">모집 인원</div>
                 <div className="text-sm">{post.recruits}명</div>
               </div>
             </div>
             <div className="flex items-center gap-3 text-gray-700">
-              <Clock className="w-6 h-6 text-gray-500" />
+              <Clock className="h-6 w-6 text-gray-500" />
               <div>
                 <div className="mb-1 font-medium">예상 기간</div>
                 <div className="text-sm">{post.expectedPeriod}</div>
@@ -270,7 +270,7 @@ const StudyPostDetail = () => {
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag, index) => (
-                <span key={index} className="px-4 py-2 text-sm font-medium text-blue-600 rounded-full bg-blue-50">
+                <span key={index} className="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600">
                   {tag}
                 </span>
               ))}
@@ -279,19 +279,19 @@ const StudyPostDetail = () => {
         </div>
 
         {/* 본문 섹션 - Quill 에디터로 변경 */}
-        <div className="p-10 mb-8 bg-white border border-gray-200 shadow-sm rounded-3xl">
+        <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-10 shadow-sm">
           <ReactQuill value={post.content} readOnly={true} modules={modules} formats={formats} theme="bubble" />
         </div>
 
         {/* 하단 버튼 섹션 */}
         <div className="flex justify-center gap-4">
-          <button className="px-8 py-4 font-semibold text-white transition-colors bg-blue-500 shadow-sm rounded-xl hover:bg-blue-600">
+          <button className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600">
             참여 신청하기
           </button>
           {isLoggedIn && user?.data.nickname === post.authorName ? (
             <button
               onClick={() => navigate(`/study/${post.postId}/edit`)}
-              className="px-8 py-4 font-semibold text-gray-700 transition-colors bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50">
+              className="rounded-xl border-2 border-gray-200 bg-white px-8 py-4 font-semibold text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50">
               수정하기
             </button>
           ) : (
@@ -299,7 +299,7 @@ const StudyPostDetail = () => {
           )}
           {isLoggedIn && user?.data.nickname === post.authorName ? (
             <button
-              className="px-8 py-4 font-semibold text-white transition-colors bg-red-500 shadow-sm rounded-xl hover:bg-blue-600"
+              className="rounded-xl bg-red-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
               onClick={deletePost}>
               삭제하기
             </button>
