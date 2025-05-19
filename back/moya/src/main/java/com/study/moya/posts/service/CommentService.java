@@ -10,9 +10,9 @@ import com.study.moya.posts.exception.PostErrorCode;
 import com.study.moya.posts.exception.PostException;
 import com.study.moya.posts.repository.CommentRepository;
 import com.study.moya.posts.repository.PostRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
