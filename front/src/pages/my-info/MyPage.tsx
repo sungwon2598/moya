@@ -33,7 +33,7 @@ const MyPage = () => {
         <div className="pt-4 border-t">
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-gray-600" />
-            <p className="text-base font-medium">재화:</p>
+            <p className="text-base font-medium">MOYA 포인트:</p>
             <p className="text-base text-gray-700">0</p>
           </div>
         </div>

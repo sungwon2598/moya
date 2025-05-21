@@ -5,20 +5,10 @@ import { Card } from '../../../shared/ui';
 import {
   ProfileFormData,
   ProfileFormProps,
-  POSITION_OPTIONS,
   EXPERIENCE_OPTIONS,
   ValidationErrors,
   VALIDATION_MESSAGES,
 } from '@/core/types/profile';
-
-const POSITIONS = [
-  { value: POSITION_OPTIONS.EMPTY, label: '직무 선택' },
-  { value: POSITION_OPTIONS.FRONTEND, label: '프론트엔드' },
-  { value: POSITION_OPTIONS.BACKEND, label: '백엔드' },
-  { value: POSITION_OPTIONS.FULLSTACK, label: '풀스택' },
-  { value: POSITION_OPTIONS.DEVOPS, label: '데브옵스' },
-  { value: POSITION_OPTIONS.MOBILE, label: '모바일' },
-] as const;
 
 const EXPERIENCES = [
   { value: EXPERIENCE_OPTIONS.EMPTY, label: '경력 선택' },
@@ -33,8 +23,6 @@ const EXPERIENCES = [
 const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit }) => {
   const [formData, setFormData] = useState<ProfileFormData>({
     nickname: '',
-    position: POSITION_OPTIONS.EMPTY,
-    school: '',
     experience: EXPERIENCE_OPTIONS.EMPTY,
     description: '',
     links: [''],
@@ -49,10 +37,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
 
     if (!formData.nickname.trim()) {
       newErrors.nickname = VALIDATION_MESSAGES.NICKNAME_REQUIRED;
-    }
-
-    if (formData.position === POSITION_OPTIONS.EMPTY) {
-      newErrors.position = VALIDATION_MESSAGES.POSITION_REQUIRED;
     }
 
     if (formData.experience === EXPERIENCE_OPTIONS.EMPTY) {
@@ -124,7 +108,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
   };
 
   return (
-    <Card.Card className="w-xl mt-10 rounded-2xl border-0 bg-white px-4 py-6 shadow-sm">
+    <Card.Card className="px-4 py-6 mt-10 bg-white border-0 shadow-sm w-xl rounded-2xl">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.submit && <Alert variant="error">{errors.submit}</Alert>}
 
@@ -141,36 +125,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
             error={errors.nickname}
           />
           {errors.nickname && <p className="mt-1 text-sm text-red-500">{errors.nickname}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">직무 *</label>
-          <select
-            name="position"
-            value={formData.position}
-            onChange={handleInputChange}
-            className={`focus:border-moya-primary focus:ring-moya-primary mt-1 block w-full rounded-md border-gray-300 shadow-sm ${
-              errors.position ? 'border-red-500' : ''
-            }`}
-            required>
-            {POSITIONS.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          {errors.position && <p className="mt-1 text-sm text-red-500">{errors.position}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">학교</label>
-          <Input
-            type="text"
-            name="school"
-            value={formData.school}
-            onChange={handleInputChange}
-            placeholder="학교명을 입력하세요"
-          />
         </div>
 
         <div>
@@ -229,7 +183,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
                 )}
               </div>
             ))}
-            <button type="button" onClick={addLink} className="text-moya-primary hover:text-moya-secondary text-sm">
+            <button type="button" onClick={addLink} className="text-sm text-moya-primary hover:text-moya-secondary">
               + 링크 추가
             </button>
           </div>
@@ -238,7 +192,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData = {}, onSubmit })
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-moya-primary hover:bg-moya-secondary w-full rounded-lg px-4 py-2 text-white transition-colors duration-200 disabled:opacity-50">
+          className="w-full px-4 py-2 text-white transition-colors duration-200 rounded-lg bg-moya-primary hover:bg-moya-secondary disabled:opacity-50">
           {isSubmitting ? '저장 중...' : '저장'}
         </button>
       </form>
