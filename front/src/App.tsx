@@ -14,7 +14,7 @@ import SignInPage from './pages/auth/SignInPage.tsx';
 import SignUpPage from './pages/auth/SignUpPage.tsx';
 import StudyList from './pages/study/list/index.tsx';
 
-import StudyPostDetail from './pages/study/StudyPostDetail.tsx';
+import StudyPostDetail from './pages/study/detail/StudyPostDetail.tsx';
 import AdminLayout from '@pages/adminator/layout/AdminLayout.tsx';
 import CategoryManagement from '@pages/category/CategoryManagement.tsx';
 import { ProtectedRoute } from '@/components/features/auth/components/ProtectedRoute.tsx';
@@ -36,6 +36,8 @@ import { useAuth } from '@/components/features/auth/hooks/useAuth.ts';
 import { TokenStorage } from '@/utils/tokenUtils';
 import { StudyEdit } from './pages/study/edit/index.tsx';
 import RoadmapDetail from './pages/my-info/Roadmap/RoadmapDetail.tsx';
+
+import { Notifications } from './pages/notifications/index.tsx';
 
 const App: React.FC = () => {
   const queryClient = new QueryClient();
@@ -70,6 +72,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<RootLayout />}>
                 <Route index element={<Main />} />
+                <Route path="notifications" element={<Notifications />} />
                 <Route path="signin" element={<SignInPage />} />
                 <Route path="signup" element={<SignUpPage />} />
                 {/* 내정보 라우트 */}
@@ -114,7 +117,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex items-center justify-center min-h-screen">
+                    <div className="flex min-h-screen items-center justify-center">
                       <h1 className="text-2xl font-bold text-gray-800">페이지를 찾을 수 없습니다</h1>
                     </div>
                   }
@@ -126,7 +129,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex items-center justify-center min-h-screen">
+                    <div className="flex min-h-screen items-center justify-center">
                       <h1 className="text-2xl font-bold text-gray-800">관리자 페이지를 찾을 수 없습니다</h1>
                     </div>
                   }

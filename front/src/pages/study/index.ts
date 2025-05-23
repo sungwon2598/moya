@@ -1,3 +1,4 @@
+import { ApplyModal } from './applyModal';
 import { StudyCreate } from './create';
 
-export { StudyCreate };
+export { StudyCreate, ApplyModal };

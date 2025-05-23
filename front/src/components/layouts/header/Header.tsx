@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Home, Book, ChevronDown, MessageCircle, Menu, X } from 'lucide-react';
+import { Home, Book, ChevronDown, MessageCircle, Menu, X, Bell } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavItem from './components/NavItem.tsx';
 import UserDropdown from './components/usermenu/UserDropdown.tsx';
@@ -117,6 +117,13 @@ export const Header: React.FC = () => {
             <div className="relative flex items-center space-x-4">
               {isLogin ? (
                 <>
+                  <button
+                    className="hover:text-moya-primary flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 hover:rounded-md hover:bg-gray-50"
+                    onClick={() => {
+                      navigate('/notifications');
+                    }}>
+                    <Bell className="h-5 w-5" />
+                  </button>
                   <button
                     onClick={handleCreateStudy}
                     className="bg-moya-secondary hover:bg-moya-secondary/90 hidden rounded-full px-4 py-2 text-sm font-medium text-white transition-colors duration-200 md:flex">

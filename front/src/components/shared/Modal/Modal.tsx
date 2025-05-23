@@ -31,7 +31,7 @@ const Modal: React.FC<ModalProps> = ({
     };
 
     // 모달이 열릴 때 body 스크롤 방지
-    document.body.style.overflow = 'hidden';
+    // document.body.style.overflow = 'hidden';
 
     document.addEventListener('keydown', handleEscape);
     if (!hideOverlay) {
@@ -65,7 +65,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center ${hideOverlay ? '' : 'bg-black bg-opacity-50'}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center ${hideOverlay ? '' : 'bg-gray-900/40'}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}>

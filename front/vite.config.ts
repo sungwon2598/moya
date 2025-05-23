@@ -47,7 +47,7 @@ export default defineConfig(({ mode }): UserConfig => {
               return `assets/images/[name]-[hash].${extType}`;
             }
             if (/\.css$/.test(assetInfo.name)) {
-              return `assets/css/[name].${extType}`;
+              return `assets/css/[name]-[hash].${extType}`;
               //  return `assets/css/[name]-[hash].${extType}`;
             }
             if (/\.(woff2?|eot|ttf|otf)$/.test(assetInfo.name)) {

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Eye, MessageSquare, Heart, Calendar, Users, Clock, ArrowLeft } from 'lucide-react';
+import { Eye, MessageSquare, Heart, Calendar, Users, Clock, ArrowLeft, User } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
 // import { mockStudyApiService as studyApiService } from './studyMockData';
 import { studyApiService } from '@/core/config/studyApiConfig';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 
-import { useAuth } from '../../components/features/auth/hooks/useAuth.ts';
+import { useAuth } from '../../../components/features/auth/hooks/useAuth.ts';
 import { toast } from 'sonner';
+
+import { useModal } from '@/shared/hooks/useModal.ts';
+import { ApplyModal } from '../applyModal/index.tsx';
 
 // Quill 에디터 스타일 설정
 const quillStyles = `
@@ -47,6 +50,8 @@ const StudyPostDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
+
+  const [isApplyed, setIsApplyed] = useState(false);
 
   // Quill 설정
   const modules = {
@@ -121,18 +126,45 @@ const StudyPostDetail = () => {
   };
 
   const deletePost = async () => {
-    if (!post) return;
-    try {
-      if (user?.data.nickname === post.authorName) {
-        await studyApiService.deletePost(post.postId);
-        toast('스터디가 삭제되었습니다.', {
-          description: '',
-        });
-        navigate('/study');
-      }
-    } catch (error) {
-      console.error('게시글 삭제 중 오류가 발생했습니다:', error);
+    if (!post || !isLoggedIn || !user?.data?.nickname) {
+      return;
     }
+
+    if (user.data.nickname !== post.authorName) {
+      toast('삭제 권한이 없습니다.');
+      return;
+    }
+
+    toast('정말로 삭제하시겠습니까?', {
+      description: '삭제 후 복구가 불가능합니다.',
+      action: {
+        label: '삭제',
+        onClick: async () => {
+          try {
+            await studyApiService.deletePost(post.postId);
+            toast('스터디가 삭제되었습니다.');
+            navigate('/study');
+          } catch (error) {
+            console.error('게시글 삭제 중 오류가 발생했습니다:', error);
+            toast('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
+          }
+        },
+      },
+    });
+  };
+
+  const { showModal } = useModal();
+
+  const handleShowApplicants = () => {
+    showModal(<ApplyModal postId={post?.postId || 0} />, {
+      title: (
+        <div className="flex items-center gap-3">
+          <User className="h-6 w-6 text-blue-500" />
+          <h2 className="text-2xl font-bold text-gray-900">신청자 목록</h2>
+        </div>
+      ),
+      size: 'lg', // 모달 크기 (ModalProps에 정의된 크기)
+    });
   };
 
   const getStatusBadge = () => {
@@ -179,16 +211,55 @@ const StudyPostDetail = () => {
     );
   }
 
+  const toggleStudyApply = async () => {
+    if (!isLoggedIn) {
+      toast('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      if (isApplyed) {
+        // 취소 요청
+        setIsApplyed(false);
+        toast('참여 신청이 취소되었습니다.');
+      } else {
+        // 신청 요청
+        setIsApplyed(true);
+        toast('참여 신청이 완료되었습니다.');
+      }
+    } catch (error) {
+      console.error('스터디 참여 신청 오류', error);
+      toast('스터디 참여 신청 중 오류가 발생했습니다, 다시 시도해주세요');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-5xl px-6">
         {/* 뒤로가기 버튼 */}
-        <button
-          onClick={() => navigate('/study')}
-          className="mb-8 flex items-center font-medium text-gray-600 transition-colors hover:text-gray-900">
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          스터디 목록으로
-        </button>
+
+        <div className="mb-4 flex content-center items-center justify-between">
+          <button
+            onClick={() => navigate('/study')}
+            className="flex items-center font-medium text-gray-600 transition-colors hover:text-gray-900">
+            <ArrowLeft className="mr-2 h-5 w-5" />
+            스터디 목록으로
+          </button>
+          {isLoggedIn && user?.data.nickname === post.authorName && (
+            <div className="mr-2 flex gap-1">
+              <button
+                onClick={() => navigate(`/study/${post.postId}/edit`)}
+                className="hover:text-moya-primary flex items-center space-x-2 px-1 py-1 text-sm font-medium text-gray-500 transition-colors duration-300 hover:rounded-md hover:bg-gray-50">
+                수정
+              </button>
+              <button
+                className="flex items-center space-x-2 px-1 py-1 text-sm font-medium text-gray-500 transition-colors duration-300 hover:rounded-md hover:bg-gray-50 hover:text-red-600"
+                onClick={deletePost}>
+                삭제
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* 헤더 섹션 */}
         <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-10 shadow-sm">
@@ -285,26 +356,20 @@ const StudyPostDetail = () => {
 
         {/* 하단 버튼 섹션 */}
         <div className="flex justify-center gap-4">
-          <button className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600">
-            참여 신청하기
-          </button>
           {isLoggedIn && user?.data.nickname === post.authorName ? (
             <button
-              onClick={() => navigate(`/study/${post.postId}/edit`)}
-              className="rounded-xl border-2 border-gray-200 bg-white px-8 py-4 font-semibold text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50">
-              수정하기
+              className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
+              onClick={handleShowApplicants}>
+              신청자 확인
             </button>
           ) : (
-            <></>
-          )}
-          {isLoggedIn && user?.data.nickname === post.authorName ? (
             <button
-              className="rounded-xl bg-red-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
-              onClick={deletePost}>
-              삭제하기
+              className={`rounded-xl px-8 py-4 font-semibold shadow-sm transition-all duration-200 ${
+                isApplyed ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+              onClick={toggleStudyApply}>
+              {isApplyed ? '참여 취소' : '참여 신청'}
             </button>
-          ) : (
-            <></>
           )}
         </div>
       </div>
