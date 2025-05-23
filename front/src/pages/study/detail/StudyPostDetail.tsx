@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Eye, MessageSquare, Heart, Calendar, Users, Clock, ArrowLeft } from 'lucide-react';
+import { Eye, MessageSquare, Heart, Calendar, Users, Clock, ArrowLeft, User } from 'lucide-react';
 import { StudyPost } from '@/core/config/studyApiConfig';
 // import { mockStudyApiService as studyApiService } from './studyMockData';
 import { studyApiService } from '@/core/config/studyApiConfig';
@@ -9,6 +9,9 @@ import 'react-quill/dist/quill.bubble.css';
 
 import { useAuth } from '../../../components/features/auth/hooks/useAuth.ts';
 import { toast } from 'sonner';
+
+import { useModal } from '@/shared/hooks/useModal.ts';
+import { ApplyModal } from '../applyModal/index.tsx';
 
 // Quill 에디터 스타일 설정
 const quillStyles = `
@@ -147,6 +150,20 @@ const StudyPostDetail = () => {
           }
         },
       },
+    });
+  };
+
+  const { showModal } = useModal();
+
+  const handleShowApplicants = () => {
+    showModal(<ApplyModal postId={post?.postId || 0} />, {
+      title: (
+        <div className="flex items-center gap-3">
+          <User className="h-6 w-6 text-blue-500" />
+          <h2 className="text-2xl font-bold text-gray-900">신청자 목록</h2>
+        </div>
+      ),
+      size: 'lg', // 모달 크기 (ModalProps에 정의된 크기)
     });
   };
 
@@ -340,7 +357,9 @@ const StudyPostDetail = () => {
         {/* 하단 버튼 섹션 */}
         <div className="flex justify-center gap-4">
           {isLoggedIn && user?.data.nickname === post.authorName ? (
-            <button className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600">
+            <button
+              className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
+              onClick={handleShowApplicants}>
               신청자 확인
             </button>
           ) : (

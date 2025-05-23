@@ -37,6 +37,8 @@ import { TokenStorage } from '@/utils/tokenUtils';
 import { StudyEdit } from './pages/study/edit/index.tsx';
 import RoadmapDetail from './pages/my-info/Roadmap/RoadmapDetail.tsx';
 
+import { Notifications } from './pages/notifications/index.tsx';
+
 const App: React.FC = () => {
   const queryClient = new QueryClient();
 
@@ -70,6 +72,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<RootLayout />}>
                 <Route index element={<Main />} />
+                <Route path="notifications" element={<Notifications />} />
                 <Route path="signin" element={<SignInPage />} />
                 <Route path="signup" element={<SignUpPage />} />
                 {/* 내정보 라우트 */}
