@@ -256,8 +256,13 @@ export const studyApiService = {
 
   // 좋아요 취소
   removeLike: async (postId: number): Promise<StudyApiResponse<void>> => {
+    const token = TokenStorage.getAccessToken();
     try {
-      const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.UNLIKE(postId));
+      const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.UNLIKE(postId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
