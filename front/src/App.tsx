@@ -14,7 +14,7 @@ import SignInPage from './pages/auth/SignInPage.tsx';
 import SignUpPage from './pages/auth/SignUpPage.tsx';
 import StudyList from './pages/study/list/index.tsx';
 
-import StudyPostDetail from './pages/study/StudyPostDetail.tsx';
+import StudyPostDetail from './pages/study/detail/StudyPostDetail.tsx';
 import AdminLayout from '@pages/adminator/layout/AdminLayout.tsx';
 import CategoryManagement from '@pages/category/CategoryManagement.tsx';
 import { ProtectedRoute } from '@/components/features/auth/components/ProtectedRoute.tsx';
@@ -114,7 +114,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex items-center justify-center min-h-screen">
+                    <div className="flex min-h-screen items-center justify-center">
                       <h1 className="text-2xl font-bold text-gray-800">페이지를 찾을 수 없습니다</h1>
                     </div>
                   }
@@ -126,7 +126,7 @@ const App: React.FC = () => {
                 <Route
                   path="*"
                   element={
-                    <div className="flex items-center justify-center min-h-screen">
+                    <div className="flex min-h-screen items-center justify-center">
                       <h1 className="text-2xl font-bold text-gray-800">관리자 페이지를 찾을 수 없습니다</h1>
                     </div>
                   }

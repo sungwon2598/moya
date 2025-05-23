@@ -29,11 +29,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   ...initialState,
 
   authenticateWithGoogle: async (authData: GoogleAuthResponse) => {
+    // window.location.href = ' /oauth2/authorization/google';
+    // console.log(authData)
     try {
       set({ loading: true, error: null });
       const response = await postGoogleAuth(authData);
-
-      // window.location.href = ' /oauth2/authorization/google';
 
       if (!response.success || !response.data) {
         throw new Error(response.message || 'Authentication failed');
