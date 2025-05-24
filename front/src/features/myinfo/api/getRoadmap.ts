@@ -1,4 +1,4 @@
-import { axiosInstance } from '@/core/config/apiConfig';
+import { axiosInstance } from '@/api/authApi';
 import { useQuery } from '@tanstack/react-query';
 
 const getMyRoadmapListData = async () => {
