@@ -247,9 +247,11 @@ export const studyApiService = {
       });
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || '좋아요 추가에 실패했습니다.');
-      }
+      console.log(error);
+      // if (axios.isAxiosError(error)) {
+      //   console.log(error.response);
+      //   throw new Error(error.response?.data?.message || '좋아요 추가에 실패했습니다.');
+      // }
       throw error;
     }
   },

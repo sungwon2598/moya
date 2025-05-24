@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
 import { useAuthStore } from '@/store/auth.ts';
 import { GoogleAuthResponse } from '../../features/auth/types/auth.types';
+import { useLocation } from 'react-router-dom';
 
 const navigationItems = [
   {
@@ -89,6 +90,13 @@ export const Header: React.FC = () => {
     }
   };
 
+  const location = useLocation();
+  const isActive = location.pathname.startsWith('/notification');
+
+  const testBtn = () => {
+    navigate('/oauth2/authorization/google');
+  };
+
   return (
     <>
       <header className={`fixed top-0 z-50 w-full bg-white ${showBorder ? 'border-moya-black/10 border-b' : ''}`}>
@@ -118,7 +126,9 @@ export const Header: React.FC = () => {
               {isLogin ? (
                 <>
                   <button
-                    className="hover:text-moya-primary flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 hover:rounded-md hover:bg-gray-50"
+                    className={`hover:text-moya-primary ${isActive ? 'text-moya-primary bg-gray-50' : ''} flex items-center rounded-md px-3 py-2 text-gray-600 transition-colors duration-300 hover:rounded-md hover:bg-gray-50 ${
+                      isActive ? 'text-moya-primary rounded-md bg-gray-50' : ''
+                    }`}
                     onClick={() => {
                       navigate('/notifications');
                     }}>
@@ -147,12 +157,15 @@ export const Header: React.FC = () => {
                   </DropdownMenu>
                 </>
               ) : (
-                <GoogleLoginButton
-                  theme="filled_blue"
-                  size="large"
-                  onSuccess={handleLoginSuccess}
-                  onError={(error) => console.error('로그인 실패:', error)}
-                />
+                <>
+                  <button onClick={testBtn}>로그인 테스트 버튼 </button>
+                  <GoogleLoginButton
+                    theme="filled_blue"
+                    size="large"
+                    onSuccess={handleLoginSuccess}
+                    onError={(error) => console.error('로그인 실패:', error)}
+                  />
+                </>
               )}
             </div>
           </nav>
