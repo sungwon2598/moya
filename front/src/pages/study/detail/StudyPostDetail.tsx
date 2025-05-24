@@ -111,6 +111,7 @@ const StudyPostDetail = () => {
     fetchPost();
   }, [postId]);
 
+  // 좋아요
   const handleLikeToggle = async () => {
     if (!post) return;
     try {
@@ -163,7 +164,7 @@ const StudyPostDetail = () => {
           <h2 className="text-2xl font-bold text-gray-900">신청자 목록</h2>
         </div>
       ),
-      size: 'lg', // 모달 크기 (ModalProps에 정의된 크기)
+      size: 'lg',
     });
   };
 
@@ -171,8 +172,9 @@ const StudyPostDetail = () => {
     if (!post) return null;
 
     const now = new Date();
-    const start = new Date(post.startDate);
-    const end = new Date(post.endDate);
+
+    const start = new Date(post.startDate); // 스터디 시작일
+    const end = new Date(post.endDate); // 스터디 마감일
 
     if (now < start) {
       return (
@@ -180,7 +182,7 @@ const StudyPostDetail = () => {
           🔜 모집 예정
         </span>
       );
-    } else if (now > end) {
+    } else if (now < end) {
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-4 py-2 font-medium text-gray-600">
           🔒 모집 마감
