@@ -1,5 +1,5 @@
+import { axiosInstance } from '@/api/authApi';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { axiosInstance } from '@core/config/apiConfig';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
