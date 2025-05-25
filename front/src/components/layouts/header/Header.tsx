@@ -13,7 +13,7 @@ import { GoogleAuthResponse } from '../../features/auth/types/auth.types';
 const navigationItems = [
   {
     label: '로드맵',
-    path: '/roadmap/preview',
+    path: '/roadmap/create',
     type: 'A' as const,
     icon: Home,
   },

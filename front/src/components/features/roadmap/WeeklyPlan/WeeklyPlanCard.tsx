@@ -19,7 +19,7 @@ export default function WeeklyPlanCard({ weeks }: CardProps) {
   const from = () => ({ x: 0, rot: 0, scale: 1.5, y: -1000 });
   const trans = (r: number, s: number) => `perspective(1500px) rotateZ(${r}deg) scale(${s})`;
 
-  const [gone] = useState(() => new Set()); // The set flags all the cards that are flicked out
+  const [gone] = useState(() => new Set());
   const [props, api] = useSprings(weeks.length, (i) => ({
     ...to(i),
     from: from(),

@@ -16,6 +16,11 @@
   body:not(.adminator-body) {
     @apply bg-gray-50 pt-16;
   }
+  .container-roadmap {
+    container-type: inline-size;
+    container-name: roadmap;
+    @apply m-10;
+  }
   :lang(ko) {
     word-break: keep-all;
   }
