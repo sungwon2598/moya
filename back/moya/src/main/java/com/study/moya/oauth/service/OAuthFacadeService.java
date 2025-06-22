@@ -62,12 +62,17 @@ public class OAuthFacadeService {
             JwtTokenProvider.TokenInfo tokenInfo = jwtTokenProvider.createToken(authentication);
             String memberId = String.valueOf(savedMember.getId());
 
-            String existingIdentifier = redisService.findIdentifierByMemberId(memberId);
+            //임시방책 redis
+//            String existingIdentifier = redisService.findIdentifierByMemberId(memberId);
 
-            if (existingIdentifier != null) {
-                redisService.deleteRefreshToken(memberId);
-            }
-            redisService.saveTokens(memberId, tokenInfo.getRefreshToken());
+
+            /**
+             * redis 오류로 인한 임시
+             */
+//            if (existingIdentifier != null) {
+//                redisService.deleteRefreshToken(memberId);
+//            }
+//            redisService.saveTokens(memberId, tokenInfo.getRefreshToken());
 
             return new MemberAuthResponse(tokenInfo.getAccessToken(), tokenInfo.getRefreshToken(), savedMember);
         } catch (Exception e){
