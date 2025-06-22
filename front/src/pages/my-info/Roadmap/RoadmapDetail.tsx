@@ -5,7 +5,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useRoadmapDetail } from '@/features/myinfo/api/getRoadmap';
 import { useModal } from '@/shared/hooks/useModal';
 import { Day } from '@/types/roadmap.types';
-import { User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 const fakeData = {
@@ -168,12 +167,14 @@ export default function RoadmapDetail() {
       setData(roadmapDetailData);
     }
   }, []);
-  const handleShowApplicants = (dailyPlans: Day) => {
+  const handleShowApplicants = (dailyPlans: Day, week: number) => {
     showModal(<DayStudyPlan dailyPlans={dailyPlans} />, {
       title: (
         <div className="flex items-center gap-3">
-          {dailyPlans.day}
-          {dailyPlans.dailyKeyword}
+          <p>
+            {week}주차 {dailyPlans.day}일 :
+          </p>
+          <p>{dailyPlans.dailyKeyword}</p>
         </div>
       ),
       size: 'lg', // 모달 크기 (ModalProps에 정의된 크기)
@@ -210,7 +211,7 @@ export default function RoadmapDetail() {
                       <p>
                         {dailyPlans.day}일차 <span>{dailyPlans.dailyKeyword}</span>
                       </p>
-                      <Button onClick={() => handleShowApplicants(dailyPlans)}>공부하러가기</Button>
+                      <Button onClick={() => handleShowApplicants(dailyPlans, weeklyPlan.week)}>공부하러가기</Button>
                     </div>
                   ))}
                 </AccordionContent>

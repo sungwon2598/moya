@@ -41,7 +41,11 @@ import { Notifications } from './pages/notifications/index.tsx';
 
 const App: React.FC = () => {
   const queryClient = new QueryClient();
-
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
   const { checkAuth, handleLogout } = useAuth();
 
   useEffect(() => {
