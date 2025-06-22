@@ -13,15 +13,15 @@ const iconMap = {
 
 const Footer: React.FC = () => {
   return (
-    <footer className="border-moya-primary/10 border-t bg-gray-50">
+    <footer className="border-moya-primary/20 border-t">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <FooterSection title={companyInfo.name}>
-            <p className="text-sm text-gray-600">{companyInfo.description}</p>
+            <p className="text-sm opacity-60">{companyInfo.description}</p>
             <div className="space-y-2">
-              <p className="text-sm text-gray-500">사업자등록번호: {companyInfo.registration}</p>
-              <p className="text-sm text-gray-500">대표: {companyInfo.ceo}</p>
-              <p className="text-sm text-gray-500">연락처: {companyInfo.phone}</p>
+              <p className="text-sm opacity-50">사업자등록번호: {companyInfo.registration}</p>
+              <p className="text-sm opacity-50">대표: {companyInfo.ceo}</p>
+              <p className="text-sm opacity-50">연락처: {companyInfo.phone}</p>
             </div>
           </FooterSection>
 
@@ -38,14 +38,14 @@ const Footer: React.FC = () => {
           ))}
         </div>
 
-        <div className="mt-12 border-t border-gray-200 pt-8">
+        <div className="mt-12 border-t border-gray-400 pt-8">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             <div className="flex space-x-6">
               {socialLinks.map((social) => (
                 <SocialLink key={social.label} href={social.href} icon={iconMap[social.icon]} label={social.label} />
               ))}
             </div>
-            <p className="text-sm text-gray-500">© {new Date().getFullYear()} MOYA. All rights reserved.</p>
+            <p className="text-sm opacity-50">© {new Date().getFullYear()} MOYA. All rights reserved.</p>
           </div>
         </div>
       </div>

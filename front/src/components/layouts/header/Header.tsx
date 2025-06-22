@@ -14,7 +14,7 @@ import { useLocation } from 'react-router-dom';
 const navigationItems = [
   {
     label: '로드맵',
-    path: '/roadmap/preview',
+    path: '/roadmap/create',
     type: 'A' as const,
     icon: Home,
   },
@@ -42,18 +42,47 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { handleGoogleLogin } = useAuth();
   const [showBorder, setShowBorder] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowBorder(window.scrollY > 0);
+      const currentScrollY = window.scrollY;
+
+      // 테두리 표시 로직
+      setShowBorder(currentScrollY > 0);
+
+      // 헤더 표시/숨김 로직
+      if (currentScrollY === 0) {
+        // 맨 위에 있을 때는 항상 표시
+        setIsHeaderVisible(true);
+      } else if (currentScrollY < lastScrollY) {
+        // 위로 스크롤할 때 표시
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // 아래로 스크롤하고 100px 이상일 때 숨김
+        setIsHeaderVisible(false);
+      }
+
+      setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    let ticking = false;
+    const scrollHandler = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
 
+    window.addEventListener('scroll', scrollHandler, { passive: true });
     handleScroll();
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => window.removeEventListener('scroll', scrollHandler);
+  }, [lastScrollY]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -99,12 +128,15 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className={`fixed top-0 z-50 w-full bg-white ${showBorder ? 'border-moya-black/10 border-b' : ''}`}>
+      <header
+        className={`bg-background fixed top-0 z-50 w-full transition-transform duration-300 ease-in-out ${
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+        } ${showBorder ? 'border-moya-black/10 border-b' : ''}`}>
         <div className="container mx-auto">
           <nav className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center">
               <button
-                className="hover:text-moya-primary -ml-2 p-2 text-gray-600 md:hidden"
+                className="hover:text-moya-primary -ml-2 p-2 opacity-60 md:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="메뉴 열기">
                 <Menu className="h-6 w-6" />

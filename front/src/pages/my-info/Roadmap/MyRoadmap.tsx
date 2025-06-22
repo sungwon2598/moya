@@ -49,7 +49,9 @@ export default function MyRoadmap() {
           const emoji = getConsistentEmoji(roadmap.id);
 
           return (
-            <Link key={roadmap.id} to={`/my-info/roadmap/${roadmap.id}`}>
+            <Link
+              key={roadmap.id}
+              to={`/my-info/roadmap/${roadmap.id}?mainCategory=${encodeURIComponent(roadmap.mainCategory)}&subCategory=${encodeURIComponent(roadmap.subCategory)}`}>
               <div className="group relative rounded-2xl bg-gradient-to-br from-blue-50 to-white p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                 <div className="mb-3 flex items-center gap-2">
                   <h3 className="text-xl font-semibold text-gray-800 transition-colors group-hover:text-blue-700">
