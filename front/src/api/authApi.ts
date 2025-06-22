@@ -177,6 +177,7 @@ export const postGoogleAuth = async (authData: GoogleAuthResponse): Promise<ApiR
     const response = await axiosInstance.post<User>(OAUTH_ENDPOINTS.LOGIN, {
       ...authData,
       redirectUri: window.location.origin,
+      // '/oauth2/authorization/google'
     });
 
     if (!response.data) {
