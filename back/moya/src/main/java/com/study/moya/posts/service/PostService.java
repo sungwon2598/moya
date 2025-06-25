@@ -70,7 +70,6 @@ public class PostService {
     }
 
     // ✅ 게시글 목록 조회 최적화
-    @Transactional(readOnly = true)
     public ApiResponse<List<PostListResponse>> getPostList(int page, Long memberId) {
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by("createdAt").descending());
         Page<Post> postPage = postRepository.findByIsDeletedFalse(pageRequest);
@@ -283,7 +282,6 @@ public class PostService {
     /**
      * 5분마다 인기 글 저장 (조회수 기준)
      */
-    @Transactional(readOnly = true)
     @Scheduled(fixedRate = 1800000) // 30분
     public void refreshPopularPosts() {
         try {
