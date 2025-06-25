@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import svgr from 'vite-plugin-svgr';
 
 import path from 'path';
 
@@ -8,7 +9,7 @@ export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), svgr()],
     base: '/',
     resolve: {
       alias: {

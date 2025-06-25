@@ -1,19 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../components/features/auth/hooks/useAuth';
-import { GoogleLoginButton } from '../../components/features/auth/components/GoogleLoginButton';
 import { useNavigate } from 'react-router-dom';
-
-const hexToRgba = (hex: string, alpha: number): string => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
+import LogoIcon from '@/assets/logo.svg?react';
+import { useGoogleLoginPopup } from '@/components/features/auth/hooks/useGoogleLoginPopup';
+import KeywordAni from '@/components/features/main/KeywordAni';
 
 const MainContent: React.FC = () => {
   const { isAuthenticated, loading, handleGoogleLogin } = useAuth();
   const navigate = useNavigate();
+  const triggerGoogleLogin = useGoogleLoginPopup();
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const actionButtons = [
     {
@@ -39,15 +36,30 @@ const MainContent: React.FC = () => {
     },
   ];
 
-  const handleLoginSuccess = async (authData: any) => {
+  const handleRoadmapClick = async () => {
+    if (loginLoading) return;
+
+    if (isAuthenticated) {
+      navigate('/roadmap/create');
+      return;
+    }
+
+    setLoginLoading(true);
     try {
+      const authData = await triggerGoogleLogin();
       await handleGoogleLogin(authData);
-      navigate('/');
+      navigate('/roadmap/create');
     } catch (error) {
-      console.error('Login failed:', error);
+      if (error.name === 'AbortError') {
+        console.log('Login process aborted by user.');
+      } else {
+        console.error('Google 로그인 실패:', error);
+        alert('로그인 중 문제가 발생했습니다.');
+      }
+    } finally {
+      setLoginLoading(false);
     }
   };
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -57,86 +69,57 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        {/* 메인 포스터 섹션 */}
-        <div className="mb-12">
-          <div className="relative aspect-video overflow-hidden rounded-2xl bg-white shadow-lg">
-            {/* 그라데이션 배경 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
-              {/* X 패턴 */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `linear-gradient(45deg, transparent 45%, ${hexToRgba('#0752cd', 0.1)} 45%, ${hexToRgba('#0752cd', 0.1)} 55%, transparent 55%)`,
-                  backgroundSize: '30px 30px',
-                }}></div>
-            </div>
-
-            {/* 중앙 텍스트 */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <h1 className="mb-4 text-4xl font-bold text-blue-600 md:text-6xl">MOYA</h1>
-              <p className="mb-8 max-w-lg px-4 text-lg text-gray-600 md:text-xl">
-                학습 성장을 위한 최적의 스터디 플랫폼,
-                <br />
-                MOYA와 함께 성장하는 여정을 시작하세요
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 액션 버튼 그리드 - 로그인 시에만 표시 */}
-        {isAuthenticated && (
-          <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-            {actionButtons.map((button, index) => (
-              <button
-                key={index}
-                className="group relative rounded-xl bg-white p-6 text-left shadow-md transition-all duration-300 hover:shadow-lg">
-                <div
-                  className={`${button.bgColor} mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-transform group-hover:scale-110`}>
-                  <button.icon className={`h-6 w-6 ${button.iconColor}`} />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900">{button.title}</h3>
-                <p className="text-sm text-gray-600">{button.description}</p>
-                <div className="absolute inset-0 rounded-xl border-2 border-transparent transition-colors group-hover:border-blue-100"></div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* 비로그인 시 구글 로그인 섹션 */}
-        {!isAuthenticated && (
-          <div className="mb-12 flex flex-col items-center gap-6">
-            <div className="mb-2 text-center">
-              <h2 className="mb-2 text-2xl font-semibold text-gray-900">MOYA 시작하기</h2>
-              <p className="mb-6 text-gray-600">Google 계정으로 간편하게 시작해보세요</p>
-            </div>
-
-            {/* Google 로그인 버튼 */}
-            <div className="flex w-full items-center justify-center">
-              <GoogleLoginButton
-                theme="filled_blue"
-                size="large"
-                onSuccess={handleLoginSuccess}
-                onError={(error) => console.error('로그인 실패:', error)}
-              />
-            </div>
-
-            <p className="max-w-sm px-4 text-center text-sm text-gray-500">
-              계속 진행하면 MOYA의{' '}
-              <a href="/terms" className="text-blue-600 hover:underline">
-                이용약관
-              </a>{' '}
-              및{' '}
-              <a href="/privacy" className="text-blue-600 hover:underline">
-                개인정보처리방침
-              </a>
-              에 동의하는 것으로 간주됩니다.
-            </p>
-          </div>
-        )}
+    <div className="relative h-[calc(100vh-60px)] pt-12">
+      <div className="overflow-hidden">
+        <KeywordAni />
       </div>
-    </main>
+      <div className="z-10 text-center">
+        <LogoIcon className="mx-auto mb-2 h-12 w-auto" fill="white" />
+        <p className="text-base font-light tracking-wide opacity-30">AI study partner</p>
+      </div>
+      <div className="z-10 mx-auto mb-12 text-center sm:w-2/3">
+        <h1 className="font-heading my-6">
+          당신의 성장을 설계하는 <br /> AI 스터디 파트너
+        </h1>
+        <p className="mx-auto px-4 text-sm/6 opacity-60 sm:text-base/6">
+          MOYA는 스터디 그룹 구성부터 학습 계획 수립까지, 학습의 전 과정을 AI 기반으로 지원하는 플랫폼입니다.
+          <br /> 개인의 목표와 일정에 최적화된 플랜을 자동으로 생성하고, 곧 실시간 온라인 스터디 기능까지 제공할
+          예정입니다.
+        </p>
+        <p className="mx-auto pt-4 text-sm/7 opacity-60 sm:text-base/6">
+          MOYA와 함께, 더 스마트하고 효율적인 학습을 시작하세요.
+        </p>
+      </div>
+      {/* 액션 버튼 그리드 - 로그인 시에만 표시 */}
+      {isAuthenticated && (
+        <div className="z-10 mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {actionButtons.map((button, index) => (
+            <button
+              key={index}
+              className="group relative rounded-xl bg-white p-6 text-left shadow-md transition-all duration-300 hover:shadow-lg">
+              <div
+                className={`${button.bgColor} mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-transform group-hover:scale-110`}>
+                <button.icon className={`h-6 w-6 ${button.iconColor}`} />
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">{button.title}</h3>
+              <p className="text-sm text-gray-600">{button.description}</p>
+              <div className="absolute inset-0 rounded-xl border-2 border-transparent transition-colors group-hover:border-blue-100"></div>
+            </button>
+          ))}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={handleRoadmapClick}
+        className="bg-moya-primary absolute bottom-0 z-10 flex h-16 w-full cursor-pointer items-center justify-center gap-1">
+        <h5 className="font-black">나만의 로드맵 생성하기</h5>
+        <div className="flex items-center justify-center">
+          <span className="material-symbols-outlined !text-[16px] opacity-30">arrow_forward_ios</span>
+          <span className="material-symbols-outlined -ml-1.5 !text-[16px] opacity-60">arrow_forward_ios</span>
+          <span className="material-symbols-outlined -ml-1.5 !text-[16px] opacity-90">arrow_forward_ios</span>
+        </div>
+      </button>
+    </div>
   );
 };
 

@@ -24,9 +24,9 @@ const HotStudy: React.FC = () => {
   }, []);
 
   return (
-    <div className="max-w-6xl px-4 py-8 mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-black">🔥 Hot 스터디</h2>
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">🔥 Hot 스터디</h2>
         <div className="flex gap-2">
           <button
             className={`rounded-full p-2 transition-all ${
@@ -34,7 +34,7 @@ const HotStudy: React.FC = () => {
             }`}
             onClick={handlePrevClick}
             disabled={currentPage === 0}>
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="h-6 w-6" />
           </button>
           <button
             className={`rounded-full p-2 transition-all ${
@@ -42,7 +42,7 @@ const HotStudy: React.FC = () => {
             }`}
             onClick={handleNextClick}
             disabled={currentPage === maxPages}>
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="h-6 w-6" />
           </button>
         </div>
       </div>

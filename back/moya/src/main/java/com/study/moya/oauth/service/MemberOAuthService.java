@@ -91,7 +91,10 @@ public class MemberOAuthService {
             log.info("Logout request received - memberId: {}, Refresh Token: {}", memberId, refreshToken);
             SecurityContextHolder.clearContext();
 
-            redisService.deleteRefreshToken(memberId);
+            /**
+             * redis 임시조치
+             */
+//            redisService.deleteRefreshToken(memberId);
             log.info("Refresh token deleted for user: {}", memberId);
 
             log.info("Logout completed successfully for user: {}", memberId);
