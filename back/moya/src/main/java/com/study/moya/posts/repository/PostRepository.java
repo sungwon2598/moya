@@ -25,8 +25,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findByAuthor(@Param("author") Member author);
 
-    @Query("SELECT p FROM Post p WHERE p.isDeleted = false ORDER BY p.views DESC")
-    List<Post> findTop10ByIsDeletedFalseOrderByViewsDesc();
+    @Query("SELECT DISTINCT p FROM Post p " +
+            "LEFT JOIN FETCH p.studies " +
+            "LEFT JOIN FETCH p.studyDetails " +
+            "WHERE p.isDeleted = false " +
+            "ORDER BY p.views DESC")
+    List<Post> findTop10ByIsDeletedFalseOrderByViewsDesc(Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")}) // 3초 락 타임아웃 (선택 사항)
