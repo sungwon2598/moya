@@ -8,7 +8,7 @@ import { SelectedValue } from './Select';
 import { toast } from 'sonner';
 
 const selectBTN =
-  'inline-block px-4 py-2 mr-2 bg-blue-100 rounded min-w-32 min-h-10 hover:bg-blue-200 transition-colors';
+  'inline-block px-4 py-2  mr-2 bg-blue-100/60 rounded min-w-32 min-h-10 hover:bg-blue-200/40 transition-colors';
 const pBTN = 'mt-2';
 interface ChoseKeywordProp {
   AllQuestionsCompleted: boolean;
@@ -74,6 +74,9 @@ export default function ChoseKeyword({
     const formData = getFormData();
     mutate(formData, {
       onError: (error) => {
+        toast('로드맵 생성 실패', {
+          description: '',
+        });
         console.error('API 요청 중 오류 발생:', error);
       },
     });
@@ -82,7 +85,7 @@ export default function ChoseKeyword({
 
   return (
     <article
-      className={`${AllQuestionsCompleted ? 'col-span-2 text-center' : ''} mb-12 rounded-2xl bg-neutral-100 p-8 text-3xl font-bold`}>
+      className={`${AllQuestionsCompleted ? 'col-span-2 text-center' : ''} mb-12 rounded-2xl bg-neutral-100/10 p-8 text-center text-3xl font-bold md:text-left`}>
       <div className={`${AllQuestionsCompleted ? 'flex items-center justify-center gap-2' : ''}`}>
         <p>나는</p>
         <p className={`${pBTN}`}>

@@ -47,7 +47,7 @@ export default function CreatePage() {
   if (error) return <div>{error.message}</div>;
 
   return (
-    <div className="@container mx-auto grid grid-cols-2 gap-4 px-4">
+    <div className="@container md:max-w-3/4 mx-auto w-11/12">
       <Title />
       <Progress TotalQuestionsNumber={questions.length} roadmapQuestionStage={roadmapQuestionStage} />
       <Select

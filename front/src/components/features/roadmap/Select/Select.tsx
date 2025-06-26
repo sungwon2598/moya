@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from 'react';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import ChoseKeyword from './ChoseKeyword';
 import { Slider } from '@/components/shared/ui/slider';
+import { toast } from 'sonner';
 
 interface SelectProp {
   answers: AnswerItem[] | null;
@@ -115,7 +116,7 @@ export default function Select({
   };
 
   return (
-    <>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <ChoseKeyword
         answers={answers}
         setAnswers={setAnswers}
@@ -156,7 +157,7 @@ export default function Select({
                   {currentStatusNumber !== 2 && (
                     <label
                       key={item.id}
-                      className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 group cursor-pointer rounded-lg border border-neutral-500 bg-amber-200 bg-neutral-50 p-6 transition hover:border-neutral-900 hover:bg-neutral-100">
+                      className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 has-checked:font-bold w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50/10 p-6 transition hover:border-neutral-900 hover:bg-neutral-100/10">
                       <>
                         <input
                           type="radio"
@@ -193,7 +194,7 @@ export default function Select({
               ) : (
                 <label
                   key={item.id}
-                  className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50 p-6 transition hover:border-neutral-900 hover:bg-neutral-100">
+                  className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 has-checked:font-bold w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50/10 p-6 transition hover:border-neutral-900 hover:bg-neutral-100/10">
                   <input
                     type="radio"
                     value={item.id}
@@ -225,6 +226,6 @@ export default function Select({
           </form>
         </section>
       )}
-    </>
+    </div>
   );
 }

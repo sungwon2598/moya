@@ -320,13 +320,23 @@ const RoadmapPreview: FC = () => {
                   transitionDuration: transitionDuration,
                   transitionDelay: animationDelay,
                   transitionTimingFunction: transitionTimingFunction,
-                  filter: `blur(${index * 0.5}px) brightness(${1 - index * 0.05})`,
+                  filter: `blur(${index * 0.3}px)`,
+                  backdropFilter: `blur(${20 + index * 5}px) saturate(1.8)`,
                 }}
-                className={`aspect-5/3 absolute left-1/2 mx-auto grid w-full -translate-x-1/2 items-end rounded-2xl bg-gradient-to-br from-blue-400 via-cyan-300 to-indigo-400 p-2 shadow-2xl backdrop-blur-sm transition-all sm:grid-cols-2 sm:p-6 ${
-                  index > 0 && !isAnimating ? 'cursor-pointer hover:scale-105' : ''
+                className={`aspect-5/3 absolute left-1/2 mx-auto grid h-96 w-full -translate-x-1/2 items-end overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all sm:h-auto sm:max-h-full sm:grid-cols-2 sm:p-6 ${
+                  index > 0 && !isAnimating
+                    ? 'cursor-pointer hover:scale-105 hover:border-white/30 hover:bg-white/15'
+                    : ''
                 } ${isAnimating ? 'pointer-events-none' : ''}`}>
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-80"></div>
+
                 <div className="relative z-10 sm:py-4">
-                  <h6 className="pb-2 text-2xl font-black uppercase drop-shadow-lg sm:p-4">{hobby.category}</h6>
+                  <div className="p-4">
+                    <h6 className="text-2xl font-black uppercase text-white drop-shadow-2xl sm:p-2">
+                      {hobby.category}
+                    </h6>
+                  </div>
+
                   <div className="flex flex-wrap gap-2 px-2 py-2">
                     {hobby.subcategories.map((subcategory, subIndex) => (
                       <span
@@ -337,33 +347,39 @@ const RoadmapPreview: FC = () => {
                             handleSubcategoryClick(subIndex);
                           }
                         }}
-                        className={`text-md inline-block transform cursor-pointer rounded-full border px-4 py-2 font-semibold uppercase transition-all hover:scale-105 ${
+                        className={`inline-block transform cursor-pointer rounded-full px-4 py-2 text-sm font-semibold uppercase backdrop-blur-xl transition-all hover:scale-105 ${
                           index === 0 && selectedSubcategoryIndex === subIndex
-                            ? 'border-gray-800 bg-gray-800 text-white shadow-lg'
-                            : 'border-gray-600/30 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                            ? 'border border-white/40 bg-white/25 text-white shadow-lg backdrop-blur-xl'
+                            : 'border border-white/20 bg-white/10 text-white/90 hover:border-white/30 hover:bg-white/20 hover:text-white hover:shadow-md'
                         } ${isAnimating || index > 0 ? 'pointer-events-none' : ''}`}>
                         {subcategory.name}
                       </span>
                     ))}
                   </div>
+
                   <div className="flex flex-wrap gap-2 px-2.5">
                     {index === 0 &&
                       currentSubcategory.skills.map((skill, skillIndex) => (
                         <span
                           key={skillIndex}
-                          className="inline-block transform cursor-pointer rounded-full border border-gray-600/30 px-3 py-1 text-sm uppercase transition-all hover:scale-105 hover:bg-white/10">
+                          className="inline-block transform cursor-pointer rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase text-white/80 backdrop-blur-md transition-all hover:scale-105 hover:border-white/30 hover:bg-white/15 hover:text-white">
                           {skill}
                         </span>
                       ))}
                   </div>
                 </div>
-                <div className="relative h-full w-full overflow-hidden rounded-2xl">
-                  <img alt={hobby.alt} className="h-full object-cover object-center" src={hobby.image} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+
+                <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/10">
+                  <img alt={hobby.alt} className="h-full w-full object-cover object-center" src={hobby.image} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent backdrop-blur-[1px]"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent"></div>
                 </div>
+
                 {index > 0 && !isAnimating && (
-                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-300 hover:border-white/30" />
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 opacity-0 transition-all duration-300 hover:opacity-100" />
                 )}
+
+                <div className="absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"></div>
               </div>
             );
           })}
