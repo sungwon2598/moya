@@ -98,7 +98,7 @@ export default function ChoseKeyword({
       <div className={`${AllQuestionsCompleted ? 'flex items-center justify-center gap-2' : ''} mt-8`}>
         <p>
           <button className={`${selectBTN}`} onClick={() => navigateToQuestion('duration')}>
-            {getFormData().duration > 0 ? `${getFormData().duration}일` : ''}
+            {getFormData().duration > 0 ? `${getFormData().duration}주` : ''}
           </button>
           동안
         </p>
@@ -123,7 +123,7 @@ export default function ChoseKeyword({
           수준으로
         </p>
       </div>
-      <p className={`${pBTN}`}>공부하고 싶어요.</p>
+      <p className={`text-center ${pBTN}`}>공부하고 싶어요.</p>
       {AllQuestionsCompleted && (
         <div>
           <Button variant="secondary" onClick={() => handlerReset()}>

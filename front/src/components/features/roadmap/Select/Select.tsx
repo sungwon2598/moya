@@ -5,7 +5,6 @@ import { Fragment, useEffect, useState } from 'react';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import ChoseKeyword from './ChoseKeyword';
 import { Slider } from '@/components/shared/ui/slider';
-import { toast } from 'sonner';
 
 interface SelectProp {
   answers: AnswerItem[] | null;
@@ -28,7 +27,7 @@ export default function Select({
   const { currentStatusNumber } = roadmapQuestionStage;
   const [selectedValue, setSelectedValue] = useState<SelectedValue | null>();
   const [customInputValue, setCustomInputValue] = useState<string | number>('');
-  const [customSliderValue, setCustomSliderValue] = useState<number>(20);
+  const [customSliderValue, setCustomSliderValue] = useState<number>(4);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -147,7 +146,8 @@ export default function Select({
                       <h5>{customSliderValue}</h5>
                       <Slider
                         defaultValue={[customSliderValue]}
-                        max={80}
+                        min={2}
+                        max={8}
                         step={1}
                         onValueChange={handleSliderChange}
                         className="col-span-2"
@@ -208,7 +208,7 @@ export default function Select({
                   />
                   <span>
                     {item.name}
-                    {currentStatusNumber === 2 && '일'}
+                    {currentStatusNumber === 2 && '주'}
                   </span>
                 </label>
               );

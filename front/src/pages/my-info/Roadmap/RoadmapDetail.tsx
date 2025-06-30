@@ -166,14 +166,12 @@ export default function RoadmapDetail() {
   const [data, setData] = useState(fakeData);
 
   useEffect(() => {
-    // 실제 데이터가 있으면 실제 데이터를 사용하고, 없으면 가짜 데이터를 유지
-    if (roadmapDetailData) {
+    if (!isLoading && roadmapDetailData) {
       setData(roadmapDetailData);
-    } else if (!isLoading && !roadmapDetailData) {
-      // 로딩이 완료되었는데 데이터가 없으면 가짜 데이터 사용
+    } else if (!isLoading && !roadmapDetailData && !isError) {
       setData(fakeData);
     }
-  }, [roadmapDetailData, isLoading]);
+  }, [roadmapDetailData, isLoading, isError]);
 
   const handleShowApplicants = (dailyPlans: Day, week: number) => {
     showModal(<DayStudyPlan dailyPlans={dailyPlans} />, {
@@ -190,7 +188,7 @@ export default function RoadmapDetail() {
   };
 
   if (isLoading) return <div>불러오는 중...</div>;
-  // if (isError) return <div>에러가 발생했어요!</div>;
+  if (isError) return <div>에러가 발생했어요!</div>;
 
   return (
     <section className="container-roadmap">

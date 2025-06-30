@@ -10,7 +10,7 @@ export default function RotatingMessage({ data }: RotatingMessageType) {
 
   return (
     <div className="group relative pb-2">
-      <div className="rounded bg-neutral-100 p-2">
+      <div className="rounded bg-neutral-100 p-2 text-black">
         <p className="mb-1 font-semibold">📚 Tip.</p>
         <p>{currentMessage as string}</p>
       </div>
