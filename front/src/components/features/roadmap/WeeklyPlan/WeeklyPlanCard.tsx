@@ -98,7 +98,7 @@ export default function WeeklyPlanCard({ weeks }: CardProps) {
                 display: isGone ? 'none' : 'block',
                 touchAction: 'none',
               }}
-              className="w-full cursor-grab select-none rounded-xl border bg-white p-6 px-3 pt-4 shadow-lg">
+              className="w-full cursor-grab select-none rounded-xl border bg-white p-6 px-3 pt-4 text-black shadow-lg">
               <div className="border-b">
                 <h6 className="text-moya-primary">
                   <span className="text-sm">{weeks[i].week}주차</span>

@@ -28,7 +28,8 @@ export default function MyRoadmap() {
       navigate('/roadmap/create');
     }
   };
-  //로드맵 없을때
+
+  // 로드맵 없을때
   if (roadmapList?.length === 0)
     return (
       <div className="p-11 text-center">
@@ -40,10 +41,12 @@ export default function MyRoadmap() {
         </Button>
       </div>
     );
-  //로드맵 있을때
+
+  // 로드맵 있을때
   return (
     <>
       <h3 className="mt-6 px-4 text-2xl font-bold">내 로드맵</h3>
+
       <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3">
         {roadmapList?.map((roadmap: RoadmapData) => {
           const emoji = getConsistentEmoji(roadmap.id);
@@ -59,7 +62,7 @@ export default function MyRoadmap() {
                   </h3>
                 </div>
 
-                <p className="mb-10 text-sm text-gray-600">{roadmap.subCategory}</p>
+                <p className="mb-4 text-sm text-gray-600">{roadmap.subCategory}</p>
 
                 <p className="absolute bottom-4 right-4 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600 shadow-sm">
                   목표 : {roadmap.duration}일

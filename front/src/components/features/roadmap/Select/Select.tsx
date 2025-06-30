@@ -27,7 +27,7 @@ export default function Select({
   const { currentStatusNumber } = roadmapQuestionStage;
   const [selectedValue, setSelectedValue] = useState<SelectedValue | null>();
   const [customInputValue, setCustomInputValue] = useState<string | number>('');
-  const [customSliderValue, setCustomSliderValue] = useState<number>(20);
+  const [customSliderValue, setCustomSliderValue] = useState<number>(4);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -115,7 +115,7 @@ export default function Select({
   };
 
   return (
-    <>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <ChoseKeyword
         answers={answers}
         setAnswers={setAnswers}
@@ -146,7 +146,8 @@ export default function Select({
                       <h5>{customSliderValue}</h5>
                       <Slider
                         defaultValue={[customSliderValue]}
-                        max={80}
+                        min={2}
+                        max={8}
                         step={1}
                         onValueChange={handleSliderChange}
                         className="col-span-2"
@@ -156,7 +157,7 @@ export default function Select({
                   {currentStatusNumber !== 2 && (
                     <label
                       key={item.id}
-                      className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 group cursor-pointer rounded-lg border border-neutral-500 bg-amber-200 bg-neutral-50 p-6 transition hover:border-neutral-900 hover:bg-neutral-100">
+                      className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 has-checked:font-bold w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50/10 p-6 transition hover:border-neutral-900 hover:bg-neutral-100/10">
                       <>
                         <input
                           type="radio"
@@ -193,7 +194,7 @@ export default function Select({
               ) : (
                 <label
                   key={item.id}
-                  className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50 p-6 transition hover:border-neutral-900 hover:bg-neutral-100">
+                  className="has-checked:bg-blue-50 has-checked:text-blue-900 has-checked:border-blue-200 has-checked:font-bold w-full cursor-pointer rounded-lg border border-neutral-500 bg-neutral-50/10 p-6 transition hover:border-neutral-900 hover:bg-neutral-100/10">
                   <input
                     type="radio"
                     value={item.id}
@@ -207,7 +208,7 @@ export default function Select({
                   />
                   <span>
                     {item.name}
-                    {currentStatusNumber === 2 && '일'}
+                    {currentStatusNumber === 2 && '주'}
                   </span>
                 </label>
               );
@@ -225,6 +226,6 @@ export default function Select({
           </form>
         </section>
       )}
-    </>
+    </div>
   );
 }

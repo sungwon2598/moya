@@ -5,7 +5,7 @@ import HotStudy from '@pages/hot-study/HotStudy.tsx';
 
 const Main: React.FC = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-hidden">
       <MainContent />
       <RoadmapPreview />
       <HotStudy />

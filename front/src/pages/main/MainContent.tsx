@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { MapPin, Users, Wrench } from 'lucide-react';
 import { useAuth } from '../../components/features/auth/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from '@/assets/logo.svg?react';
@@ -11,30 +10,6 @@ const MainContent: React.FC = () => {
   const navigate = useNavigate();
   const triggerGoogleLogin = useGoogleLoginPopup();
   const [loginLoading, setLoginLoading] = useState(false);
-
-  const actionButtons = [
-    {
-      title: '로드맵 생성',
-      description: '나만의 학습 경로를 만들어보세요',
-      icon: MapPin,
-      bgColor: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-    },
-    {
-      title: '스터디 찾기',
-      description: '함께 성장할 동료를 찾아보세요',
-      icon: Users,
-      bgColor: 'bg-green-100',
-      iconColor: 'text-green-600',
-    },
-    {
-      title: '협업툴',
-      description: '효율적인 협업 도구를 활용해보세요',
-      icon: Wrench,
-      bgColor: 'bg-purple-100',
-      iconColor: 'text-purple-600',
-    },
-  ];
 
   const handleRoadmapClick = async () => {
     if (loginLoading) return;
@@ -50,7 +25,7 @@ const MainContent: React.FC = () => {
       await handleGoogleLogin(authData);
       navigate('/roadmap/create');
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if ((error as Error).name === 'AbortError') {
         console.log('Login process aborted by user.');
       } else {
         console.error('Google 로그인 실패:', error);
@@ -74,7 +49,7 @@ const MainContent: React.FC = () => {
         <KeywordAni />
       </div>
       <div className="z-10 text-center">
-        <LogoIcon className="mx-auto mb-2 h-12 w-auto" fill="white" />
+        <LogoIcon className="mx-auto mb-2 h-12 w-auto fill-black dark:fill-white" />
         <p className="text-base font-light tracking-wide opacity-30">AI study partner</p>
       </div>
       <div className="z-10 mx-auto mb-12 text-center sm:w-2/3">
@@ -90,24 +65,7 @@ const MainContent: React.FC = () => {
           MOYA와 함께, 더 스마트하고 효율적인 학습을 시작하세요.
         </p>
       </div>
-      {/* 액션 버튼 그리드 - 로그인 시에만 표시 */}
-      {isAuthenticated && (
-        <div className="z-10 mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {actionButtons.map((button, index) => (
-            <button
-              key={index}
-              className="group relative rounded-xl bg-white p-6 text-left shadow-md transition-all duration-300 hover:shadow-lg">
-              <div
-                className={`${button.bgColor} mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-transform group-hover:scale-110`}>
-                <button.icon className={`h-6 w-6 ${button.iconColor}`} />
-              </div>
-              <h3 className="mb-2 text-lg font-semibold text-gray-900">{button.title}</h3>
-              <p className="text-sm text-gray-600">{button.description}</p>
-              <div className="absolute inset-0 rounded-xl border-2 border-transparent transition-colors group-hover:border-blue-100"></div>
-            </button>
-          ))}
-        </div>
-      )}
+
       <button
         type="button"
         onClick={handleRoadmapClick}

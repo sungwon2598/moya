@@ -7,6 +7,7 @@ import { useModal } from '@/shared/hooks/useModal';
 import { Day } from '@/types/roadmap.types';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+
 const fakeData = {
   weeklyPlans: [
     {
@@ -154,6 +155,7 @@ const fakeData = {
     '이 로드맵은 롤의 다양한 측면을 폭넓게 다루고 있으며, 면접 준비에 필요한 심화 학습을 포함하고 있어 적합합니다.',
   hasRestrictedTopics: '없음',
 };
+
 export default function RoadmapDetail() {
   const { roadmapId } = useParams();
   const [searchParams] = useSearchParams();
@@ -162,11 +164,15 @@ export default function RoadmapDetail() {
   const { showModal } = useModal();
   const { data: roadmapDetailData, isLoading, isError } = useRoadmapDetail(Number(roadmapId));
   const [data, setData] = useState(fakeData);
+
   useEffect(() => {
-    if (roadmapDetailData) {
+    if (!isLoading && roadmapDetailData) {
       setData(roadmapDetailData);
+    } else if (!isLoading && !roadmapDetailData && !isError) {
+      setData(fakeData);
     }
-  }, []);
+  }, [roadmapDetailData, isLoading, isError]);
+
   const handleShowApplicants = (dailyPlans: Day, week: number) => {
     showModal(<DayStudyPlan dailyPlans={dailyPlans} />, {
       title: (
@@ -177,11 +183,13 @@ export default function RoadmapDetail() {
           <p>{dailyPlans.dailyKeyword}</p>
         </div>
       ),
-      size: 'lg', // 모달 크기 (ModalProps에 정의된 크기)
+      size: 'lg',
     });
   };
+
   if (isLoading) return <div>불러오는 중...</div>;
   if (isError) return <div>에러가 발생했어요!</div>;
+
   return (
     <section className="container-roadmap">
       <div className="">
@@ -194,8 +202,8 @@ export default function RoadmapDetail() {
         <h6 className="mt-4">학습플랜</h6>
         {data.weeklyPlans &&
           data.weeklyPlans.length > 0 &&
-          data.weeklyPlans.map((weeklyPlan) => (
-            <Accordion type="single" collapsible>
+          data.weeklyPlans.map((weeklyPlan, index) => (
+            <Accordion key={index} type="single" collapsible>
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                   <div className="flex w-full items-center justify-between">
@@ -206,8 +214,8 @@ export default function RoadmapDetail() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="rounded-lg bg-neutral-100">
-                  {weeklyPlan.dailyPlans.map((dailyPlans) => (
-                    <div className="p-2">
+                  {weeklyPlan.dailyPlans.map((dailyPlans, dailyIndex) => (
+                    <div key={dailyIndex} className="p-2">
                       <p>
                         {dailyPlans.day}일차 <span>{dailyPlans.dailyKeyword}</span>
                       </p>
