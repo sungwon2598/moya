@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -37,6 +39,10 @@ public class Post extends BaseEntity {
     // 모집 인원
     @Column
     private Integer recruits;
+
+    //지원 현황
+//    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+//    private List<Application> applications = new ArrayList<>();
 
     // 예상 기간
     @Column(length = 50)
@@ -73,12 +79,6 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
     private Set<Comment> comments = new HashSet<>();
-
-    // 좋아요 수는 동적으로 계산 가능하므로 별도의 필드 없이 Like 엔티티를 통해 계산 가능
-    // 좋아요
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @BatchSize(size = 10)
-    private Set<Like> likes = new HashSet<>();
 
     // 스터디 시작일자
     @Column(nullable = false)
@@ -139,14 +139,6 @@ public class Post extends BaseEntity {
 
     public void incrementViews() {
         this.views += 1;
-    }
-
-    public void addLike(Like like) {
-        this.likes.add(like);
-    }
-
-    public void removeLike(Like like) {
-        this.likes.remove(like);
     }
 
     //Soft Delete

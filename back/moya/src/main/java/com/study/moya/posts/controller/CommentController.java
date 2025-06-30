@@ -51,7 +51,7 @@ public class CommentController {
 
         if (SecurityContextHolder.getContext().getAuthentication().getAuthorities()
                 .stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-            commentService.deleteCommentAsAdmin(postId, commentId, memberId);
+            commentService.deleteCommentAsAdmin(postId, commentId);
         } else {
             commentService.deleteComment(postId, commentId, memberId);
         }
