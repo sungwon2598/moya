@@ -8,7 +8,7 @@ interface CardProps {
   weeks: Week[];
 }
 
-export default function WeeklyPlanCard({ weeks }: CardProps) {
+export default function WeeklyPlanCard({ weeks = [] }: CardProps) {
   const to = (i: number) => ({
     x: 0,
     y: i * -4,

@@ -6,7 +6,7 @@ const getMyRoadmapListData = async () => {
   return data;
 };
 const getMyRoadmapDetailData = async (id: number) => {
-  const { data } = await axiosInstance.get(`/api/roadmap/roadmaps/${id}`);
+  const { data } = await axiosInstance.get(`/api/roadmap/myroadmaps/${id}`);
   return data;
 };
 export const useMyRoadmapList = () => {
