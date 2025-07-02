@@ -297,6 +297,7 @@ public class RoadmapService {
 
         // 2. 로드맵에 속한 모든 일별 계획 조회 (주차, 일자 순으로 정렬됨)
         List<DailyPlan> allDailyPlans = dailyPlanRepository.findAllByWeeklyPlan_RoadMap_IdOrderByDayNumber(roadmapId);
+        log.info("========================데일리 플랜 내용: {}", allDailyPlans.get(1).toString());
 
         // 3. 주차별로 일별 계획을 그룹화
         Map<Integer, List<DailyPlan>> weeklyGroupedPlans = new HashMap<>();
@@ -324,7 +325,8 @@ public class RoadmapService {
             List<WeeklyRoadmapResponse.DailyPlan> dailyPlansDto = weekDailyPlans.stream()
                     .map(plan -> new WeeklyRoadmapResponse.DailyPlan(
                             plan.getDayNumber(),
-                            plan.getKeyword()
+                            plan.getKeyword(),
+                            getWorksheet(plan)
                     ))
                     .collect(Collectors.toList());
 
@@ -345,6 +347,13 @@ public class RoadmapService {
                 roadMap.getEvaluation(),
                 "없음" // 금지된 주제 여부는 별도 필드가 없어 기본값으로 설정
         );
+    }
+
+    private String getWorksheet(DailyPlan plan) {
+        if (plan.getWorkSheet() == null) {
+            return "";
+        }
+        return plan.getWorkSheet();
     }
 
     private Etc createEtc(String name, Long etcType){
