@@ -1,6 +1,7 @@
 export type Day = {
   day: number;
   dailyKeyword: string;
+  worksheet: string;
 };
 
 export type Week = {

@@ -4,10 +4,12 @@ interface DayStudyPlanType {
   dailyPlans: Day;
 }
 export default function DayStudyPlan({ dailyPlans }: DayStudyPlanType) {
+  console.log(dailyPlans);
   return (
-    <div>
+    <div className="text-black">
       {dailyPlans.day}
       {dailyPlans.dailyKeyword}
+      {dailyPlans.worksheet}
     </div>
   );
 }
