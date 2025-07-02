@@ -30,5 +30,6 @@ public class WeeklyRoadmapResponse {
     public static class DailyPlan {
         private int day; // 날짜
         private String dailyKeyword; // 일별 키워드
+        private String worksheet; //워크시트(값이 없는 경우 null)
     }
 }
