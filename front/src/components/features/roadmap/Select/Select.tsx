@@ -28,9 +28,39 @@ export default function Select({
   const [selectedValue, setSelectedValue] = useState<SelectedValue | null>();
   const [customInputValue, setCustomInputValue] = useState<string | number>('');
   const [customSliderValue, setCustomSliderValue] = useState<number>(4);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  useEffect(() => {
+    if (currentStatusNumber === 2) {
+      const existingAnswer = answers?.find((answer) => answer.questionNumber === currentStatusNumber);
+      if (existingAnswer) {
+        setCustomSliderValue(existingAnswer.choiceValue as number);
+        setSelectedValue({ id: 'custom', name: existingAnswer.choiceValue });
+      } else {
+        setSelectedValue({ id: 'custom', name: 4 });
+        const currentQuestion = questions[currentStatusNumber - 1];
+        setAnswers((prev) => {
+          const newAnswers = [...(prev ?? [])];
+          const existingAnswerIndex = newAnswers.findIndex((answer) => answer.questionNumber === currentStatusNumber);
+
+          if (existingAnswerIndex === -1) {
+            newAnswers.push({
+              questionNumber: currentStatusNumber,
+              choiceId: 'custom',
+              name: currentQuestion.name,
+              choiceValue: 4,
+            });
+          }
+
+          return newAnswers;
+        });
+      }
+    }
+  }, [currentStatusNumber, answers, questions, setAnswers]);
+
   const handleChoiceSubmit = (choiceId: SelectedValue) => {
     const currentQuestion = questions[currentStatusNumber - 1];
     setAnswers((prev) => {
@@ -146,6 +176,7 @@ export default function Select({
                       <h5>{customSliderValue}</h5>
                       <Slider
                         defaultValue={[customSliderValue]}
+                        value={[customSliderValue]}
                         min={2}
                         max={8}
                         step={1}

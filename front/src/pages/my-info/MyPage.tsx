@@ -12,10 +12,10 @@ const MyPage = () => {
   }, [user]);
 
   return (
-    <div className="flex items-start justify-center min-h-screen px-4 py-12">
-      <Card.Card className="w-full max-w-xl p-6 bg-white border-0 shadow-sm rounded-2xl">
-        <div className="flex items-center gap-4 mb-6">
-          <Avatar.Avatar className="w-16 h-16">
+    <div className="flex min-h-screen items-start justify-center px-4 py-12">
+      <Card.Card className="w-full max-w-xl rounded-2xl border-0 bg-white p-6 text-neutral-950 shadow-sm">
+        <div className="mb-6 flex items-center gap-4">
+          <Avatar.Avatar className="h-16 w-16">
             {user?.data.profileImageUrl ? (
               <Avatar.AvatarImage src={user?.data.profileImageUrl} alt={user.data.nickname} />
             ) : (
@@ -30,16 +30,16 @@ const MyPage = () => {
           </div>
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="border-t pt-4">
           <div className="flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-gray-600" />
+            <Ticket className="h-5 w-5 text-gray-600" />
             <p className="text-base font-medium">MOYA 포인트:</p>
             <p className="text-base text-gray-700">0</p>
           </div>
         </div>
 
         <Link to="/settings/profile" className="flex items-center gap-2">
-          <Settings className="w-5 h-5 text-gray-600" />
+          <Settings className="h-5 w-5 text-gray-600" />
           <p className="text-base font-medium">프로필 설정</p>
         </Link>
       </Card.Card>
