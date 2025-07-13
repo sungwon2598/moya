@@ -18,6 +18,7 @@ const getRoadmapFormData = async () => {
 
 const postRoadmapFormData = async (createFormData: CreateFormDataType) => {
   const { data } = await axiosInstance.post('/api/roadmap/generate', createFormData);
+  console.log(data);
   return data;
 };
 
@@ -41,6 +42,8 @@ export const usePostRoadmapCreate = () => {
     },
     onSuccess: (data) => {
       console.log('로드맵 생성 성공');
+      console.log(data);
+
       queryClient.setQueryData(['roadmapStatus'], {
         status: 'success',
         data,

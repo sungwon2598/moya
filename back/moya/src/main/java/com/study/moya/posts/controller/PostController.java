@@ -4,6 +4,7 @@ import com.study.moya.global.api.ApiResponse;
 import com.study.moya.posts.dto.like.LikeResponse;
 import com.study.moya.posts.dto.post.*;
 import com.study.moya.posts.service.PostService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -84,24 +85,14 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 좋아요 추가
-     */
+    // ✅ 기존 addLike, removeLike 엔드포인트를 toggleLike로 통합
     @PostMapping("/{postId}/like")
-    public ResponseEntity<ApiResponse<LikeResponse>> addLike(@PathVariable Long postId,
-                                                             @AuthenticationPrincipal Long memberId) {
-        LikeResponse likeResponse = postService.addLike(postId, memberId);
-        return ResponseEntity.ok(ApiResponse.of(likeResponse));
-    }
-
-    /**
-     * 좋아요 취소
-     */
-    @DeleteMapping("/{postId}/like")
-    public ResponseEntity<ApiResponse<LikeResponse>> removeLike(@PathVariable Long postId,
-                                                                @AuthenticationPrincipal Long memberId) {
-        LikeResponse likeResponse = postService.removeLike(postId, memberId);
-        return ResponseEntity.ok(ApiResponse.of(likeResponse));
+    @Operation(summary = "좋아요/취소", description = "좋아요 상태를 토글합니다")
+    public ResponseEntity<LikeResponse> toggleLike(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal Long memberId) {
+        LikeResponse response = postService.toggleLike(postId, memberId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/popular")

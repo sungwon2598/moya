@@ -15,9 +15,9 @@ public class RoadmapPromptService {
     public String createSystemPrompt(RoadmapRequest request){
         return String.format(
                 systemPrompt,
-                request.getSubCategory(),
-                request.getMainCategory(),
-                request.getSubCategory(),
+                request.getEffectiveSubCategory(),
+                request.getEffectiveMainCategory(),
+                request.getEffectiveSubCategory(),
                 request.getCurrentLevel(),
                 request.getDuration(),
                 request.getLearningObjective()
@@ -32,8 +32,8 @@ public class RoadmapPromptService {
                         "기간: %s주\n" +
                         "학습 목표: %s\n\n" +
                         "위의 정보를 기반으로 주차별 키워드와 일별 키워드를 포함한 로드맵을 작성해주세요.",
-                request.getMainCategory(),
-                request.getSubCategory(),
+                request.getEffectiveMainCategory(),
+                request.getEffectiveSubCategory(),
                 request.getCurrentLevel(),
                 request.getDuration(),
                 request.getLearningObjective()

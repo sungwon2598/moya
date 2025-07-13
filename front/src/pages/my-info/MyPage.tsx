@@ -13,6 +13,7 @@ const MyPage = () => {
 
   return (
     <div className="flex min-h-screen items-start justify-center px-4 py-12">
+
       <div className="w-full max-w-4xl">
         <Tabs.Tabs defaultValue="profile" className="w-full">
           <div className="w-full overflow-x-auto">
@@ -34,7 +35,9 @@ const MyPage = () => {
                 </Tabs.TabsTrigger>
               )}
             </Tabs.TabsList>
+
           </div>
+
 
           <Tabs.TabsContent value="profile" className="mt-6">
             <Card.Card className="w-full rounded-2xl border-0 bg-white p-6 shadow-sm">
@@ -109,6 +112,7 @@ const MyPage = () => {
           )}
         </Tabs.Tabs>
       </div>
+
     </div>
   );
 };

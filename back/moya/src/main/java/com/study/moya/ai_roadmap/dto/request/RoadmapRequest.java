@@ -40,6 +40,19 @@ public class RoadmapRequest {
     public RoadmapRequest() {
     }
 
+    // etc 값이 있으면 사용하고, 없으면 기본값 사용
+    public String getEffectiveMainCategory() {
+        return isNotEmpty(etc1) ? etc1 : mainCategory;
+    }
+
+    public String getEffectiveSubCategory() {
+        return isNotEmpty(etc2) ? etc2 : subCategory;
+    }
+
+    private boolean isNotEmpty(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
     // toString 메소드 오버라이드
     @Override
     public String toString() {

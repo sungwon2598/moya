@@ -15,19 +15,16 @@ import com.study.moya.posts.repository.LikeRepository;
 import com.study.moya.posts.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -39,9 +36,12 @@ public class PostService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
     private final com.study.moya.member.repository.MemberRepository memberRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    // 인메모리 캐시 저장소
+    private volatile List<PopularListResponse> cachedPopularPosts = new ArrayList<>();
+    private volatile LocalDateTime lastUpdated = null;
 
-    private static final String POPULAR_POSTS_KEY = "popular:posts";
+    private static final int CACHE_DURATION_MINUTES = 30;
+
 
     @Transactional
     public Long createPost(PostCreateRequest request, Long memberId) {
@@ -69,26 +69,30 @@ public class PostService {
         return saved.getId();
     }
 
-    @Transactional(readOnly = true)
+    // ✅ 게시글 목록 조회 최적화
     public ApiResponse<List<PostListResponse>> getPostList(int page, Long memberId) {
-
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by("createdAt").descending());
         Page<Post> postPage = postRepository.findByIsDeletedFalse(pageRequest);
+
+        // 게시글 ID 목록 추출
+        List<Long> postIds = postPage.getContent().stream()
+                .map(Post::getId)
+                .toList();
+
+        // 배치로 좋아요 수 조회 (N+1 문제 해결)
+        Map<Long, Integer> likeCountMap = getLikeCountsForPosts(postIds);
+
+        // 현재 사용자의 좋아요 여부 배치 조회
+        Map<Long, Boolean> memberLikeMap = getMemberLikeStatusForPosts(postIds, memberId);
+
         List<PostListResponse> responseList = postPage.getContent().stream().map(post -> {
             int commentCount = post.getComments().size();
             String authorName = post.getAuthor().getNickname();
-            // 좋아요 처리
-            int totalLikes = likeRepository.countByPostId(post.getId());
-            boolean isLiked = false;
 
-            if (memberId != null) {
-                Member member = memberRepository.findById(memberId).orElse(null);
-                if (member != null) {
-                    isLiked = likeRepository.findByMemberIdAndPostId(member.getId(), post.getId()).isPresent();
-                } else {
-                    log.warn("인증된 사용자가 DB에 존재하지 않습니다. id: {}", memberId);
-                }
-            }
+            // 배치 조회 결과 사용
+            int totalLikes = likeCountMap.getOrDefault(post.getId(), 0);
+            boolean isLiked = memberLikeMap.getOrDefault(post.getId(), false);
+
             return new PostListResponse(
                     post.getId(),
                     post.getTitle(),
@@ -110,6 +114,7 @@ public class PostService {
         return ApiResponse.of(new PageImpl<>(responseList, pageRequest, postPage.getTotalElements()));
     }
 
+    // ✅ 게시글 상세 조회 최적화
     @Transactional
     public ApiResponse<PostDetailResponse> getPostDetail(Long postId, Long memberId) {
         Post post = postRepository.findWithLockById(postId)
@@ -123,14 +128,14 @@ public class PostService {
         post.incrementViews();
         String authorName = post.getAuthor().getNickname();
 
-        Member member = null;
+        // 좋아요 여부 및 개수 조회
+        boolean isLiked = false;
         if (memberId != null) {
-            member = memberRepository.findById(memberId).orElse(null);
+            isLiked = likeRepository.existsByMemberIdAndPostId(memberId, postId);
         }
+        int totalLikes = likeRepository.countByPostId(postId);
 
-        // 좋아요 여부
-        boolean isLiked = member != null && likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
-
+        // 댓글 처리 (기존 로직 유지)
         Set<Comment> allComments = post.getComments();
         List<Comment> rootComments = allComments.stream()
                 .filter(c -> c.getParentComment() == null)
@@ -157,7 +162,7 @@ public class PostService {
                 commentDetails,
                 totalComments,
                 isLiked,
-                post.getLikes().size()
+                totalLikes
         );
 
         return ApiResponse.of(detailResponse);
@@ -234,114 +239,133 @@ public class PostService {
     }
 
     @Transactional
-    public LikeResponse addLike(Long postId, Long memberId) {
+    public LikeResponse toggleLike(Long postId, Long memberId) {
         if (memberId == null) {
             throw PostException.of(PostErrorCode.BAD_ACCESS);
         }
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> PostException.of(PostErrorCode.POST_NOT_FOUND));
-
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
-
-        boolean alreadyLiked = likeRepository.findByMemberIdAndPostId(member.getId(), postId).isPresent();
-
-        if (alreadyLiked) {
-            throw PostException.of(PostErrorCode.ALREADY_LIKED);
+        if(!postRepository.existsById(postId)) {
+            throw PostException.of(PostErrorCode.POST_NOT_FOUND);
         }
 
-        Like like = Like.builder()
-                .member(member)
-                .post(post)
-                .build();
-        likeRepository.save(like);
-
-        int totalLikes = likeRepository.countByPostId(postId);
-
-        return new LikeResponse(true, totalLikes);
-    }
-
-    @Transactional
-    public LikeResponse removeLike(Long postId, Long memberId) {
-        if (memberId == null) {
-            throw PostException.of(PostErrorCode.BAD_ACCESS);
+        if(!memberRepository.existsById(memberId)) {
+            throw PostException.of(PostErrorCode.MEMBER_NOT_FOUND);
         }
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> PostException.of(PostErrorCode.MEMBER_NOT_FOUND));
+        // 토글 로직: 삭제 시도 후 결과에 따라 분기
+        int deletedCount = likeRepository.deleteByMemberIdAndPostId(memberId, postId);
 
-        Like like = likeRepository.findByMemberIdAndPostId(member.getId(), postId)
-                .orElseThrow(() -> PostException.of(PostErrorCode.NO_LIKED));
+        if (deletedCount > 0) {
+            // 좋아요 취소됨
+            int totalLikes = likeRepository.countByPostId(postId);
+            return new LikeResponse(false, totalLikes);
+        } else {
+            // 좋아요 추가
+            try {
+                Like like = Like.builder()
+                        .member(memberRepository.getReferenceById(memberId))  // 프록시 사용
+                        .post(postRepository.getReferenceById(postId))        // 프록시 사용
+                        .build();
+                likeRepository.save(like);
 
-        likeRepository.delete(like);
+                int totalLikes = likeRepository.countByPostId(postId);
+                return new LikeResponse(true, totalLikes);
 
-        int totalLikes = likeRepository.countByPostId(postId);
-
-        return new LikeResponse(false, totalLikes);
+            } catch (DataIntegrityViolationException e) {
+                // 동시성으로 인한 중복 생성 시 (DB 제약 조건 활용)
+                int totalLikes = likeRepository.countByPostId(postId);
+                return new LikeResponse(true, totalLikes);
+            }
+        }
     }
 
     /**
      * 5분마다 인기 글 저장 (조회수 기준)
      */
-    @Transactional(readOnly = true)
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRate = 1800000) // 30분
     public void refreshPopularPosts() {
-        // 인기글 Top 10 조회 (인덱스 활용)
-        List<Post> popularPosts = postRepository.findTop10ByIsDeletedFalseOrderByViewsDesc();
+        try {
+            // 인기글 Top 10 조회
+            List<Post> popularPosts = postRepository.findTop10ByIsDeletedFalseOrderByViewsDesc(Pageable.ofSize(10));
 
-        // 레디스에 저장할 데이터 준비
-        List<PopularListResponse> postResponses = popularPosts.stream()
-                .map(PopularListResponse::from)
-                .toList();
+            // 응답 객체로 변환
+            List<PopularListResponse> postResponses = popularPosts.stream()
+                    .map(PopularListResponse::from)
+                    .toList();
 
-        redisTemplate.delete(POPULAR_POSTS_KEY);
+            // 인메모리에 저장 (원자적 업데이트)
+            this.cachedPopularPosts = postResponses;
+            this.lastUpdated = LocalDateTime.now();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        for (PopularListResponse post : postResponses) {
-            try {
-                // 객체를 Json으로 파싱
-                String postJson = objectMapper.writeValueAsString(post);
-                redisTemplate.opsForList().rightPush(POPULAR_POSTS_KEY, postJson);
-            } catch (JsonProcessingException e) {
-                log.error("JSON 파싱 오류: {}", e.getMessage());
+            log.info("인메모리 캐시에 인기 게시글 업데이트 완료 - {} 개", postResponses.size());
+            for (PopularListResponse post : postResponses) {
+                log.info("인메모리 캐시에 게시글 id {}", post.postId());
             }
+
+
+        } catch (Exception e) {
+            log.error("인기 게시글 캐시 업데이트 중 오류 발생", e);
         }
-
-        redisTemplate.expire(POPULAR_POSTS_KEY, 300, TimeUnit.SECONDS);
-
-        log.info("Redis 캐시에 인기 게시글 업데이트 완료");
     }
 
     /**
-     * Redis 에서 인기 글 조회 (조회수 기준)
-     * @return 인기 글 목록
+     * 인메모리에서 인기 글 조회
      */
     public List<PopularListResponse> getPopularPosts() {
-        List<Object> cachedPosts = redisTemplate.opsForList().range(POPULAR_POSTS_KEY, 0, -1);
-
-        if (cachedPosts == null || cachedPosts.isEmpty()) {
-            log.info("인기 게시글 관련 레디스에 데이터가 없다. refresh 메서드 재요청");
+        // 캐시가 비어있거나 만료되었으면 새로고침
+        if (isCacheExpired()) {
+            log.info("캐시가 만료되어 새로고침 실행");
             refreshPopularPosts();
-            cachedPosts = redisTemplate.opsForList().range(POPULAR_POSTS_KEY, 0, -1);
         }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<PopularListResponse> result = new ArrayList<>();
+        // 방어적 복사로 반환
+        return new ArrayList<>(cachedPopularPosts);
+    }
 
-        for (Object cachedPost : cachedPosts) {
-            try {
-                // Json 을 객체로 파싱
-                PopularListResponse post = objectMapper.readValue(cachedPost.toString(), PopularListResponse.class);
-                result.add(post);
-            } catch (JsonProcessingException e) {
-                log.error("JSON 파싱 오류: {}", e.getMessage());
-            }
+    /**
+     * 캐시 만료 여부 확인
+     */
+    private boolean isCacheExpired() {
+        return cachedPopularPosts.isEmpty()
+                || lastUpdated == null
+                || lastUpdated.isBefore(LocalDateTime.now().minusMinutes(CACHE_DURATION_MINUTES));
+    }
+
+    // ✅ 배치 좋아요 수 조회 헬퍼 메서드
+    private Map<Long, Integer> getLikeCountsForPosts(List<Long> postIds) {
+        if (postIds.isEmpty()) {
+            return Map.of();
         }
 
-        return result;
+        // 한 번의 쿼리로 모든 게시글의 좋아요 수 조회
+        List<Object[]> results = likeRepository.findLikeCountsByPostIds(postIds);
 
+        return results.stream()
+                .collect(Collectors.toMap(
+                        result -> (Long) result[0],      // postId
+                        result -> ((Number) result[1]).intValue() // likeCount
+                ));
+    }
+
+    // ✅ 사용자 좋아요 여부 배치 조회 헬퍼 메서드
+    private Map<Long, Boolean> getMemberLikeStatusForPosts(List<Long> postIds, Long memberId) {
+        if (postIds.isEmpty() || memberId == null) {
+            return postIds.stream()
+                    .collect(Collectors.toMap(
+                            postId -> postId,
+                            postId -> false
+                    ));
+        }
+
+        // 한 번의 쿼리로 사용자가 좋아요한 게시글 ID 목록 조회
+        List<Long> likedPostIds = likeRepository.findLikedPostIdsByMemberAndPosts(memberId, postIds);
+        Set<Long> likedPostIdSet = new HashSet<>(likedPostIds);
+
+        return postIds.stream()
+                .collect(Collectors.toMap(
+                        postId -> postId,
+                        likedPostIdSet::contains
+                ));
     }
 
 

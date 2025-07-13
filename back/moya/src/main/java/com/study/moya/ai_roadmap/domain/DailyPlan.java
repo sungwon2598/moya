@@ -56,4 +56,15 @@ public class DailyPlan extends BaseEntity {
             throw new IllegalArgumentException("일자는 1-7 사이여야 합니다.");
         }
     }
+
+    @Override
+    public String toString() {
+        return "DailyPlan{" +
+                "id=" + id +
+                ", dayNumber=" + dayNumber +
+                ", keyword='" + keyword + '\'' +
+                ", workSheet='" + (workSheet != null ? workSheet.substring(0, Math.min(workSheet.length(), 100)) + "..." : null) + '\'' +
+                ", weeklyPlanId=" + (weeklyPlan != null ? weeklyPlan.getId() : null) +
+                '}';
+    }
 }

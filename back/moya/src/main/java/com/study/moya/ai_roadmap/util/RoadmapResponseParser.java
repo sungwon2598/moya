@@ -58,7 +58,9 @@ public class RoadmapResponseParser {
         for (JsonNode dailyPlanNode : dailyPlansNode) {
             int day = dailyPlanNode.get("day").asInt();
             String dailyKeyword = dailyPlanNode.get("dailyKeyword").asText();
-            dailyPlans.add(new WeeklyRoadmapResponse.DailyPlan(day, dailyKeyword));
+            String worksheet = dailyPlanNode.has("worksheet") ?
+                    dailyPlanNode.get("worksheet").asText("") : "";
+            dailyPlans.add(new WeeklyRoadmapResponse.DailyPlan(day, dailyKeyword, worksheet));
         }
 
         return dailyPlans;

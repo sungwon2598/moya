@@ -119,7 +119,7 @@ public class RoadmapController {
         return ResponseEntity.ok(roadMapSummaryDTOS);
     }
 
-    @GetMapping("/roadmaps/{roadMapId}")
+    @GetMapping("/myroadmaps/{roadMapId}")
     public ResponseEntity<WeeklyRoadmapResponse> getRoadMap(@PathVariable Long roadMapId){
         return ResponseEntity.ok(roadMapService.getRoadmapById(roadMapId));
     }
