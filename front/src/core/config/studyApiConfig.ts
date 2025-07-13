@@ -17,6 +17,9 @@ export const STUDY_ENDPOINTS = {
   DELETE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
   UPDATE_CATEGORY: (categoryId: number) => `${BASE_URL}/api/categories/${categoryId}`,
   HOTSTUDYLIST: `${BASE_URL}/api/posts/popular`,
+  COMMENTS: (postId: number) => `${BASE_URL}/api/posts/${postId}/comments`,
+  REPLY_COMMENTS: (postId: number, commentId: number) => `${BASE_URL}/api/posts/${postId}/comments/${commentId}`,
+  DELETE_COMMENTS: (postId: number, commentId: number) => `${BASE_URL}/api/posts/${postId}/comments/${commentId}`,
 } as const;
 
 // 카테고리 관련 타입 정의
@@ -46,6 +49,21 @@ export interface StudyFilters {
   recruitmentStatus?: string;
 }
 
+export interface Replies {
+  replyId: number;
+  replyAuthorName: string;
+  replyContent: string;
+  replyCreatedAt: string;
+}
+
+export interface Comment {
+  commentId: number;
+  content: string;
+  authorName: string;
+  createdAt: string;
+  replies?: Replies[];
+}
+
 // 스터디 게시글 관련 타입 정의
 export interface StudyPost {
   postId: number;
@@ -59,6 +77,7 @@ export interface StudyPost {
   studyDetails: string[];
   authorName: string;
   views: number;
+  comments: Comment[];
   totalComments: number;
   isLiked: boolean;
   totalLikes: number;
@@ -83,6 +102,12 @@ export interface CreateStudyDTO {
   endDate: string;
   studies: string[];
   studyDetails: string[];
+}
+
+export interface CreateCommentDTO {
+  content: string;
+  parentCommentId?: number;
+  commentId?: number;
 }
 
 export interface UpdateStudyDTO extends CreateStudyDTO {
@@ -240,18 +265,21 @@ export const studyApiService = {
   addLike: async (postId: number): Promise<StudyApiResponse<void>> => {
     const token = TokenStorage.getAccessToken();
     try {
-      const response = await axios.post<StudyApiResponse<void>>(STUDY_ENDPOINTS.LIKE(postId), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.post<StudyApiResponse<void>>(
+        STUDY_ENDPOINTS.LIKE(postId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
-      console.log(error);
-      // if (axios.isAxiosError(error)) {
-      //   console.log(error.response);
-      //   throw new Error(error.response?.data?.message || '좋아요 추가에 실패했습니다.');
-      // }
+      if (axios.isAxiosError(error)) {
+        console.log(error.response);
+        throw new Error(error.response?.data?.message || '좋아요 추가에 실패했습니다.');
+      }
       throw error;
     }
   },
@@ -260,11 +288,15 @@ export const studyApiService = {
   removeLike: async (postId: number): Promise<StudyApiResponse<void>> => {
     const token = TokenStorage.getAccessToken();
     try {
-      const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.UNLIKE(postId), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.delete<StudyApiResponse<void>>(
+        STUDY_ENDPOINTS.UNLIKE(postId),
+
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -282,6 +314,91 @@ export const studyApiService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data?.message || '핫 스터디 조회 실패.');
+      }
+      throw error;
+    }
+  },
+
+  // 댓글 생성
+  // createComments: async (postId: number, commentData: CeateCommentDTO): Promise<StudyApiResponse<Comment>> => {
+  //   const token = TokenStorage.getAccessToken();
+
+  //   try {
+  //     const response = await axios.post<StudyApiResponse<Comment>>(STUDY_ENDPOINTS.COMMENTS(postId), commentData, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     console.log('댓글 생성완료', response.data, commentData);
+  //     return response.data;
+  //   } catch (error) {
+  //     if (axios.isAxiosError(error)) {
+  //       console.log(commentData);
+  //       throw new Error(error.response?.data?.message || '댓글 생성에 실패했습니다.');
+  //     }
+  //     throw error;
+  //   }
+  // },
+
+  createComment: async (postId: number, commentData: CreateCommentDTO): Promise<StudyApiResponse<Comment>> => {
+    const token = TokenStorage.getAccessToken();
+
+    try {
+      const response = await axios.post<StudyApiResponse<Comment>>(STUDY_ENDPOINTS.COMMENTS(postId), commentData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // 디버깅을 위한 로그
+      console.log('댓글/대댓글 생성 요청:', {
+        postId,
+        commentData,
+        isReply: !!commentData.parentCommentId,
+      });
+      console.log('응답:', response.data);
+
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('댓글/대댓글 생성 실패:', error.response?.data);
+        throw new Error(error.response?.data?.message || '댓글 생성에 실패했습니다.');
+      }
+      throw error;
+    }
+  },
+
+  // 대댓글 생성
+  createComments: async (postId: number, commentData: CreateCommentDTO): Promise<StudyApiResponse<Comment>> => {
+    return studyApiService.createComment(postId, commentData);
+  },
+
+  createReplyComments: async (
+    postId: number,
+    parentCommentId: number,
+    commentData: CreateCommentDTO
+  ): Promise<StudyApiResponse<Comment>> => {
+    const replyData = {
+      ...commentData,
+      parentCommentId: parentCommentId,
+    };
+    return studyApiService.createComment(postId, replyData);
+  },
+  // 댓글 삭제
+  deleteComments: async (postId: number, commentId: number): Promise<StudyApiResponse<void>> => {
+    const token = TokenStorage.getAccessToken();
+
+    try {
+      const response = await axios.delete<StudyApiResponse<void>>(STUDY_ENDPOINTS.DELETE_COMMENTS(postId, commentId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || '댓글 삭제에 실패했습니다.');
       }
       throw error;
     }

@@ -10,3 +10,4 @@ export * as Select from './select';
 export * as Badge from './badge';
 export * as Avatar from './avatar';
 export * as DropdownMenu from './dropdown-menu';
+export * as Tabs from './tabs';
