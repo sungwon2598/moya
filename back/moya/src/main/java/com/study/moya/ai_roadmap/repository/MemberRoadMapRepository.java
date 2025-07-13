@@ -3,6 +3,7 @@ package com.study.moya.ai_roadmap.repository;
 import com.study.moya.ai_roadmap.domain.MemberRoadMap;
 import com.study.moya.ai_roadmap.domain.RoadMap;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
+import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryProjection;
 import com.study.moya.member.domain.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,17 +22,31 @@ public interface MemberRoadMapRepository extends JpaRepository<MemberRoadMap, Lo
     @Query("SELECT mr FROM MemberRoadMap mr JOIN FETCH mr.roadMap WHERE mr.member.id = :memberId")
     List<MemberRoadMap> findByMemberIdWithRoadMap(@Param("memberId") Long memberId);
 
-    @Query("SELECT new com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO(" +
-            "r.id, " +                // 1번째 파라미터 (id)
-//            "r.category.name, " +     // 2번째 파라미터 (mainCategory)
-            "COALESCE(r.category.name, r.etc2.name), " +
-            "r.topic, " +             // 3번째 파라미터 (subCategory)
-            "r.duration) " +          // 4번째 파라미터 (duration)
-            "FROM MemberRoadMap mr JOIN mr.roadMap r " +
-            "LEFT JOIN r.category " +
-            "LEFT JOIN r.etc2 " +
-            "WHERE mr.member.id = :memberId")
-    List<RoadMapSummaryDTO> findRoadMapSummariesByMemberId(@Param("memberId") Long memberId);
+//    @Query("SELECT new com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO(" +
+//            "r.id, " +                // 1번째 파라미터 (id)
+////            "r.category.name, " +     // 2번째 파라미터 (mainCategory)
+//            "COALESCE(r.category.name, r.etc2.name), " +
+//            "r.topic, " +             // 3번째 파라미터 (subCategory)
+//            "r.duration) " +          // 4번째 파라미터 (duration)
+//            "FROM MemberRoadMap mr JOIN mr.roadMap r " +
+//            "LEFT JOIN r.category " +
+//            "LEFT JOIN r.etc2 " +
+//            "WHERE mr.member.id = :memberId")
+//    List<RoadMapSummaryDTO> findRoadMapSummariesByMemberId(@Param("memberId") Long memberId);
+
+    @Query(value = "SELECT " +
+            "r.id as id, " +
+            "CASE WHEN r.category_id IS NOT NULL THEN c.name ELSE e1.name END as mainCategory, " +
+            "CASE WHEN r.category_id IS NOT NULL THEN r.topic ELSE e2.name END as subCategory, " +
+            "r.duration as duration " +
+            "FROM member_roadmaps mr " +
+            "JOIN roadmaps r ON mr.roadmap_id = r.id " +
+            "LEFT JOIN categories c ON r.category_id = c.id " +
+            "LEFT JOIN etc e1 ON r.etc1_id = e1.id " +
+            "LEFT JOIN etc e2 ON r.etc2_id = e2.id " +
+            "WHERE mr.member_id = :memberId",
+            nativeQuery = true)
+    List<RoadMapSummaryProjection> findRoadMapSummariesByMemberId(@Param("memberId") Long memberId);
 
     boolean existsByMemberIdAndRoadMapId(Long memberId, Long roadMapId);
 
