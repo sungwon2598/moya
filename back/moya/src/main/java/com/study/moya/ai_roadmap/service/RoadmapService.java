@@ -5,6 +5,7 @@ import com.study.moya.ai_roadmap.domain.*;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
+import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryProjection;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.repository.*;
 import com.study.moya.ai_roadmap.util.RoadmapResponseParser;
@@ -278,14 +279,15 @@ public class RoadmapService {
     public List<RoadMapSummaryDTO> getMemberRoadMapSummaries(Long memberId) {
         log.info("사용자의 구독 로드맵 요약 정보 조회 시작. 사용자 ID: {}", memberId);
 
-        // 사용자 존재 확인 (선택 사항)
-        if (!memberRepository.existsById(memberId)) {
-            throw new EntityNotFoundException("사용자를 찾을 수 없습니다. ID: " + memberId);
-        }
+        // Projection으로 조회
+        List<RoadMapSummaryProjection> projections = memberRoadMapRepository.findRoadMapSummariesByMemberId(memberId);
 
-        List<RoadMapSummaryDTO> roadMapSummaries = memberRoadMapRepository.findRoadMapSummariesByMemberId(memberId);
+        // Projection → DTO 변환
+        List<RoadMapSummaryDTO> roadMapSummaries = projections.stream()
+                .map(RoadMapSummaryDTO::from)
+                .collect(Collectors.toList());
+
         log.info("사용자의 구독 로드맵 요약 정보 조회 완료. 조회된 로드맵 수: {}", roadMapSummaries.size());
-
         return roadMapSummaries;
     }
 
