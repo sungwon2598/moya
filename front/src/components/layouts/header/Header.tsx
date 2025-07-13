@@ -93,6 +93,12 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const isActive = location.pathname.startsWith('/notification');
 
+  useEffect(() => {
+    if (location.pathname === '/login/oauth2/code/google') {
+      navigate('/', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   const testBtn = () => {
     navigate('/oauth2/authorization/google');
   };
