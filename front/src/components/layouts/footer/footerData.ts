@@ -12,7 +12,7 @@ export const footerSections: FooterSection[] = [
   {
     title: '바로가기',
     links: [
-      { href: '/about', label: '회사소개' },
+      // { href: '/about', label: '회사소개' },
       { href: '/roadmap', label: '로드맵' },
       { href: '/study', label: '스터디' },
       // { href: '/cooperate', label: '협업툴' }
@@ -21,23 +21,23 @@ export const footerSections: FooterSection[] = [
   {
     title: '고객지원',
     links: [
-      { href: '/faq', label: '자주 묻는 질문' },
-      { href: '/contact', label: '문의하기' },
-      { href: '/notice', label: '공지사항' },
+      // { href: '/faq', label: '자주 묻는 질문' },
+      // { href: '/contact', label: '문의하기' },
+      // { href: '/notice', label: '공지사항' },
       {
         href: 'https://docs.google.com/forms/d/e/1FAIpQLSfiWdVsmn4WD12WoFfWfeSBN5Cu-QVdcd6YNR9hG2K64BRIyA/closedform',
         label: '피드백',
       },
     ],
   },
-  {
-    title: '약관 및 정책',
-    links: [
-      { href: '/terms', label: '이용약관' },
-      { href: '/privacy', label: '개인정보처리방침' },
-      { href: '/refund', label: '환불정책' },
-    ],
-  },
+  // {
+  //   title: '약관 및 정책',
+  //   links: [
+  //     { href: '/terms', label: '이용약관' },
+  //     { href: '/privacy', label: '개인정보처리방침' },
+  //     { href: '/refund', label: '환불정책' },
+  //   ],
+  // },
 ] as const;
 
 export const socialLinks = [

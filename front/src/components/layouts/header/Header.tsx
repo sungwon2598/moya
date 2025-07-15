@@ -26,14 +26,14 @@ const navigationItems = [
   },
 ];
 
-const authNavigationItems = [
-  {
-    label: '채팅',
-    path: '/chat',
-    type: 'A' as const,
-    icon: MessageCircle,
-  },
-];
+// const authNavigationItems = [
+//   {
+//     label: '채팅',
+//     path: '/chat',
+//     type: 'A' as const,
+//     icon: MessageCircle,
+//   },
+// ];
 
 export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -122,8 +122,15 @@ export const Header: React.FC = () => {
     }
   }, [location.pathname, navigate]);
 
-  const testBtn = () => {
-    navigate('/oauth2/authorization/google');
+  const testLogin = () => {
+    const isDev = import.meta.env.DEV;
+    console.log('개발 환경', isDev);
+
+    if (isDev) {
+      navigate('/oauth2/authorization/google');
+    } else {
+      window.location.href = 'https://api.moyastudy.com/oauth2/authorization/google';
+    }
   };
 
   return (
@@ -133,31 +140,31 @@ export const Header: React.FC = () => {
           isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
         } ${showBorder ? 'border-moya-black/10 border-b' : ''}`}>
         <div className="container mx-auto">
-          <nav className="flex items-center justify-between h-16 px-4">
+          <nav className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center">
               <button
-                className="p-2 -ml-2 hover:text-moya-primary opacity-60 md:hidden"
+                className="hover:text-moya-primary -ml-2 p-2 opacity-60 md:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="메뉴 열기">
-                <Menu className="w-6 h-6" />
+                <Menu className="h-6 w-6" />
               </button>
 
-              <Link to="/" className="flex items-center ml-2 space-x-3 cursor-pointer md:ml-0">
-                <span className="text-xl font-bold text-moya-primary">MOYA</span>
+              <Link to="/" className="ml-2 flex cursor-pointer items-center space-x-3 md:ml-0">
+                <span className="text-moya-primary text-xl font-bold">MOYA</span>
               </Link>
 
-              <div className="items-center hidden gap-1 ml-8 md:flex">
+              <div className="ml-8 hidden items-center gap-1 md:flex">
                 {navigationItems.map((item) => (
                   <NavItem key={item.path} {...item} />
                 ))}
-                {isLogin && authNavigationItems.map((item) => <NavItem key={item.path} {...item} />)}
+                {/* {isLogin && authNavigationItems.map((item) => <NavItem key={item.path} {...item} />)} */}
               </div>
             </div>
 
             <div className="relative flex items-center space-x-4">
               {isLogin ? (
                 <>
-                  <button
+                  {/* <button
                     className={`hover:text-moya-primary ${isActive ? 'text-moya-primary bg-gray-50' : ''} flex items-center rounded-md px-3 py-2 text-gray-600 transition-colors duration-300 hover:rounded-md hover:bg-gray-50 ${
                       isActive ? 'text-moya-primary rounded-md bg-gray-50' : ''
                     }`}
@@ -165,15 +172,15 @@ export const Header: React.FC = () => {
                       navigate('/notifications');
                     }}>
                     <Bell className="w-5 h-5" />
-                  </button>
+                  </button> */}
                   <button
                     onClick={handleCreateStudy}
-                    className="hidden px-4 py-2 text-sm font-medium text-white transition-colors duration-200 rounded-full bg-moya-secondary hover:bg-moya-secondary/90 md:flex">
+                    className="bg-moya-secondary hover:bg-moya-secondary/90 hidden rounded-full px-4 py-2 text-sm font-medium text-white transition-colors duration-200 md:flex">
                     스터디 모집하기
                   </button>
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger className="flex items-center space-x-2 outline-none">
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="h-8 w-8">
                         {user?.data.profileImageUrl ? (
                           <AvatarImage src={user?.data.profileImageUrl} alt={user.data.nickname} />
                         ) : (
@@ -181,7 +188,7 @@ export const Header: React.FC = () => {
                         )}
                       </Avatar>
                       {/* <span className="text-sm font-medium">{user?.data.nickname}</span> */}
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="mt-3.5 w-56">
                       <UserDropdown user={user} isLogin={isLogin} />
@@ -190,13 +197,13 @@ export const Header: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <button onClick={testBtn}>로그인 테스트 버튼 </button>
-                  <GoogleLoginButton
+                  <button onClick={testLogin}>로그인 테스트 버튼 </button>
+                  {/* <GoogleLoginButton
                     theme="filled_blue"
                     size="large"
                     onSuccess={handleLoginSuccess}
                     onError={(error) => console.error('로그인 실패:', error)}
-                  />
+                  /> */}
                 </>
               )}
             </div>
@@ -215,13 +222,13 @@ export const Header: React.FC = () => {
         className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-white transition-transform duration-200 ease-in-out ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <span className="text-xl font-bold text-moya-primary">MOYA</span>
+        <div className="flex items-center justify-between border-b border-gray-200 p-4">
+          <span className="text-moya-primary text-xl font-bold">MOYA</span>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="p-2 text-gray-600 hover:text-moya-primary"
+            className="hover:text-moya-primary p-2 text-gray-600"
             aria-label="메뉴 닫기">
-            <X className="w-6 h-6" />
+            <X className="h-6 w-6" />
           </button>
         </div>
 
@@ -231,8 +238,8 @@ export const Header: React.FC = () => {
               handleCreateStudy();
               handleMobileMenuItemClick();
             }}
-            className="flex items-center w-full px-4 py-3 text-emerald-500 hover:bg-gray-50">
-            <Book className="w-5 h-5 mr-3" />
+            className="flex w-full items-center px-4 py-3 text-emerald-500 hover:bg-gray-50">
+            <Book className="mr-3 h-5 w-5" />
             <span>팀원 모집하기</span>
           </button>
 
@@ -240,13 +247,13 @@ export const Header: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center px-4 py-3 text-gray-600 transition-colors duration-200 hover:text-moya-primary hover:bg-gray-50"
+              className="hover:text-moya-primary flex items-center px-4 py-3 text-gray-600 transition-colors duration-200 hover:bg-gray-50"
               onClick={handleMobileMenuItemClick}>
-              <item.icon className="w-5 h-5 mr-3" />
+              <item.icon className="mr-3 h-5 w-5" />
               <span>{item.label}</span>
             </Link>
           ))}
-          {isLogin &&
+          {/* {isLogin &&
             authNavigationItems.map((item) => (
               <Link
                 key={item.path}
@@ -256,7 +263,7 @@ export const Header: React.FC = () => {
                 <item.icon className="w-5 h-5 mr-3" />
                 <span>{item.label}</span>
               </Link>
-            ))}
+            ))} */}
         </div>
       </div>
     </>

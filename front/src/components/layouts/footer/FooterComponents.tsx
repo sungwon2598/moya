@@ -4,10 +4,7 @@ import { FooterLinkProps, SocialLinkProps } from '../../../core/types/footer.ts'
 
 export const FooterLink: React.FC<FooterLinkProps> = ({ href, children }) => (
   <div className="block">
-    <Link
-      to={href}
-      //   target="_blank"
-      className="hover:text-moya-primary text-sm text-gray-600 transition-colors duration-200">
+    <Link to={href} className="hover:text-moya-primary text-sm text-gray-600 transition-colors duration-200">
       {children}
     </Link>
   </div>

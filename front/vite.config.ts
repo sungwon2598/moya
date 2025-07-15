@@ -8,6 +8,8 @@ import path from 'path';
 export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
 
+  const devMode = mode === 'development';
+
   return {
     plugins: [react(), tailwindcss(), svgr()],
     base: '/',
@@ -26,11 +28,12 @@ export default defineConfig(({ mode }): UserConfig => {
     },
     define: {
       'process.env': JSON.stringify(env),
+      'import.meta.env.VITE_API_URL': JSON.stringify(devMode ? 'http://localhost:8080' : 'https://api.moyastudy.com'),
     },
     build: {
       outDir: 'dist',
       emptyOutDir: true,
-      sourcemap: true, // 개발 디버깅을 위해 true로 설정
+      sourcemap: true,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -73,6 +76,11 @@ export default defineConfig(({ mode }): UserConfig => {
           target: 'https://api.moyastudy.com',
 
           // http://localhost:8080
+          changeOrigin: true,
+          secure: false,
+        },
+        '/oauth2': {
+          target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false,
         },

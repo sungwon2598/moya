@@ -319,28 +319,6 @@ export const studyApiService = {
     }
   },
 
-  // 댓글 생성
-  // createComments: async (postId: number, commentData: CeateCommentDTO): Promise<StudyApiResponse<Comment>> => {
-  //   const token = TokenStorage.getAccessToken();
-
-  //   try {
-  //     const response = await axios.post<StudyApiResponse<Comment>>(STUDY_ENDPOINTS.COMMENTS(postId), commentData, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-
-  //     console.log('댓글 생성완료', response.data, commentData);
-  //     return response.data;
-  //   } catch (error) {
-  //     if (axios.isAxiosError(error)) {
-  //       console.log(commentData);
-  //       throw new Error(error.response?.data?.message || '댓글 생성에 실패했습니다.');
-  //     }
-  //     throw error;
-  //   }
-  // },
-
   createComment: async (postId: number, commentData: CreateCommentDTO): Promise<StudyApiResponse<Comment>> => {
     const token = TokenStorage.getAccessToken();
 
@@ -351,7 +329,6 @@ export const studyApiService = {
         },
       });
 
-      // 디버깅을 위한 로그
       console.log('댓글/대댓글 생성 요청:', {
         postId,
         commentData,
