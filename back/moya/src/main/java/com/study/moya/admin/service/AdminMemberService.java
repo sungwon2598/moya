@@ -25,7 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +53,9 @@ public class AdminMemberService {
         return convertToAdminMemberDetailResponseDto(member);
     }
 
+    /**
+     * 멤버 차단 처리 (관리자용)
+     */
     @Transactional
     public void blockMember(Long memberId, String reason) {
         if (reason == null || reason.trim().isEmpty()) {
@@ -64,6 +70,79 @@ public class AdminMemberService {
         }
 
         member.block(reason);
+    }
+
+    /**
+     * 멤버 탈퇴 처리 (관리자용)
+     */
+    @Transactional
+    public void withdrawMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> AdminException.of(AdminErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            throw AdminException.of(AdminErrorCode.ALREADY_WITHDRAWN_MEMBER);
+        }
+
+        member.withdraw();
+    }
+
+    /**
+     * 멤버 휴면 처리 (관리자용)
+     */
+    @Transactional
+    public void dormantMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> AdminException.of(AdminErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.DORMANT) {
+            throw AdminException.of(AdminErrorCode.ALREADY_DORMANT_MEMBER);
+        }
+
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            throw AdminException.of(AdminErrorCode.ALREADY_WITHDRAWN_MEMBER);
+        }
+
+        member.dormant();
+    }
+
+    /**
+     * 멤버 차단 해제 처리 (관리자용)
+     */
+    @Transactional
+    public void unblockMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> AdminException.of(AdminErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() != MemberStatus.BLOCKED) {
+            throw AdminException.of(AdminErrorCode.NOT_BLOCKED_MEMBER);
+        }
+
+        member.unblock();  // Member 엔티티에 unblock() 메서드가 필요
+    }
+
+    /**
+     * 상태별 멤버 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<AdminMemberResponse> getMembersByStatus(MemberStatus status, Pageable pageable) {
+        Page<Member> membersPage = memberRepository.findByStatus(status, pageable);
+        return membersPage.map(this::convertToAdminMemberResponseDto);
+    }
+
+    /**
+     * 전체 상태별 멤버 개수 조회
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Long> getAllMemberCountsByStatus() {
+        Map<String, Long> statusCounts = new HashMap<>();
+
+        for (MemberStatus status : MemberStatus.values()) {
+            long count = memberRepository.countByStatus(status);
+            statusCounts.put(status.name(), count);
+        }
+
+        return statusCounts;
     }
 
     private AdminMemberResponse convertToAdminMemberResponseDto(Member member) {

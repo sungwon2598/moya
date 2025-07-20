@@ -205,6 +205,16 @@ public class Member extends BaseEntity implements UserDetails {
         this.status = MemberStatus.BLOCKED;
     }
 
+    public void dormant() {
+        validateModifiable();
+        this.status = MemberStatus.DORMANT;
+    }
+
+    public void unblock() {
+//        validateModifiable();
+        this.status = MemberStatus.ACTIVE;
+    }
+
     public void withdraw() {
         validateModifiable();
         this.status = MemberStatus.WITHDRAWN;
