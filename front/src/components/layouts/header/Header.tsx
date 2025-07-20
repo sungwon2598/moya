@@ -137,6 +137,7 @@ export const Header: React.FC = () => {
         }
 
         window.history.replaceState({}, document.title, '/');
+        navigate('/');
       } catch (error) {
         console.error('토큰 처리 중 오류:', error);
 
@@ -144,6 +145,7 @@ export const Header: React.FC = () => {
         localStorage.removeItem('refreshToken');
 
         window.history.replaceState({}, document.title, '/');
+        navigate('/');
       }
     }
 
@@ -265,6 +267,13 @@ export const Header: React.FC = () => {
                       />
                     </svg>
                     Google 로그인
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      navigate('/');
+                    }}>
+                    home
                   </button>
                   {/* <GoogleLoginButton
                     theme="filled_blue"
