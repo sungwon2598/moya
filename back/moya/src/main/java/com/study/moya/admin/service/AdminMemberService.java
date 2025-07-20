@@ -39,7 +39,8 @@ public class AdminMemberService {
 
     public Page<AdminMemberResponse> getMembers(Pageable pageable) {
         // ID가 4 이상인 회원만 조회하도록 수정
-        Page<Member> membersPage = memberRepository.findByIdGreaterThanEqual(3701L, pageable);
+//        Page<Member> membersPage = memberRepository.findByIdGreaterThanEqual(3701L, pageable);
+        Page<Member> membersPage = memberRepository.findAll(pageable);
         return membersPage.map(this::convertToAdminMemberResponseDto);
     }
 

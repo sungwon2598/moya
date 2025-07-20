@@ -6,11 +6,13 @@ import com.study.moya.admin.service.AdminMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/admin/members")
+//@PreAuthorize("hasRole('ADMIN')")
 public class AdminMemberController {
     private final AdminMemberService adminMemberService;
 

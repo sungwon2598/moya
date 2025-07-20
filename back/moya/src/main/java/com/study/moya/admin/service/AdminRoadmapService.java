@@ -1,6 +1,7 @@
-package com.study.moya.ai_roadmap.service;
+package com.study.moya.admin.service;
 
-import com.study.moya.ai_roadmap.constants.LearningObjective;
+import com.study.moya.admin.dto.roadmap.request.UpdateRoadmapInfoRequest;
+import com.study.moya.admin.dto.roadmap.response.AdminMemberSubscriptionResponse;
 import com.study.moya.ai_roadmap.domain.*;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
@@ -8,43 +9,39 @@ import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryProjection;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.repository.*;
+import com.study.moya.ai_roadmap.service.RoadmapPromptService;
 import com.study.moya.ai_roadmap.util.RoadmapResponseParser;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
-import com.study.moya.token.domain.enums.TicketType;
-import com.study.moya.token.dto.ticket.reponse.TicketUsageResponse;
 import com.study.moya.token.dto.usage.AiUsageResponse;
 import com.study.moya.token.dto.usage.UseTokenRequest;
 import com.study.moya.token.service.TokenFacadeService;
-import com.study.moya.token.service.ticket.TicketFacadeService;
 import com.theokanning.openai.Usage;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.service.OpenAiService;
-import java.sql.Types;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.object.BatchSqlUpdate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 @Service
+@Transactional
 @RequiredArgsConstructor
-public class RoadmapService {
+@Slf4j
+public class AdminRoadmapService {
 
     @Value("${openai.api.models.roadmap_generation.model}")
     private String roadmapModel;
@@ -62,8 +59,6 @@ public class RoadmapService {
     private final MemberRepository memberRepository;
     private final EtcRepository etcRepository;
 
-    private final TicketFacadeService ticketFacadeService;
-
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private static final Long ROADMAP_SERVICE_ID = 1L;
@@ -72,48 +67,14 @@ public class RoadmapService {
     public static final Long SUB_CATEGORY = 2L;     // 중분류(etc2)
 
     @Async("taskExecutor")
-    public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request, Long memberId) {
+    public CompletableFuture<WeeklyRoadmapResponse> generateWeeklyRoadmapAsync(RoadmapRequest request) {
         return CompletableFuture.supplyAsync(() -> {
-            log.info("로드맵 생성 시작");
-            Long usageId = null;
+            log.info("어드민 - 로드맵 생성 시작");
 
             String systemPrompt = promptService.createSystemPrompt(request);
-            log.info("===================시스템 프롬프트=================== \n" + systemPrompt);
-
             String prompt = promptService.createPrompt(request);
-            log.info("생성된 Prompt:\n{}", prompt);
 
-            // 1. 로드맵 티켓 확인 및 사용 (없으면 바로 예외) 잠깐 추가
-            try {
-                if (!ticketFacadeService.hasTicket(memberId, TicketType.ROADMAP_TICKET)) {
-                    throw new RuntimeException("로드맵 티켓이 부족합니다");
-                }
-
-                TicketUsageResponse ticketResponse = ticketFacadeService.useTicket(memberId, TicketType.ROADMAP_TICKET);
-                usageId = ticketResponse.getId();
-                log.info("로드맵 티켓 사용 완료. 사용 ID: {}", usageId);
-
-            } catch (Exception e) {
-                log.error("티켓 확인/사용 실패: {}", e.getMessage());
-                throw new RuntimeException("티켓이 부족합니다", e);
-            }
-
-            //여기까지=============================================
-
-
-            UseTokenRequest tokenRequest = UseTokenRequest.builder()
-                    .aiServiceId(ROADMAP_SERVICE_ID)
-                    .requestData(prompt)
-                    .build();
-
-//            try {
-//                AiUsageResponse usageResponse = tokenFacadeService.useTokenForAiService(memberId, tokenRequest);
-//                usageId = usageResponse.getId();
-//                log.info("토큰 차감 완료. 사용 ID: {}", usageId);
-//            } catch (Exception e) {
-//                log.error("토큰 차감 실패: {}", e.getMessage());
-//                throw new RuntimeException("토큰 차감 실패", e);
-//            }
+            log.info("어드민 - 생성된 Prompt:\n{}", prompt);
 
             ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
                     .model(roadmapModel)
@@ -122,97 +83,46 @@ public class RoadmapService {
                     .maxTokens(2000)
                     .build();
 
-            log.info("OpenAI API 요청 준비 완료: {}", completionRequest);
-
             try {
-                log.info("OpenAI API 호출 시작...");
+                log.info("어드민 - OpenAI API 호출 시작...");
                 ChatCompletionResult chatCompletion = openAiService.createChatCompletion(completionRequest);
 
                 String apiResponse = chatCompletion.getChoices().get(0).getMessage().getContent();
-                log.info("OpenAI API 응답 수신 완료:\n{}", apiResponse);
+                log.info("어드민 - OpenAI API 응답 수신 완료");
 
-                // 6. 토큰 사용량 로깅
-                Usage usage = chatCompletion.getUsage();
-                logTokenUsage(usage);
-
-                // 7. 실제 사용량 기록 (선택 사항)
-                if (usage != null && usageId != null) {
-                    try {
-                        tokenFacadeService.updateActualTokenUsage(usageId, usage.getTotalTokens());
-                    } catch (Exception e) {
-                        log.error("실제 사용량 업데이트 실패: {}", e.getMessage());
-                        // 실제 사용량 업데이트 실패는 로드맵 생성 자체에 영향을 주지 않음
-                    }
-                }
+                // 토큰 사용량 로깅 (정보용)
+                logTokenUsage(chatCompletion.getUsage());
 
                 // 응답 파싱
                 WeeklyRoadmapResponse response = responseParser.parseResponse(apiResponse);
 
                 Category category = null;
                 if (request.getMainCategory() != null && !request.getMainCategory().trim().isEmpty()) {
-                    // 카테고리가 있는 경우만 찾기
                     category = categoryRepository.findByName(request.getMainCategory())
                             .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + request.getMainCategory()));
                 }
 
-                // 파싱된 응답을 엔티티로 저장
-                saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1, request.getSubCategory(),
-                        request.getDuration(), request.getLearningObjective(), response,
-                        category, memberId, request.getEtc1(), request.getEtc2());
-
-                //잠깐 추가!
-                try {
-                    ticketFacadeService.markTicketUsageAsCompleted(usageId);
-                    log.info("티켓 사용 완료 처리: {}", usageId);
-                } catch (Exception e) {
-                    log.error("티켓 사용 완료 처리 실패: {}", e.getMessage());
-                    // 상태 업데이트 실패는 로드맵 생성 자체에 영향을 주지 않음
-                }
-                //잠깐 추가!
-
-                // 9. AI 사용 내역 완료 처리
-                try {
-                    tokenFacadeService.markAiUsageAsCompleted(usageId);
-                    log.info("AI 사용 내역 완료 처리: {}", usageId);
-                } catch (Exception e) {
-                    log.error("AI 사용 내역 완료 처리 실패: {}", e.getMessage());
-                    // 상태 업데이트 실패는 로드맵 생성 자체에 영향을 주지 않음
-                }
-
+                // 파싱된 응답을 엔티티로 저장 (멤버 구독 없이)
+                saveCurriculum(Integer.parseInt(request.getCurrentLevel()) + 1,
+                        request.getSubCategory(), request.getDuration(),
+                        request.getLearningObjective(), response, category,
+                        request.getEtc1(), request.getEtc2());
 
                 return response;
             } catch (Exception e) {
-                log.error("OpenAI API 호출 중 예외 발생:", e);
-                // 10. API 호출 실패 시 토큰 환불 처리
-                if (usageId != null) {
-                    try {
-                        tokenFacadeService.markAiUsageAsFailed(usageId);
-                        log.info("토큰 환불 처리 완료: {}", usageId);
-                        //잠깐 추가
-                        ticketFacadeService.markTicketUsageAsFailed(usageId);
-                        log.info("티켓 환불 처리 완료: {}", usageId);
-                        //잠깐 추가
-                    } catch (Exception ex) {
-                        log.error("토큰 환불 처리 실패: {}", ex.getMessage());
-                        //잠깐 추가2
-                        log.error("티켓 환불 처리 실패: {}", ex.getMessage());
-                        //잠깐 추가2
-                    }
-                }
-
-                throw new RuntimeException("OpenAI API 호출 실패", e);
+                log.error("어드민 - OpenAI API 호출 실패:", e);
+                throw new RuntimeException("로드맵 생성 실패", e);
             }
         });
     }
 
     public Long saveCurriculum(int goalLevel, String topic, int duration, String learningObjective,
-                               WeeklyRoadmapResponse response, Category category,
-                               Long memberId, String etc1Name, String etc2Name) {
-        log.info("커리큘럼 저장 시작");
+                                    WeeklyRoadmapResponse response, Category category,
+                                    String etc1Name, String etc2Name) {
+        log.info("어드민 - 커리큘럼 저장 시작");
 
         Etc etc1 = createEtc(etc1Name, MAIN_CATEGORY);
         Etc etc2 = createEtc(etc2Name, SUB_CATEGORY);
-
 
         // RoadMap 생성
         RoadMap roadMap = RoadMap.builder()
@@ -227,38 +137,30 @@ public class RoadmapService {
                 .etc2(etc2)
                 .build();
 
-        // 먼저 RoadMap을 저장하여 ID를 확보
         RoadMap savedRoadMap = roadMapRepository.save(roadMap);
 
-        // WeeklyPlan 생성 및 저장
+        // WeeklyPlan & DailyPlan 생성 (기존과 동일)
         for (WeeklyRoadmapResponse.WeeklyPlan weeklyPlanDto : response.getWeeklyPlans()) {
             WeeklyPlan weeklyPlan = WeeklyPlan.builder()
                     .weekNumber(weeklyPlanDto.getWeek())
                     .keyword(weeklyPlanDto.getWeeklyKeyword())
-                    .roadMap(savedRoadMap)  // 저장된 RoadMap 참조
+                    .roadMap(savedRoadMap)
                     .build();
 
-            // WeeklyPlan 저장
             WeeklyPlan savedWeeklyPlan = weeklyPlanRepository.save(weeklyPlan);
 
-            // DailyPlan 생성 및 저장
             for (WeeklyRoadmapResponse.DailyPlan dailyPlanDto : weeklyPlanDto.getDailyPlans()) {
                 DailyPlan dailyPlan = DailyPlan.builder()
                         .dayNumber(dailyPlanDto.getDay())
                         .keyword(dailyPlanDto.getDailyKeyword())
-                        .weeklyPlan(savedWeeklyPlan)  // 저장된 WeeklyPlan 참조
+                        .weeklyPlan(savedWeeklyPlan)
                         .build();
 
                 dailyPlanRepository.save(dailyPlan);
             }
         }
 
-        if (memberId != null){
-            subscribeToRoadMap(memberId, savedRoadMap.getId());
-        }
-
-        log.info("커리큘럼 저장 완료. ID: {}", savedRoadMap.getId());
-
+        log.info("어드민 - 커리큘럼 저장 완료. ID: {}", savedRoadMap.getId());
         return savedRoadMap.getId();
     }
 
@@ -391,6 +293,170 @@ public class RoadmapService {
         );
     }
 
+    // ============ 로드맵 수정 기능들 (워크시트 제외) ============
+
+    /**
+     * 일별 키워드 수정 (관리자용 - 권한 검증 없음)
+     */
+    @Transactional
+    public String updateDailyKeyword(Long roadmapId, Integer weekNumber, Integer dayNumber, String newKeyword) {
+        log.info("어드민 - 일별 키워드 수정 시작 - 로드맵: {}, {}주차 {}일차", roadmapId, weekNumber, dayNumber);
+
+        DailyPlan dailyPlan = dailyPlanRepository.findByRoadmapIdAndWeekAndDay(roadmapId, weekNumber, dayNumber)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format("로드맵 %d의 %d주차 %d일차 계획을 찾을 수 없습니다", roadmapId, weekNumber, dayNumber)));
+
+        dailyPlan.updateKeyword(newKeyword);
+        dailyPlanRepository.save(dailyPlan);
+
+        log.info("어드민 - 일별 키워드 수정 완료");
+
+        return dailyPlan.getKeyword();
+    }
+
+    /**
+     * 주차별 키워드 수정 (관리자용)
+     */
+    @Transactional
+    public String updateWeeklyKeyword(Long roadmapId, Integer weekNumber, String newKeyword) {
+        log.info("어드민 - 주차별 키워드 수정 시작 - 로드맵: {}, {}주차", roadmapId, weekNumber);
+
+        WeeklyPlan weeklyPlan = weeklyPlanRepository.findByRoadmapIdAndWeek(roadmapId, weekNumber)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format("로드맵 %d의 %d주차 계획을 찾을 수 없습니다", roadmapId, weekNumber)));
+
+        weeklyPlan.updateKeyword(newKeyword);
+        weeklyPlanRepository.save(weeklyPlan);
+
+        log.info("어드민 - 주차별 키워드 수정 완료");
+        return weeklyPlan.getKeyword(); // 수정된 키워드 반환
+    }
+
+    /**
+     * 전체 팁 수정 (관리자용)
+     */
+    @Transactional
+    public List<String> updateOverallTips(Long roadmapId, List<String> newTips) {
+        log.info("어드민 - 전체 팁 수정 시작 - 로드맵: {}", roadmapId);
+
+        RoadMap roadMap = getRoadmap(roadmapId);
+        roadMap.updateOverallTips(newTips);
+        roadMapRepository.save(roadMap);
+
+        log.info("어드민 - 전체 팁 수정 완료");
+        return roadMap.getOverallTips(); // 수정된 팁 목록 반환
+    }
+
+    /**
+     * 로드맵 기본 정보 수정 (관리자용)
+     */
+    @Transactional
+    public Map<String, Object> updateRoadmapInfo(Long roadmapId, UpdateRoadmapInfoRequest request) {
+        log.info("어드민 - 로드맵 기본 정보 수정 시작 - 로드맵: {}", roadmapId);
+
+        RoadMap roadMap = getRoadmap(roadmapId);
+        roadMap.updateBasicInfo(
+                request.getTopic(),
+                request.getDuration(),
+                request.getLearningObjective(),
+                request.getEvaluation()
+        );
+
+        roadMapRepository.save(roadMap);
+
+        log.info("어드민 - 로드맵 기본 정보 수정 완료");
+
+        // 수정된 정보를 Map으로 반환
+        Map<String, Object> updatedInfo = new HashMap<>();
+        updatedInfo.put("topic", roadMap.getTopic());
+        updatedInfo.put("duration", roadMap.getDuration());
+        updatedInfo.put("learningObjective", roadMap.getLearningObjective());
+        updatedInfo.put("evaluation", roadMap.getEvaluation());
+
+        return updatedInfo;
+    }
+
+    /**
+     * 로드맵 삭제 (관리자용)
+     */
+    @Transactional
+    public void deleteRoadmap(Long roadmapId) {
+        log.info("어드민 - 로드맵 삭제 시작 - 로드맵: {}", roadmapId);
+
+        // 순차적 삭제 (구독자 수 조회 제거)
+        dailyPlanRepository.deleteByWeeklyPlanRoadMapId(roadmapId);
+        weeklyPlanRepository.deleteByRoadMapId(roadmapId);
+        memberRoadMapRepository.deleteByRoadMapId(roadmapId);
+        roadMapRepository.deleteById(roadmapId);
+
+        log.info("어드민 - 로드맵 삭제 완료");
+    }
+
+    /**
+     * 전체 로드맵 조회 (관리자용)
+     */
+    @Transactional(readOnly = true)
+    public List<RoadMapSummaryDTO> getAllRoadmaps() {
+        log.info("어드민 - 전체 로드맵 조회");
+
+        return roadMapRepository.findAllWithRelations().stream()
+                .map(roadmap -> new RoadMapSummaryDTO(
+                        roadmap.getId(),
+                        roadmap.getCategory() != null ? roadmap.getCategory().getName() :
+                                (roadmap.getEtc1() != null ? roadmap.getEtc1().getName() : "미분류"),
+                        roadmap.getTopic(),
+                        roadmap.getDuration()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminMemberSubscriptionResponse> getMemberSubscriptions(Long memberId) {
+        log.info("어드민 - 멤버 구독 로드맵 조회 - 멤버 ID: {}", memberId);
+
+        // 멤버 존재 여부 확인
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("멤버를 찾을 수 없습니다: " + memberId));
+
+        // 기존 메서드 그대로 사용!
+        return memberRoadMapRepository.findRoadMapSummariesByMemberId(memberId).stream()
+                .map(projection -> new AdminMemberSubscriptionResponse(
+                        projection.getId(),
+                        projection.getMainCategory(),
+                        projection.getSubCategory(),
+                        projection.getDuration()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminMemberSubscriptionResponse> getRoadMapsByCategory(Long categoryId) {
+        log.info("어드민 - 카테고리별 로드맵 조회 - 카테고리 ID: {}", categoryId);
+
+        // 카테고리 존재 여부 확인 (선택사항)
+        // categoryRepository.findById(categoryId)
+        //         .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + categoryId));
+
+        return roadMapRepository.findAdminRoadMapsByCategoryId(categoryId).stream()
+                .map(projection -> new AdminMemberSubscriptionResponse(
+                        projection.getId(),
+                        projection.getMainCategory(),
+                        projection.getSubCategory(),
+                        projection.getDuration()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // ============ 유틸리티 메서드들 ============
+
+    /**
+     * 로드맵 조회 (공통)
+     */
+    private RoadMap getRoadmap(Long roadmapId) {
+        return roadMapRepository.findById(roadmapId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 로드맵을 찾을 수 없습니다: " + roadmapId));
+    }
+
     private String getWorksheet(DailyPlan plan) {
         if (plan.getWorkSheet() == null) {
             return "";
@@ -411,86 +477,6 @@ public class RoadmapService {
         return etcRepository.save(etc);
     }
 
-    //    @Transactional
-//    public Long saveCurriculum(int goalLevel, String topic, int duration, WeeklyRoadmapResponse response) {
-//        log.info("커리큘럼 벌크 저장 시작");
-//
-//        // 1. Roadmap 벌크 INSERT
-//        String roadmapBulkInsert = """
-//            INSERT INTO roadmaps (duration, goal_level, topic, evaluation, created_at, modified_at)
-//            VALUES (:duration, :goalLevel, :topic, :evaluation, :now, :now)
-//            """;
-//
-//        MapSqlParameterSource roadmapParams = new MapSqlParameterSource()
-//                .addValue("duration", duration)
-//                .addValue("goalLevel", goalLevel)
-//                .addValue("topic", topic)
-//                .addValue("evaluation", response.getCurriculumEvaluation())
-//                .addValue("now", LocalDateTime.now());
-//
-//        KeyHolder keyHolder = new GeneratedKeyHolder();
-//        namedParameterJdbcTemplate.update(roadmapBulkInsert, roadmapParams, keyHolder);
-//        Long roadmapId = keyHolder.getKey().longValue();
-//
-//        // 2. Tips 벌크 INSERT - 위치 기반 파라미터 사용
-//        String tipsBulkInsert = """
-//            INSERT INTO roadmap_tips (roadmap_id, tip)
-//            VALUES (?, ?)
-//            """;
-//
-//        jdbcTemplate.batchUpdate(tipsBulkInsert,
-//                response.getOverallTips().stream()
-//                        .map(tip -> new Object[]{roadmapId, tip})
-//                        .collect(Collectors.toList()));
-//
-//        // 3. WeeklyPlans 벌크 INSERT
-//        String weeklyPlansBulkInsert = """
-//            INSERT INTO weekly_plans (roadmap_id, week_number, keyword, created_at, modified_at)
-//            VALUES (:roadmapId, :weekNumber, :keyword, :now, :now)
-//            """;
-//
-//        List<Map<String, Object>> weeklyBatchParams = response.getWeeklyPlans().stream()
-//                .map(wp -> {
-//                    Map<String, Object> params = new HashMap<>();
-//                    params.put("roadmapId", roadmapId);
-//                    params.put("weekNumber", wp.getWeek());
-//                    params.put("keyword", wp.getWeeklyKeyword());
-//                    params.put("now", LocalDateTime.now());
-//                    return params;
-//                })
-//                .collect(Collectors.toList());
-//
-//        namedParameterJdbcTemplate.batchUpdate(weeklyPlansBulkInsert,
-//                weeklyBatchParams.toArray(new Map[0]));
-//
-//        // 4. DailyPlans 벌크 INSERT
-//        String dailyPlansBulkInsert = """
-//            INSERT INTO daily_plans (weekly_plan_id, day_number, keyword, created_at, modified_at)
-//            SELECT wp.id, :dayNumber, :keyword, :now, :now
-//            FROM weekly_plans wp
-//            WHERE wp.roadmap_id = :roadmapId AND wp.week_number = :weekNumber
-//            """;
-//
-//        List<Map<String, Object>> dailyBatchParams = response.getWeeklyPlans().stream()
-//                .flatMap(wp -> wp.getDailyPlans().stream()
-//                        .map(dp -> {
-//                            Map<String, Object> params = new HashMap<>();
-//                            params.put("roadmapId", roadmapId);
-//                            params.put("weekNumber", wp.getWeek());
-//                            params.put("dayNumber", dp.getDay());
-//                            params.put("keyword", dp.getDailyKeyword());
-//                            params.put("now", LocalDateTime.now());
-//                            return params;
-//                        }))
-//                .collect(Collectors.toList());
-//
-//        namedParameterJdbcTemplate.batchUpdate(dailyPlansBulkInsert,
-//                dailyBatchParams.toArray(new Map[0]));
-//
-//        log.info("커리큘럼 벌크 저장 완료. ID: {}", roadmapId);
-//        return roadmapId;
-//    }
-//
     private void logTokenUsage(Usage usage) {
         if (usage != null) {
             log.info("OpenAI 토큰 사용량 - Prompt Tokens: {}, Completion Tokens: {}, Total Tokens: {}",
@@ -500,9 +486,5 @@ public class RoadmapService {
         } else {
             log.warn("OpenAI 토큰 사용량 정보를 가져올 수 없습니다.");
         }
-    }
-
-    public List<RoadMapSimpleDto> getRoadMapsByCategory(Long categoryId) {
-        return roadMapRepository.findRoadMapsByCategoryId(categoryId);
     }
 }
