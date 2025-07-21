@@ -155,7 +155,9 @@ const StudyPostDetail = () => {
       .map((comment) => ({
         ...comment,
         replies: comment.replies
-          ? [...comment.replies].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          ? [...comment.replies].sort(
+              (a, b) => new Date(b.replyCreatedAt).getTime() - new Date(a.replyCreatedAt).getTime()
+            )
           : [],
       }))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -371,9 +373,8 @@ const StudyPostDetail = () => {
   const CommentItem = ({
     comment,
     isReply = false,
-    parentCommentId,
   }: {
-    comment: Comment | Reply;
+    comment: Comment | Replies;
     isReply?: boolean;
     parentCommentId?: number;
   }) => {
@@ -388,7 +389,10 @@ const StudyPostDetail = () => {
     const isAuthor = isLoggedIn && user?.data?.nickname === authorName;
 
     return (
-      <div className={`flex gap-4 ${isReply ? 'ml-12 mt-4' : ''}`}>
+      <div
+        className={`flex gap-4 rounded-lg p-3 ${
+          isReply ? 'ml-10 mt-3 border-l-2 border-gray-200 bg-gray-50' : 'border border-gray-100 bg-white'
+        }`}>
         <img
           src={`https://api.dicebear.com/7.x/initials/svg?seed=${authorName}`}
           alt="avatar"
@@ -425,7 +429,7 @@ const StudyPostDetail = () => {
                     {isAuthor && (
                       <button
                         onClick={() => handleDeleteComment(commentId)}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-gray-50">
                         <Trash2 className="h-4 w-4" />
                         삭제
                       </button>
@@ -438,7 +442,6 @@ const StudyPostDetail = () => {
 
           <p className="mb-3 leading-relaxed text-gray-700">{content}</p>
 
-          {/* 답글 작성 UI - 댓글에만 표시 */}
           {replyingTo === commentId && !isReply && !isReplyType && (
             <div className="mt-4 flex gap-4">
               <img
@@ -657,13 +660,11 @@ const StudyPostDetail = () => {
           </div>
         </div>
 
-        {/* 댓글 섹션 */}
         <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-10 shadow-sm">
           <h3 className="mb-6 text-2xl font-bold text-gray-900">
             댓글 <span className="text-lg font-normal text-gray-500">({totalComments})</span>
           </h3>
 
-          {/* 기존 댓글 목록 */}
           {comments.length > 0 && (
             <div className="mb-8 space-y-6">
               {comments.map((comment) => (
