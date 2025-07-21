@@ -3,9 +3,11 @@ import DayStudyPlan from '@/components/features/roadmap/DayStudyPlan';
 import RotatingMessage from '@/components/features/roadmap/RotatingMessage';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/shared/ui/accordion';
 import { useRoadmapDetail } from '@/features/myinfo/api/getRoadmap';
+import { usePostWorksheetsCreate } from '@/features/roadmap/api/createRoadmap';
 import { useModal } from '@/shared/hooks/useModal';
 import { Day, Week } from '@/types/roadmap.types';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function RoadmapDetail() {
   const { roadmapId } = useParams<{ roadmapId: string }>();
@@ -14,6 +16,18 @@ export default function RoadmapDetail() {
   const subCategory = searchParams.get('subCategory');
   const { showModal } = useModal();
   const { data: roadmapDetailData, isLoading, isError } = useRoadmapDetail(Number(roadmapId));
+  const { mutate } = usePostWorksheetsCreate();
+
+  const handleCreateAllWorksheets = async () => {
+    mutate(Number(roadmapId), {
+      onError: (error) => {
+        toast('워크시트 생성 실패', {
+          description: '',
+        });
+        console.error('API 요청 중 오류 발생:', error);
+      },
+    });
+  };
 
   const handleShowApplicants = (dailyPlans: Day, week: number) => {
     showModal(<DayStudyPlan dailyPlans={dailyPlans} />, {
@@ -47,7 +61,6 @@ export default function RoadmapDetail() {
 
   return (
     <div className="mx-auto max-w-4xl p-3 sm:p-4 lg:p-6">
-      {/* Header */}
       <div className="z-20 mb-6 rounded-xl border border-white/30 bg-white/10 p-4 shadow-lg backdrop-blur-md sm:mb-8 sm:rounded-2xl sm:p-6 dark:border-white/20 dark:bg-white/5">
         <div className="mb-4 text-center">
           <h1 className="mb-1 break-words text-xl font-bold text-blue-900 sm:text-2xl lg:text-3xl dark:text-blue-100">
@@ -68,6 +81,14 @@ export default function RoadmapDetail() {
         )}
 
         {roadmapDetailData?.overallTips?.length > 0 && <RotatingMessage data={roadmapDetailData} />}
+
+        <div className="mt-4 flex justify-center">
+          <Button
+            onClick={handleCreateAllWorksheets}
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:rounded-xl sm:px-8 sm:py-4 sm:text-base dark:bg-blue-500 dark:hover:bg-blue-600">
+            <span>📝</span> 전체 워크시트 생성
+          </Button>
+        </div>
       </div>
 
       {/* Weekly Plan */}

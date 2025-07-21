@@ -50,7 +50,6 @@ export default function MyRoadmap() {
   if (roadmapList?.length === 0)
     return (
       <div className="relative flex min-h-[500px] flex-col items-center justify-center px-4 py-16 text-center">
-        {/* 글래스 카드 */}
         <div className="relative rounded-3xl border border-white/20 bg-white/40 p-12 shadow-2xl backdrop-blur-md">
           <div className="mb-8">
             <div className="relative">
@@ -77,11 +76,8 @@ export default function MyRoadmap() {
       </div>
     );
 
-  // 로드맵 있을때
   return (
     <div className="relative mx-auto w-full max-w-7xl px-4 py-6">
-      {/* 배경 그라데이션 */}
-
       <div className="mb-8">
         <h3 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
           <Sparkles className="h-6 w-6 text-purple-500" />내 스터디 로드맵
@@ -100,7 +96,6 @@ export default function MyRoadmap() {
               to={`/my-info/roadmap/${roadmap.id}?mainCategory=${encodeURIComponent(roadmap.mainCategory)}&subCategory=${encodeURIComponent(roadmap.subCategory)}`}
               className="group block w-full">
               <div className="relative h-full overflow-hidden rounded-3xl border border-white/20 bg-white/40 shadow-xl backdrop-blur-md transition-all duration-300 hover:-translate-y-2 hover:bg-white/50 hover:shadow-2xl">
-                {/* 글래스 헤더 */}
                 <div className={`bg-gradient-to-r ${gradient} border-b border-white/20 p-6 backdrop-blur-sm`}>
                   <div className="flex items-center justify-between">
                     <h4 className="mb-2 line-clamp-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-blue-600">
@@ -113,7 +108,6 @@ export default function MyRoadmap() {
                   </div>
                 </div>
 
-                {/* 카드 내용 */}
                 <div className="p-6">
                   <div className="mb-4">
                     <p className="line-clamp-2 rounded-lg bg-white/20 p-2 text-sm text-gray-600 backdrop-blur-sm">
@@ -122,10 +116,7 @@ export default function MyRoadmap() {
                   </div>
                 </div>
 
-                {/* 글래스 호버 효과 */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-400/0 to-purple-400/0 transition-all duration-300 group-hover:from-blue-400/10 group-hover:to-purple-400/10" />
-
-                {/* 반짝이 효과 */}
                 <div className="absolute right-4 top-4 h-2 w-2 animate-pulse rounded-full bg-white/40" />
               </div>
             </Link>
