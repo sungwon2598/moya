@@ -37,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 //@PreAuthorize("hasRole('ADMIN')")
 public class AdminRoadmapController {
 
+
     private final AdminRoadmapService adminRoadmapService;
 
     @Operation(summary = "로드맵 생성 테스트", description = "로드맵 생성 요청 테스트용 엔드포인트")
