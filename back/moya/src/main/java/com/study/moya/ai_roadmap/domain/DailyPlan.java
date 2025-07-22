@@ -47,7 +47,23 @@ public class DailyPlan extends BaseEntity {
         this.weeklyPlan = weeklyPlan;
     }
 
+    /**
+     * 일별 키워드 업데이트
+     */
+    public void updateKeyword(String newKeyword) {
+        if (newKeyword == null || newKeyword.trim().isEmpty()) {
+            throw new IllegalArgumentException("일별 키워드는 빈 값일 수 없습니다");
+        }
+        if (newKeyword.length() > 100) {
+            throw new IllegalArgumentException("일별 키워드는 100자를 초과할 수 없습니다");
+        }
+        this.keyword = newKeyword.trim();
+    }
+
     public void updateWorkSheet(String workSheet) {
+        if (workSheet != null && workSheet.length() > 5000) {
+            throw new IllegalArgumentException("워크시트는 5000자를 초과할 수 없습니다");
+        }
         this.workSheet = workSheet;
     }
 

@@ -23,6 +23,16 @@ public enum AdminErrorCode implements ErrorCode {
     @Schema(description = "차단 사유 누락")
     BLOCK_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "103", "차단 사유를 입력해주세요."),
 
+    @Schema(description = "차단되지 않은 멤버")
+    NOT_BLOCKED_MEMBER(HttpStatus.BAD_REQUEST, "104", "차단되지 않은 멤버입니다."),
+
+    @Schema(description = "이미 탈퇴한 멤버")
+    ALREADY_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "105", "이미 탈퇴한 멤버입니다."),
+
+    @Schema(description = "이미 휴면 상태인 멤버")
+    ALREADY_DORMANT_MEMBER(HttpStatus.BAD_REQUEST, "106", "이미 휴면 상태인 멤버입니다."),
+
+
     // 게시물 관리 관련 에러
     @Schema(description = "게시물을 찾을 수 없음")
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "201", "해당 게시물을 찾을 수 없습니다."),

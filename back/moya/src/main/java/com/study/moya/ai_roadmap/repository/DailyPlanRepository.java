@@ -2,7 +2,10 @@ package com.study.moya.ai_roadmap.repository;
 
 import com.study.moya.ai_roadmap.domain.DailyPlan;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,4 +56,27 @@ public interface DailyPlanRepository extends JpaRepository<DailyPlan, Long> {
     @Query("SELECT COUNT(d) FROM DailyPlan d " +
             "WHERE d.weeklyPlan.roadMap.id = :roadmapId")
     long countTotalDailyPlans(@Param("roadmapId") Long roadmapId);
+
+    //학습지만 조회
+    @Query("SELECT d.workSheet FROM DailyPlan d " +
+            "JOIN d.weeklyPlan w " +
+            "WHERE w.roadMap.id = :roadmapId " +
+            "AND d.workSheet IS NOT NULL AND d.workSheet != '' " +
+            "ORDER BY w.weekNumber, d.dayNumber")
+    List<String> findWorksheetsByRoadmapId(@Param("roadmapId") Long roadmapId);
+
+    @Query("SELECT dp FROM DailyPlan dp " +
+            "JOIN dp.weeklyPlan wp " +
+            "WHERE wp.roadMap.id = :roadmapId " +
+            "AND wp.weekNumber = :weekNumber " +
+            "AND dp.dayNumber = :dayNumber")
+    Optional<DailyPlan> findByRoadmapIdAndWeekAndDay(
+            @Param("roadmapId") Long roadmapId,
+            @Param("weekNumber") Integer weekNumber,
+            @Param("dayNumber") Integer dayNumber
+    );
+
+    @Modifying
+    @Query("DELETE FROM DailyPlan dp WHERE dp.weeklyPlan.roadMap.id = :roadmapId")
+    void deleteByWeeklyPlanRoadMapId(@Param("roadmapId") Long roadmapId);
 }
