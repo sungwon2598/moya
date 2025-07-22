@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from '../../components/features/auth/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from '@/assets/logo.svg?react';
-import { useGoogleLoginPopup } from '@/components/features/auth/hooks/useGoogleLoginPopup';
+// import { useGoogleLoginPopup } from '@/components/features/auth/hooks/useGoogleLoginPopup';
 import KeywordAni from '@/components/features/main/KeywordAni';
 
 const MainContent: React.FC = () => {
-  const { isAuthenticated, loading, handleGoogleLogin } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
-  const triggerGoogleLogin = useGoogleLoginPopup();
+  // const triggerGoogleLogin = useGoogleLoginPopup();
   const [loginLoading, setLoginLoading] = useState(false);
 
   const handleRoadmapClick = async () => {
@@ -21,8 +21,8 @@ const MainContent: React.FC = () => {
 
     setLoginLoading(true);
     try {
-      const authData = await triggerGoogleLogin();
-      await handleGoogleLogin(authData);
+      // const authData = await triggerGoogleLogin();
+      // await handleGoogleLogin(authData);
       navigate('/roadmap/create');
     } catch (error) {
       if ((error as Error).name === 'AbortError') {

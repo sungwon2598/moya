@@ -1,15 +1,15 @@
 import React from 'react';
-import { Facebook, Instagram, Youtube } from 'lucide-react';
-import { FooterLink, SocialLink } from './FooterComponents.tsx';
+// import { Facebook, Instagram, Youtube } from 'lucide-react';
+import { FooterLink } from './FooterComponents.tsx';
 import FooterSection from './FooterSection.tsx';
-import { companyInfo, footerSections, socialLinks } from './footerData.ts';
+import { companyInfo, footerSections } from './footerData.ts';
 import { QuickLink } from '@/core/types/footer.ts';
 
-const iconMap = {
-  Facebook,
-  Instagram,
-  Youtube,
-};
+// const iconMap = {
+//   Facebook,
+//   Instagram,
+//   Youtube,
+// };
 
 const Footer: React.FC = () => {
   return (

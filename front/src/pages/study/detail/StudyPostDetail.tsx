@@ -543,7 +543,7 @@ const StudyPostDetail = () => {
             <ArrowLeft className="mr-2 h-5 w-5" />
             스터디 목록으로
           </button>
-          {isLoggedIn && user?.data.nickname === post.authorName && (
+          {isLoggedIn && user?.data?.nickname === post.authorName && (
             <div className="mr-2 flex gap-1">
               <button
                 onClick={() => navigate(`/study/${post.postId}/edit`)}
@@ -642,7 +642,7 @@ const StudyPostDetail = () => {
 
           {/* 하단 버튼 섹션 */}
           <div className="mt-4 flex justify-end gap-4">
-            {isLoggedIn && user?.data.nickname === post.authorName ? (
+            {isLoggedIn && user?.data?.nickname === post.authorName ? (
               <button
                 className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
                 onClick={handleShowApplicants}>

@@ -13,7 +13,6 @@ const MyPage = () => {
 
   return (
     <div className="flex min-h-screen items-start justify-center px-4 py-12">
-
       <div className="w-full max-w-4xl">
         <Tabs.Tabs defaultValue="profile" className="w-full">
           <div className="w-full overflow-x-auto">
@@ -28,33 +27,31 @@ const MyPage = () => {
               <Tabs.TabsTrigger value="study" className="flex items-center gap-2 whitespace-nowrap">
                 <Users className="h-4 w-4" />내 스터디
               </Tabs.TabsTrigger>
-              {user?.data.roles?.includes('USER') && (
+              {user?.data?.roles?.includes('USER') && (
                 <Tabs.TabsTrigger value="admin" className="flex items-center gap-2 whitespace-nowrap">
                   <Shield className="h-4 w-4" />
                   관리자
                 </Tabs.TabsTrigger>
               )}
             </Tabs.TabsList>
-
           </div>
-
 
           <Tabs.TabsContent value="profile" className="mt-6">
             <Card.Card className="w-full rounded-2xl border-0 bg-white p-6 shadow-sm">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <Avatar.Avatar className="h-16 w-16">
-                    {user?.data.profileImageUrl ? (
+                    {user?.data?.profileImageUrl ? (
                       <Avatar.AvatarImage src={user?.data.profileImageUrl} alt={user.data.nickname} />
                     ) : (
                       <Avatar.AvatarFallback className="text-lg">
-                        {user?.data.nickname?.charAt(0).toUpperCase()}
+                        {user?.data?.nickname?.charAt(0).toUpperCase()}
                       </Avatar.AvatarFallback>
                     )}
                   </Avatar.Avatar>
                   <div className="flex-1">
-                    <p className="text-2xl font-semibold">{user?.data.nickname}</p>
-                    <p className="text-sm text-gray-500">{user?.data.email}</p>
+                    <p className="text-2xl font-semibold">{user?.data?.nickname}</p>
+                    <p className="text-sm text-gray-500">{user?.data?.email}</p>
                   </div>
                 </div>
 
@@ -92,7 +89,7 @@ const MyPage = () => {
             </Card.Card>
           </Tabs.TabsContent>
 
-          {user?.data.roles?.includes('USER') && (
+          {user?.data?.roles?.includes('USER') && (
             <Tabs.TabsContent value="admin" className="mt-6">
               <Card.Card className="w-full rounded-2xl border-0 bg-white p-6 shadow-sm">
                 <div className="space-y-4">
@@ -112,7 +109,6 @@ const MyPage = () => {
           )}
         </Tabs.Tabs>
       </div>
-
     </div>
   );
 };
