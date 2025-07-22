@@ -6,6 +6,7 @@ import { studyApiService, HotPost } from '@/core/config/studyApiConfig.ts';
 
 const HotStudy: React.FC = () => {
   const [posts, setPosts] = useState<HotPost[]>([]);
+  const [isError, setIsError] = useState(false);
 
   const { currentPage, maxPages, visibleItems, handlePrevClick, handleNextClick } = useSlideControl(posts, 5);
 
@@ -15,6 +16,7 @@ const HotStudy: React.FC = () => {
       console.log(response);
       setPosts(response.data.slice(0, 10));
     } catch (error) {
+      setIsError(true);
       console.log(error);
     }
   };
@@ -26,7 +28,9 @@ const HotStudy: React.FC = () => {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
+
         <h2 className="text-2xl font-bold">🔥 Hot 스터디</h2>
+
         <div className="flex gap-2">
           <button
             className={`rounded-full p-2 transition-all ${
@@ -46,12 +50,17 @@ const HotStudy: React.FC = () => {
           </button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-        {visibleItems.map((card, index) => (
-          <HotStudyCard key={index} card={card} />
-        ))}
-      </div>
+      {isError ? (
+        <div className="m-3 flex justify-center">
+          <p>인기 게시글 조회에 실패 했습니다 😵‍💫</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          {visibleItems.map((card, index) => (
+            <HotStudyCard key={index} card={card} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

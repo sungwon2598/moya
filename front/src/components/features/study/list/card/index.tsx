@@ -41,16 +41,16 @@ export const StudyCard = ({
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    if (now < start) {
-      return (
-        <Badge variant="secondary" className="bg-blue-50 text-blue-600">
-          🔜 모집 예정
-        </Badge>
-      );
-    } else if (now > end) {
+    if (now > end) {
       return (
         <Badge variant="secondary" className="bg-gray-100 text-gray-600">
           🔒 모집 마감
+        </Badge>
+      );
+    } else if (now >= start && now <= end) {
+      return (
+        <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+          🏃‍♂️ 스터디 진행 중
         </Badge>
       );
     } else {

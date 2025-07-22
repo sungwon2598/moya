@@ -1,11 +1,17 @@
 package com.study.moya.global.config.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import java.util.List;
+
+import com.study.moya.member.repository.MemberRepository;
+import com.study.moya.oauth.handler.CustomOAuth2SuccessHandler;
+import com.study.moya.oauth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.conn.util.PublicSuffixList;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +24,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -32,6 +39,10 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomOAuth2UserService oAuth2UserService;
+    private final ObjectMapper objectMapper;
+
+    private final MemberRepository memberRepository;
 
 //    @Value("${cors.allowed-origins}")
 //    private List<String> allowedOrigins;
@@ -56,6 +67,12 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                        .userService(oAuth2UserService)
+                        )
+                        .successHandler(oauth2SuccessHandler())
+                )
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/**","/api/auth/**", "/css/**", "/js/**", "/*.ico", "/dashboard",
                                 "/webjars/**", "/swagger-ui.html", "/swagger-ui/**", "/actuator/**",
@@ -114,4 +131,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public AuthenticationSuccessHandler oauth2SuccessHandler() {
+        return new CustomOAuth2SuccessHandler(jwtTokenProvider, memberRepository, objectMapper);
+    }
 }

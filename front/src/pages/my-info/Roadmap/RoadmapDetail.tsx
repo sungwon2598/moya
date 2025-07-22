@@ -18,11 +18,11 @@ export default function RoadmapDetail() {
   const handleShowApplicants = (dailyPlans: Day, week: number) => {
     showModal(<DayStudyPlan dailyPlans={dailyPlans} />, {
       title: (
-        <div className="flex items-center gap-3">
-          <p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <p className="text-sm sm:text-base">
             {week}주차 {dailyPlans.day}일 :
           </p>
-          <p>{dailyPlans.dailyKeyword}</p>
+          <p className="text-sm font-medium sm:text-base">{dailyPlans.dailyKeyword}</p>
         </div>
       ),
       size: 'lg',
@@ -31,29 +31,39 @@ export default function RoadmapDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-64 items-center justify-center text-gray-600 dark:text-gray-300">불러오는 중...</div>
+      <div className="flex min-h-64 items-center justify-center px-4 text-gray-600 dark:text-gray-300">
+        불러오는 중...
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-64 items-center justify-center text-red-600 dark:text-red-400">에러가 발생했어요!</div>
+      <div className="flex min-h-64 items-center justify-center px-4 text-red-600 dark:text-red-400">
+        에러가 발생했어요!
+      </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4">
+    <div className="mx-auto max-w-4xl p-3 sm:p-4 lg:p-6">
       {/* Header */}
-      <div className="mb-8 rounded-2xl border border-white/30 bg-white/10 p-6 shadow-lg backdrop-blur-md dark:border-white/20 dark:bg-white/5">
+      <div className="z-20 mb-6 rounded-xl border border-white/30 bg-white/10 p-4 shadow-lg backdrop-blur-md sm:mb-8 sm:rounded-2xl sm:p-6 dark:border-white/20 dark:bg-white/5">
         <div className="mb-4 text-center">
-          <h1 className="mb-1 text-2xl font-bold text-blue-900 dark:text-blue-100">{mainCategory}</h1>
-          <h2 className="text-lg text-blue-700 dark:text-blue-300">{subCategory}</h2>
+          <h1 className="mb-1 break-words text-xl font-bold text-blue-900 sm:text-2xl lg:text-3xl dark:text-blue-100">
+            {mainCategory}
+          </h1>
+          <h2 className="break-words text-base text-blue-700 sm:text-lg lg:text-xl dark:text-blue-300">
+            {subCategory}
+          </h2>
         </div>
 
         {roadmapDetailData?.curriculumEvaluation && (
-          <div className="z-10 mb-4 rounded-xl bg-white/20 p-4 backdrop-blur-md dark:bg-white/10">
-            <h3 className="mb-2 text-sm font-bold text-blue-900 dark:text-blue-100">학습 가이드</h3>
-            <p className="text-sm text-blue-800 dark:text-blue-200">{roadmapDetailData.curriculumEvaluation}</p>
+          <div className="mb-4 rounded-lg bg-white/20 p-3 backdrop-blur-md sm:rounded-xl sm:p-4 dark:bg-white/10">
+            <h3 className="mb-2 text-xs font-bold text-blue-900 sm:text-sm dark:text-blue-100">학습 가이드</h3>
+            <p className="text-xs leading-relaxed text-blue-800 sm:text-sm dark:text-blue-200">
+              {roadmapDetailData.curriculumEvaluation}
+            </p>
           </div>
         )}
 
@@ -61,50 +71,49 @@ export default function RoadmapDetail() {
       </div>
 
       {/* Weekly Plan */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {roadmapDetailData?.weeklyPlans?.map((weeklyPlan: Week, index: number) => (
           <div
             key={index}
-            className="rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur-md dark:border-white/20 dark:bg-white/5">
+            className="rounded-xl border border-white/20 bg-white/10 shadow-lg backdrop-blur-md sm:rounded-2xl dark:border-white/20 dark:bg-white/5">
             <Accordion type="single" collapsible>
               <AccordionItem value={`item-${index}`} className="border-none">
-                <AccordionTrigger className="border-b border-white/10 bg-gradient-to-r from-white/30 to-white/10 px-6 py-4 backdrop-blur-md dark:from-white/10 dark:to-white/5">
+                <AccordionTrigger className="border-b border-white/10 bg-gradient-to-r from-white/30 to-white/10 px-3 py-3 backdrop-blur-md sm:px-6 sm:py-4 dark:from-white/10 dark:to-white/5">
                   <div className="flex w-full items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white sm:h-8 sm:w-8 sm:text-sm">
                         {weeklyPlan.week}
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-gray-800 dark:text-white">{weeklyPlan.week}주차</p>
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-300">
+                        <p className="text-sm font-bold text-gray-800 sm:text-base dark:text-white">
+                          {weeklyPlan.week}주차
+                        </p>
+                        <p className="break-words text-xs font-medium text-blue-600 sm:text-sm dark:text-blue-300">
                           {weeklyPlan.weeklyKeyword}
                         </p>
                       </div>
                     </div>
-                    <Button
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded-xl bg-purple-600/80 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700 dark:bg-purple-500/60 dark:hover:bg-purple-600">
-                      📝 스터디 상세 만들기
-                    </Button>
                   </div>
                 </AccordionTrigger>
 
                 <AccordionContent className="bg-transparent p-0">
-                  <div className="grid gap-4 p-6">
+                  <div className="grid gap-3 p-3 sm:gap-4 sm:p-6">
                     {weeklyPlan.dailyPlans.map((dailyPlans: Day, dailyIndex: number) => {
                       const isWorksheetEmpty = !dailyPlans.worksheet || dailyPlans.worksheet.trim() === '';
                       return (
                         <div
                           key={dailyIndex}
-                          className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-sm backdrop-blur-md transition-shadow hover:shadow-lg dark:border-white/20 dark:bg-white/5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 font-bold text-orange-600">
+                          className="rounded-xl border border-white/20 bg-white/10 p-3 shadow-sm backdrop-blur-md transition-shadow hover:shadow-lg sm:rounded-2xl sm:p-4 dark:border-white/20 dark:bg-white/5">
+                          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-sm font-bold text-orange-600 sm:h-10 sm:w-10 sm:rounded-xl sm:text-base">
                                 {dailyPlans.day}
                               </div>
                               <div>
-                                <p className="font-semibold text-gray-800 dark:text-white">{dailyPlans.day}일차</p>
-                                <p className="text-sm font-medium text-orange-600 dark:text-orange-300">
+                                <p className="text-sm font-semibold text-gray-800 sm:text-base dark:text-white">
+                                  {dailyPlans.day}일차
+                                </p>
+                                <p className="break-words text-xs font-medium text-orange-600 sm:text-sm dark:text-orange-300">
                                   {dailyPlans.dailyKeyword}
                                 </p>
                               </div>
@@ -113,14 +122,14 @@ export default function RoadmapDetail() {
                             {isWorksheetEmpty ? (
                               <Button
                                 disabled
-                                className="flex cursor-not-allowed items-center gap-2 rounded-xl bg-gray-400 px-4 py-2 font-medium text-white">
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-gray-400 px-3 py-2 text-xs font-medium text-white sm:w-auto sm:rounded-xl sm:px-4 sm:text-sm">
+                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-4 sm:w-4"></div>
                                 학습지 생성중
                               </Button>
                             ) : (
                               <Button
                                 onClick={() => handleShowApplicants(dailyPlans, weeklyPlan.week)}
-                                className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600">
+                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-green-700 sm:w-auto sm:rounded-xl sm:px-4 sm:text-sm dark:bg-green-500 dark:hover:bg-green-600">
                                 <span>📖</span> 공부하러가기
                               </Button>
                             )}
@@ -134,11 +143,6 @@ export default function RoadmapDetail() {
             </Accordion>
           </div>
         ))}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-12 border-t border-white/10 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-        💡 매일 꾸준히 학습하여 목표를 달성해보세요!
       </div>
     </div>
   );

@@ -100,6 +100,8 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
           }
         },
         auto_select: false,
+        //
+        cancel_on_tap_outside: false,
       });
 
       setIsInitialized(true);
@@ -131,7 +133,7 @@ export const GoogleLoginButton: FC<GoogleButtonProps> = ({
   }, [isInitialized, theme, size, text, width, onError]);
 
   if (!isScriptLoaded || !isInitialized) {
-    return <div className="w-64 h-10 bg-gray-100 rounded animate-pulse" aria-label="Loading Google Sign-In" />;
+    return <div className="h-10 w-64 animate-pulse rounded bg-gray-100" aria-label="Loading Google Sign-In" />;
   }
 
   return <div ref={buttonRef} className="google-login-button" role="button" aria-label="Sign in with Google" />;

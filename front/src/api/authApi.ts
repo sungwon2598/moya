@@ -169,6 +169,7 @@ export const createAxiosInstance = (): AxiosInstance => {
   return instance;
 };
 
+//      // '/oauth2/authorization/google'
 export const axiosInstance = createAxiosInstance();
 
 // Google 로그인
@@ -177,7 +178,6 @@ export const postGoogleAuth = async (authData: GoogleAuthResponse): Promise<ApiR
     const response = await axiosInstance.post<User>(OAUTH_ENDPOINTS.LOGIN, {
       ...authData,
       redirectUri: window.location.origin,
-      // '/oauth2/authorization/google'
     });
 
     if (!response.data) {

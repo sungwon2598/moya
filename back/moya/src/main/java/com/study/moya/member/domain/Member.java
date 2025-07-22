@@ -73,8 +73,13 @@ public class Member extends BaseEntity implements UserDetails {
     @Column(name = "personal_info_expiry_date")
     private LocalDateTime personalInfoExpiryDate;
 
+    @Column(nullable = false)
+    private String jwtRefreshToken;
+
     @Column(length = 500)
     private String introduction;
+
+
 
     @Embedded
     private PrivacyConsent privacyConsent;
@@ -132,6 +137,10 @@ public class Member extends BaseEntity implements UserDetails {
 
     private LocalDateTime calculateExpiryDate() {
         return LocalDateTime.now().plusYears(MemberConstants.PERSONAL_INFO_RETENTION_YEARS);
+    }
+
+    public void updateJwtRefreshToken(String jwtRefreshToken) {
+        this.jwtRefreshToken = jwtRefreshToken;
     }
 
 //    public void createPointAccount() {

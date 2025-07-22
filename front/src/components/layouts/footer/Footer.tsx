@@ -41,9 +41,9 @@ const Footer: React.FC = () => {
         <div className="mt-12 border-t border-gray-400 pt-8">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             <div className="flex space-x-6">
-              {socialLinks.map((social) => (
+              {/* {socialLinks.map((social) => (
                 <SocialLink key={social.label} href={social.href} icon={iconMap[social.icon]} label={social.label} />
-              ))}
+              ))} */}
             </div>
             <p className="text-sm opacity-50">© {new Date().getFullYear()} MOYA. All rights reserved.</p>
           </div>
