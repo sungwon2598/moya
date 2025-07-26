@@ -16,12 +16,16 @@ const getRoadmapFormData = async () => {
   return data;
 };
 
+const postWorksheetsFormData = async (id: number) => {
+  const { data } = await axiosInstance.post(`/api/${id}/worksheets`);
+  console.log(data);
+  return data;
+};
 const postRoadmapFormData = async (createFormData: CreateFormDataType) => {
   const { data } = await axiosInstance.post('/api/roadmap/generate', createFormData);
   console.log(data);
   return data;
 };
-
 export const useRoadmapFormData = () => {
   return useQuery({
     queryKey: ['roadmapForm'],
@@ -56,6 +60,33 @@ export const usePostRoadmapCreate = () => {
         description: '',
       });
       navigate('/roadmap/create');
+    },
+  });
+};
+
+export const usePostWorksheetsCreate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: postWorksheetsFormData,
+    onMutate: () => {
+      console.log('워크시트 생성 시도');
+      queryClient.removeQueries({ queryKey: ['worksheetStatus'] });
+    },
+    onSuccess: (data) => {
+      console.log('워크시트 생성 성공');
+      console.log(data);
+
+      queryClient.setQueryData(['worksheetStatus'], {
+        status: 'success',
+        data,
+      });
+    },
+    onError: () => {
+      console.log('워크시트 생성 실패');
+      toast('워크시트 생성에 실패하엿습니다.', {
+        description: '',
+      });
     },
   });
 };
