@@ -5,14 +5,18 @@ import com.study.moya.ai_roadmap.domain.*;
 import com.study.moya.ai_roadmap.dto.request.RoadmapRequest;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSimpleDto;
 import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryDTO;
+import com.study.moya.ai_roadmap.dto.response.RoadMapSummaryProjection;
 import com.study.moya.ai_roadmap.dto.response.WeeklyRoadmapResponse;
 import com.study.moya.ai_roadmap.repository.*;
 import com.study.moya.ai_roadmap.util.RoadmapResponseParser;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
+import com.study.moya.token.domain.enums.TicketType;
+import com.study.moya.token.dto.ticket.reponse.TicketUsageResponse;
 import com.study.moya.token.dto.usage.AiUsageResponse;
 import com.study.moya.token.dto.usage.UseTokenRequest;
 import com.study.moya.token.service.TokenFacadeService;
+import com.study.moya.token.service.ticket.TicketFacadeService;
 import com.theokanning.openai.Usage;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
@@ -58,6 +62,8 @@ public class RoadmapService {
     private final MemberRepository memberRepository;
     private final EtcRepository etcRepository;
 
+    private final TicketFacadeService ticketFacadeService;
+
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private static final Long ROADMAP_SERVICE_ID = 1L;
@@ -76,6 +82,24 @@ public class RoadmapService {
 
             String prompt = promptService.createPrompt(request);
             log.info("생성된 Prompt:\n{}", prompt);
+
+            // 1. 로드맵 티켓 확인 및 사용 (없으면 바로 예외) 잠깐 추가
+            try {
+                if (!ticketFacadeService.hasTicket(memberId, TicketType.ROADMAP_TICKET)) {
+                    throw new RuntimeException("로드맵 티켓이 부족합니다");
+                }
+
+                TicketUsageResponse ticketResponse = ticketFacadeService.useTicket(memberId, TicketType.ROADMAP_TICKET);
+                usageId = ticketResponse.getId();
+                log.info("로드맵 티켓 사용 완료. 사용 ID: {}", usageId);
+
+            } catch (Exception e) {
+                log.error("티켓 확인/사용 실패: {}", e.getMessage());
+                throw new RuntimeException("티켓이 부족합니다", e);
+            }
+
+            //여기까지=============================================
+
 
             UseTokenRequest tokenRequest = UseTokenRequest.builder()
                     .aiServiceId(ROADMAP_SERVICE_ID)
@@ -136,6 +160,16 @@ public class RoadmapService {
                         request.getDuration(), request.getLearningObjective(), response,
                         category, memberId, request.getEtc1(), request.getEtc2());
 
+                //잠깐 추가!
+                try {
+                    ticketFacadeService.markTicketUsageAsCompleted(usageId);
+                    log.info("티켓 사용 완료 처리: {}", usageId);
+                } catch (Exception e) {
+                    log.error("티켓 사용 완료 처리 실패: {}", e.getMessage());
+                    // 상태 업데이트 실패는 로드맵 생성 자체에 영향을 주지 않음
+                }
+                //잠깐 추가!
+
                 // 9. AI 사용 내역 완료 처리
                 try {
                     tokenFacadeService.markAiUsageAsCompleted(usageId);
@@ -154,8 +188,15 @@ public class RoadmapService {
                     try {
                         tokenFacadeService.markAiUsageAsFailed(usageId);
                         log.info("토큰 환불 처리 완료: {}", usageId);
+                        //잠깐 추가
+                        ticketFacadeService.markTicketUsageAsFailed(usageId);
+                        log.info("티켓 환불 처리 완료: {}", usageId);
+                        //잠깐 추가
                     } catch (Exception ex) {
                         log.error("토큰 환불 처리 실패: {}", ex.getMessage());
+                        //잠깐 추가2
+                        log.error("티켓 환불 처리 실패: {}", ex.getMessage());
+                        //잠깐 추가2
                     }
                 }
 
@@ -278,14 +319,15 @@ public class RoadmapService {
     public List<RoadMapSummaryDTO> getMemberRoadMapSummaries(Long memberId) {
         log.info("사용자의 구독 로드맵 요약 정보 조회 시작. 사용자 ID: {}", memberId);
 
-        // 사용자 존재 확인 (선택 사항)
-        if (!memberRepository.existsById(memberId)) {
-            throw new EntityNotFoundException("사용자를 찾을 수 없습니다. ID: " + memberId);
-        }
+        // Projection으로 조회
+        List<RoadMapSummaryProjection> projections = memberRoadMapRepository.findRoadMapSummariesByMemberId(memberId);
 
-        List<RoadMapSummaryDTO> roadMapSummaries = memberRoadMapRepository.findRoadMapSummariesByMemberId(memberId);
+        // Projection → DTO 변환
+        List<RoadMapSummaryDTO> roadMapSummaries = projections.stream()
+                .map(RoadMapSummaryDTO::from)
+                .collect(Collectors.toList());
+
         log.info("사용자의 구독 로드맵 요약 정보 조회 완료. 조회된 로드맵 수: {}", roadMapSummaries.size());
-
         return roadMapSummaries;
     }
 

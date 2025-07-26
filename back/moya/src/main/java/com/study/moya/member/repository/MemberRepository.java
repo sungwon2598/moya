@@ -22,4 +22,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByNicknameAndStatusNot(String nickname, MemberStatus status);
 
     Page<Member> findByIdGreaterThanEqual(Long startId, Pageable pageable);
+
+    Page<Member> findByStatus(MemberStatus status, Pageable pageable);
+
+    long countByStatus(MemberStatus status);
 }

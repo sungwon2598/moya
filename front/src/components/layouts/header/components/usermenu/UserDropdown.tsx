@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, User, Map, Heart, LayoutGrid, PlusSquare } from 'lucide-react';
-import { User as UserType } from '@/components/features/auth/types/auth.types.ts';
+import { User as UserType } from '@/types/auth.types';
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/shared/ui/dropdown-menu';
 import { useAuthStore } from '@/store/auth';
 
@@ -15,7 +15,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
   const { logoutUser } = useAuthStore();
   console.log(user?.data?.roles);
 
-  const isAdmin = user?.data?.roles.includes('ADMIN');
+  const isAdmin = user?.data?.roles?.includes('ADMIN');
 
   const handleLogout = async () => {
     try {
@@ -30,7 +30,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
     <>
       <DropdownMenuLabel>
         <div className="flex items-center space-x-3">
-          {user?.data.profileImageUrl ? (
+          {user?.data?.profileImageUrl ? (
             <img src={user?.data.profileImageUrl} alt="프로필" className="w-10 h-10 rounded-full" />
           ) : (
             <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
@@ -38,8 +38,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
             </div>
           )}
           <div>
-            <p className="text-sm font-semibold">{user?.data.nickname}</p>
-            <p className="text-sm text-gray-500">{user?.data.email}</p>
+            <p className="text-sm font-semibold">{user?.data?.nickname}</p>
+            <p className="text-sm text-gray-500">{user?.data?.email}</p>
           </div>
         </div>
       </DropdownMenuLabel>

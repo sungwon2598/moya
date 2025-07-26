@@ -43,6 +43,16 @@ public class WeeklyPlan extends BaseEntity {
         this.roadMap = roadMap;
     }
 
+    public void updateKeyword(String newKeyword) {
+        if (newKeyword == null || newKeyword.trim().isEmpty()) {
+            throw new IllegalArgumentException("주차별 키워드는 빈 값일 수 없습니다");
+        }
+        if (newKeyword.length() > 150) {
+            throw new IllegalArgumentException("주차별 키워드는 150자를 초과할 수 없습니다");
+        }
+        this.keyword = newKeyword.trim();
+    }
+
     private void validateWeekNumber(Integer weekNumber) {
         if (weekNumber == null || weekNumber < 1) {
             throw new IllegalArgumentException("주차는 1 이상이어야 합니다.");

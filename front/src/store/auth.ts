@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { GoogleAuthResponse, User } from '@/types/auth.types';
-import { postGoogleAuth, logout } from '@/api/authApi';
+import { User } from '@/types/auth.types';
+import { logout } from '@/api/authApi';
 import { TokenStorage, UserStorage } from '../utils/tokenUtils';
 
 interface AuthState {
@@ -10,7 +10,14 @@ interface AuthState {
   error: string | null;
   accessToken: string | null;
 
-  authenticateWithGoogle: (authData: GoogleAuthResponse) => Promise<void>;
+  handleOAuthCallback: (params: {
+    accessToken: string;
+    refreshToken: string;
+    email?: string;
+    nickname?: string;
+    profileImage?: string;
+  }) => Promise<void>;
+
   checkLoginStatus: () => Promise<void>;
   logoutUser: () => Promise<void>;
   clearError: () => void;
@@ -28,27 +35,29 @@ const initialState = {
 export const useAuthStore = create<AuthState>((set) => ({
   ...initialState,
 
-  authenticateWithGoogle: async (authData: GoogleAuthResponse) => {
-    // window.location.href = ' /oauth2/authorization/google';
-    // console.log(authData)
+  // OAuth 콜백
+  handleOAuthCallback: async (params) => {
     try {
       set({ loading: true, error: null });
-      const response = await postGoogleAuth(authData);
 
-      if (!response.success || !response.data) {
-        throw new Error(response.message || 'Authentication failed');
-      }
+      const { accessToken, refreshToken, email, nickname, profileImage } = params;
 
-      console.log('로그인 성공: 사용자 정보: ', response.data.user);
+      console.log('OAuth 콜백 처리 시작:', { email, nickname });
 
-      const userData = response.data.user;
-      const accessToken = response.data.user.data?.accessToken;
-      const refreshToken = response.data.user.data?.refreshToken;
+      TokenStorage.setTokens(accessToken, refreshToken);
 
-      if (accessToken && refreshToken) {
-        TokenStorage.setTokens(accessToken, refreshToken);
-        UserStorage.setUserData(userData);
-      }
+      const userData: User = {
+        data: {
+          email: email || '',
+          nickname: nickname || '',
+          profileImageUrl: profileImage || '',
+          accessToken,
+          refreshToken,
+        },
+      };
+
+      // 사용자 정보 저장
+      UserStorage.setUserData(userData);
 
       set({
         loading: false,
@@ -57,12 +66,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         accessToken: accessToken,
         error: null,
       });
+
+      console.log('OAuth 로그인 완료:', userData);
     } catch (error) {
+      console.error('OAuth 콜백 처리 실패:', error);
       set({
         loading: false,
         isLogin: false,
         user: null,
-        error: error instanceof Error ? error.message : '인증 실패',
+        error: error instanceof Error ? error.message : 'OAuth 로그인 실패',
       });
     }
   },
@@ -78,12 +90,20 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
+    // 토큰 만료 확인
+    if (TokenStorage.isTokenExpired(token)) {
+      console.log('토큰이 만료되었습니다.');
+      TokenStorage.clearTokens();
+      UserStorage.clearUserData();
+      set(initialState);
+      return;
+    }
+
     set({ loading: true });
 
-    // 우선 세션 스토리지에서 사용자 정보 확인
     const savedUserData = UserStorage.getUserData();
     if (savedUserData) {
-      // console.log("세션 스토리지에서 사용자 정보 복원:", savedUserData);
+      console.log('세션 스토리지에서 사용자 정보 복원:', savedUserData);
       set({
         loading: false,
         isLogin: true,
@@ -94,6 +114,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
+    // 사용자 정보가 없으면 로그아웃 처리
+    console.log('사용자 정보를 찾을 수 없습니다.');
     set({
       loading: false,
       isLogin: false,
@@ -105,12 +127,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logoutUser: async () => {
     try {
-      await logout();
+      set({ loading: true });
+
+      try {
+        await logout();
+      } catch (error) {
+        console.error('서버 로그아웃 실패:', error);
+      }
+
       TokenStorage.clearTokens();
       UserStorage.clearUserData();
       set(initialState);
+
+      console.log('로그아웃 완료');
     } catch (error) {
       console.error('로그아웃 실패:', error);
+      // 실패해도 클라이언트 정보는 정리
       TokenStorage.clearTokens();
       UserStorage.clearUserData();
       set(initialState);
@@ -121,6 +153,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   resetAuth: () => {
     TokenStorage.clearTokens();
+    UserStorage.clearUserData();
     set(initialState);
   },
 }));
