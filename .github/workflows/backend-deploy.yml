@@ -1,4 +1,4 @@
-name: Backend Deploy To Home Server
+name: Backend Deploy To EC2 Server (Session Manager)
 on:
   push:
     branches:
@@ -9,6 +9,11 @@ on:
     types: [opened, closed]
     paths:
       - 'back/**'
+
+# OIDC 토큰을 위한 권한 설정
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   Check_Path:
@@ -46,52 +51,85 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
-      - name: SSH로 홈서버 접속하기
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
+
+      # OIDC로 AWS 인증 (GitHub Secrets 불필요!)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.HOME_SERVER_HOST }}
-          username: ${{ secrets.HOME_SERVER_USERNAME }}
-          password: ${{ secrets.HOME_SERVER_PASSWORD }}
-          port: ${{ secrets.HOME_SERVER_PORT }}
-          envs: APPLICATION_PROPERTIES
-          script_stop: true
-          script: |
-            # 백엔드 코드 업데이트
-            cd /home/ubuntu/moya/back/moya
+          role-to-assume: arn:aws:iam::179227986066:role/GitHubActionsRole
+          aws-region: ap-northeast-2
 
-            git reset --hard
-            git clean -fd -e logs/
-            git remote set-url origin git@github.com:sungwon2598/moya.git
-            git pull origin main
-            
-            # application.yml 업데이트
-            echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
-            
-            # 도커 컴포즈로 서비스 재시작
-            cd /home/ubuntu/moya-docker
-            docker-compose stop springboot-app
-            docker-compose rm -f springboot-app
-            docker-compose up -d --build springboot-app
-
-  Notify:
-    needs: [Check_Path, Deploy]
-    if: always() && needs.Check_Path.outputs.should_deploy == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify Slack
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # Parameter Store에서 설정 정보 가져오기
+      - name: Get parameters from AWS Parameter Store
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            MESSAGE="백엔드 코드가 main 브랜치에 푸시되었습니다.\n\n커밋 메시지: ${{ github.event.head_commit.message }}"
-          elif [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.action }}" = "opened" ]; then
-            MESSAGE="백엔드 코드의 새로운 PR이 생성되었습니다.\n\nPR 번호: #${{ github.event.pull_request.number }}\n\nPR 제목: ${{ github.event.pull_request.title }}"
-          elif [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
-            MESSAGE="백엔드 코드 PR이 main 브랜치에 병합되었습니다.\n\nPR 번호: #${{ github.event.pull_request.number }}\n\nPR 제목: ${{ github.event.pull_request.title }}"
-          else
-            MESSAGE="백엔드 배포 워크플로우가 실행되었습니다."
+          echo "INSTANCE_ID=$(aws ssm get-parameter --name "/moya/backend/server/instance-id" --query "Parameter.Value" --output text)" >> $GITHUB_ENV
+          
+          APPLICATION_PROPERTIES=$(aws ssm get-parameter --name "/moya/backend/application-yml" --with-decryption --query "Parameter.Value" --output text)
+          
+          # 환경 변수로 설정 (멀티라인 텍스트)
+          echo "APPLICATION_PROPERTIES<<EOF" >> $GITHUB_ENV
+          echo "$APPLICATION_PROPERTIES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # Session Manager로 배포 명령 실행
+      - name: Deploy via Session Manager
+        run: |
+          # 배포 스크립트 생성
+          cat > deploy_commands.json << 'EOF'
+          [
+            "cd /home/ubuntu/moya/back/moya",
+            "git reset --hard",
+            "git clean -fd -e logs/",
+            "git remote set-url origin https://github.com/sungwon2598/moya.git",
+            "git pull origin main",
+            "echo '$APPLICATION_PROPERTIES' > src/main/resources/application.yml",
+            "pkill -f 'java.*moya.*jar' || true",
+            "sleep 3",
+            "./gradlew clean build -x test",
+            "nohup java -Xmx256m -jar build/libs/moya-0.0.1-SNAPSHOT.jar > app.log 2>&1 &",
+            "sleep 5",
+            "if pgrep -f 'java.*moya.*jar' > /dev/null; then echo 'Application started successfully'; else echo 'Application failed to start' && exit 1; fi"
+          ]
+          EOF
+          
+          # Session Manager로 명령 실행
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters file://deploy_commands.json \
+            --query "Command.CommandId" --output text)
+          
+          echo "Command ID: $COMMAND_ID"
+          
+          # 명령 실행 완료 대기 (최대 10분)
+          echo "Waiting for command execution to complete..."
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --cli-read-timeout 600 \
+            --cli-connect-timeout 60
+          
+          # 실행 결과 확인
+          echo "Command execution result:"
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query 'Status'
+          
+          # 성공 여부 확인
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query 'Status' --output text)
+          
+          if [ "$STATUS" != "Success" ]; then
+            echo "Deployment failed with status: $STATUS"
+            # 실패 시 상세 로그 출력
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query 'StandardErrorContent' --output text
+            exit 1
           fi
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
+          
+          echo "Deployment completed successfully!"
