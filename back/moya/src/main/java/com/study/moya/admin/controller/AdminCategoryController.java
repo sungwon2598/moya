@@ -25,7 +25,7 @@ import java.util.List;
 public class AdminCategoryController {
 
     private final AdminCategoryService adminCategoryService;
-    //깃허브 액션 테스트를 위한 주석 추가 시도 5
+    //깃허브 액션 테스트를 위한 주석 추가 시도 6
 
     // ==================== 조회 API ====================
 
