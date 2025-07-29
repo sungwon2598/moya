@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "INSTANCE_ID=$(aws ssm get-parameter --name "/moya/backend/server/instance-id" --query "Parameter.Value" --output text)" >> $GITHUB_ENV
           
-          APPLICATION_PROPERTIES=$(aws ssm get-parameter --name "/moya/backend/application-yml" --with-decryption --query "Parameter.Value" --output text)
+          APPLICATION_PROPERTIES=$(aws ssm get-parameter --name "/moya/backend/application-properties" --with-decryption --query "Parameter.Value" --output text)
           
           # 환경 변수로 설정 (멀티라인 텍스트)
           echo "APPLICATION_PROPERTIES<<EOF" >> $GITHUB_ENV
@@ -74,29 +74,26 @@ jobs:
       # Session Manager로 배포 명령 실행
       - name: Deploy via Session Manager
         run: |
-          # 배포 스크립트 생성
-          cat > deploy_commands.json << 'EOF'
-          [
-            "cd /home/ubuntu/moya/back/moya",
-            "git reset --hard",
-            "git clean -fd -e logs/",
-            "git remote set-url origin https://github.com/sungwon2598/moya.git",
-            "git pull origin main",
-            "echo '$APPLICATION_PROPERTIES' > src/main/resources/application.yml",
-            "pkill -f 'java.*moya.*jar' || true",
-            "sleep 3",
-            "./gradlew clean build -x test",
-            "nohup java -Xmx256m -jar build/libs/moya-0.0.1-SNAPSHOT.jar > app.log 2>&1 &",
-            "sleep 5",
-            "if pgrep -f 'java.*moya.*jar' > /dev/null; then echo 'Application started successfully'; else echo 'Application failed to start' && exit 1; fi"
-          ]
-          EOF
+          # APPLICATION_PROPERTIES를 파일로 저장
+          echo "$APPLICATION_PROPERTIES" > application.yml
           
           # Session Manager로 명령 실행
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters file://deploy_commands.json \
+            --parameters 'commands=[
+              "cd /home/ubuntu/moya/back/moya",
+              "git reset --hard",
+              "git clean -fd -e logs/",
+              "git remote set-url origin https://github.com/sungwon2598/moya.git",
+              "git pull origin main",
+              "pkill -f \"java.*moya.*jar\" || true",
+              "sleep 3",
+              "./gradlew clean build -x test",
+              "nohup java -Xmx256m -jar build/libs/moya-0.0.1-SNAPSHOT.jar > app.log 2>&1 &",
+              "sleep 5",
+              "if pgrep -f \"java.*moya.*jar\" > /dev/null; then echo \"Application started successfully\"; else echo \"Application failed to start\" && exit 1; fi"
+            ]' \
             --query "Command.CommandId" --output text)
           
           echo "Command ID: $COMMAND_ID"
