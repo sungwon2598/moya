@@ -29,7 +29,7 @@ public class AdminCategoryController {
 
     @GetMapping("/easteregg")
     public String easterEgg() {
-        return "GitHub Actions is working! 🎉";
+        return "너네가 나처럼 피젯스피너를 돌릴 수 있을까? ߷";
     }
 
     @GetMapping("/easteregg2")
