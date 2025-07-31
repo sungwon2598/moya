@@ -86,32 +86,19 @@ jobs:
               "echo \"Current directory: $(pwd)\"",
               "cd /home/ubuntu/moya/back/moya",
               "echo \"Changed to directory: $(pwd)\"",
-              "echo \"=== Fixing Git ownership ===\"",
-              "sudo git config --global --add safe.directory /home/ubuntu/moya",
-              "sudo git config --global --add safe.directory /home/ubuntu/moya/back/moya",
-              "echo \"Git ownership fixed\"",
-              "echo \"=== Current state before update ===\"",
-              "echo \"Current commit BEFORE pull: $(git rev-parse HEAD)\"",
-              "echo \"Current branch: $(git branch --show-current)\"",
               "echo \"=== Git reset hard ===\"",
               "git reset --hard",
-              "echo \"Git reset completed\"",
+              "echo \"Git reset completed. Current commit: $(git rev-parse HEAD)\"",
               "echo \"=== Git clean ===\"",
               "sudo git clean -fd -e logs/",
               "echo \"Git clean completed\"",
               "echo \"=== Setting remote URL ===\"",
               "git remote set-url origin https://github.com/sungwon2598/moya.git",
               "echo \"Remote URL set to: $(git remote get-url origin)\"",
-              "echo \"=== Fetching latest changes ===\"",
-              "git fetch origin main",
-              "echo \"Fetch completed\"",
               "echo \"=== Git pull ===\"",
               "git pull origin main",
-              "echo \"=== Verifying update ===\"",
-              "echo \"Current commit AFTER pull: $(git rev-parse HEAD)\"",
-              "echo \"Latest commits:\"",
-              "git log --oneline -5",
-              "git status",
+              "echo \"Git pull completed. Latest commits:\"",
+              "git log --oneline -3",
               "echo \"=== Stopping existing Java processes ===\"",
               "sudo pkill -f \"java.*moya.*jar\" || echo \"No existing Java processes found\"",
               "echo \"Waiting for processes to stop...\"",
@@ -128,9 +115,6 @@ jobs:
               "sleep 5",
               "echo \"=== Checking application status ===\"",
               "if pgrep -f \"java.*moya.*jar\" > /dev/null; then echo \"✅ Application started successfully. PID: $(pgrep -f java.*moya.*jar)\"; else echo \"❌ Application failed to start\" && exit 1; fi",
-              "echo \"=== Final verification ===\"",
-              "echo \"Deployed commit: $(git rev-parse HEAD)\"",
-              "echo \"Deployed at: $(date)\"",
               "echo \"=== Deployment process completed ===\""
             ]' \
             --query "Command.CommandId" --output text)
@@ -176,4 +160,4 @@ jobs:
             exit 1
           fi
           
-          echo "Deployment completed successfully!
+          echo "Deployment completed successfully!"
