@@ -84,12 +84,13 @@ jobs:
             --parameters 'commands=[
               "cd /home/ubuntu/moya/back/moya",
               "git reset --hard",
-              "git clean -fd -e logs/",
+              "sudo git clean -fd -e logs/",
               "git remote set-url origin https://github.com/sungwon2598/moya.git",
               "git pull origin main",
-              "pkill -f \"java.*moya.*jar\" || true",
+              "sudo pkill -f \"java.*moya.*jar\" || true",
               "sleep 3",
-              "./gradlew clean build -x test",
+              "sudo chmod +x ./gradlew",
+            "sudo ./gradlew clean build -x test",
               "nohup java -Xmx256m -jar build/libs/moya-0.0.1-SNAPSHOT.jar > app.log 2>&1 &",
               "sleep 5",
               "if pgrep -f \"java.*moya.*jar\" > /dev/null; then echo \"Application started successfully\"; else echo \"Application failed to start\" && exit 1; fi"
