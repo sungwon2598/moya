@@ -83,11 +83,7 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "cd /home/ubuntu/moya/back/moya",
-              "git reset --hard",
-              "sudo git clean -fd -e logs/",
-              "git remote set-url origin https://github.com/sungwon2598/moya.git",
               "git pull origin main",
-              "git log --oneline -3",
               "sudo pkill -f \"java.*moya.*jar\" || true",
               "sleep 3",
               "sudo chmod +x ./gradlew",
