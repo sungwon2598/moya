@@ -27,6 +27,11 @@ public class AdminCategoryController {
     private final AdminCategoryService adminCategoryService;
     //깃허브 액션 테스트를 위한 주석 추가 시도 6
 
+    @GetMapping("/easteregg")
+    public String easterEgg() {
+        return "GitHub Actions is working! 🎉";
+    }
+
     // ==================== 조회 API ====================
 
     @Operation(summary = "전체 카테고리 계층 구조 조회", description = "대분류와 중분류로 구성된 전체 카테고리 계층 구조를 조회합니다")
