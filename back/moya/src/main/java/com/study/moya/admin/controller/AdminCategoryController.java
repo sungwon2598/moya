@@ -37,6 +37,11 @@ public class AdminCategoryController {
         return "짜잔!! 이몸 등장!!! 🎉";
     }
 
+    @GetMapping("/easteregg3")
+    public String easterEgg3() {
+        return "앙 기모닥";
+    }
+
     // ==================== 조회 API ====================
 
     @Operation(summary = "전체 카테고리 계층 구조 조회", description = "대분류와 중분류로 구성된 전체 카테고리 계층 구조를 조회합니다")
