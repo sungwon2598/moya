@@ -82,18 +82,40 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "echo \"=== Starting deployment process ===\"",
+              "echo \"Current directory: $(pwd)\"",
               "cd /home/ubuntu/moya/back/moya",
+              "echo \"Changed to directory: $(pwd)\"",
+              "echo \"=== Git reset hard ===\"",
               "git reset --hard",
+              "echo \"Git reset completed. Current commit: $(git rev-parse HEAD)\"",
+              "echo \"=== Git clean ===\"",
               "sudo git clean -fd -e logs/",
+              "echo \"Git clean completed\"",
+              "echo \"=== Setting remote URL ===\"",
               "git remote set-url origin https://github.com/sungwon2598/moya.git",
+              "echo \"Remote URL set to: $(git remote get-url origin)\"",
+              "echo \"=== Git pull ===\"",
               "git pull origin main",
-              "sudo pkill -f \"java.*moya.*jar\" || true",
+              "echo \"Git pull completed. Latest commits:\"",
+              "git log --oneline -3",
+              "echo \"=== Stopping existing Java processes ===\"",
+              "sudo pkill -f \"java.*moya.*jar\" || echo \"No existing Java processes found\"",
+              "echo \"Waiting for processes to stop...\"",
               "sleep 3",
+              "echo \"=== Setting gradlew permissions ===\"",
               "sudo chmod +x ./gradlew",
-            "sudo ./gradlew clean build -x test",
+              "echo \"Gradlew permissions set. File info: $(ls -la ./gradlew)\"",
+              "echo \"=== Starting build process ===\"",
+              "sudo ./gradlew clean build -x test",
+              "echo \"Build completed. Checking build artifacts:\"",
+              "ls -la build/libs/",
+              "echo \"=== Starting application ===\"",
               "nohup java -Xmx256m -jar build/libs/moya-0.0.1-SNAPSHOT.jar > app.log 2>&1 &",
               "sleep 5",
-              "if pgrep -f \"java.*moya.*jar\" > /dev/null; then echo \"Application started successfully\"; else echo \"Application failed to start\" && exit 1; fi"
+              "echo \"=== Checking application status ===\"",
+              "if pgrep -f \"java.*moya.*jar\" > /dev/null; then echo \"✅ Application started successfully. PID: $(pgrep -f java.*moya.*jar)\"; else echo \"❌ Application failed to start\" && exit 1; fi",
+              "echo \"=== Deployment process completed ===\""
             ]' \
             --query "Command.CommandId" --output text)
           
@@ -114,6 +136,19 @@ jobs:
             --instance-id "$INSTANCE_ID" \
             --query 'Status'
           
+          # 상세 로그 출력 (성공/실패 관계없이)
+          echo "=== Standard Output ==="
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query 'StandardOutputContent' --output text
+          
+          echo "=== Standard Error ==="
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query 'StandardErrorContent' --output text
+          
           # 성공 여부 확인
           STATUS=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
@@ -122,11 +157,6 @@ jobs:
           
           if [ "$STATUS" != "Success" ]; then
             echo "Deployment failed with status: $STATUS"
-            # 실패 시 상세 로그 출력
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query 'StandardErrorContent' --output text
             exit 1
           fi
           
