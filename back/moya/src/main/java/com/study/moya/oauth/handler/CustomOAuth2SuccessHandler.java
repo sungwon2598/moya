@@ -30,8 +30,8 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     private final ObjectMapper objectMapper;
 
     // 프론트엔드 URL 설정 (환경에 따라 변경)
-    //private static final String FRONTEND_URL = "http://localhost:3000"; // 개발환경
-    private static final String FRONTEND_URL = "https://moyastudy.com"; // 운영환경
+    private static final String FRONTEND_URL = "http://localhost:3000"; // 개발환경
+    //private static final String FRONTEND_URL = "https://moyastudy.com"; // 운영환경
 
     @Override
     @Transactional
@@ -95,7 +95,6 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                     .queryParam("message", "로그인 처리 중 오류가 발생했습니다.")
                     .build()
                     .toUriString();
-
             getRedirectStrategy().sendRedirect(request, response, errorUrl);
         }
     }
