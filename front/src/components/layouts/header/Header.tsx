@@ -158,9 +158,9 @@ export const Header: React.FC = () => {
     setIsLoggingIn(true);
 
     try {
-      const isDev = import.meta.env.DEV;
-      const baseUrl = isDev ? 'http://localhost:8080' : 'https://api.moyastudy.com';
-      const oauthUrl = `${baseUrl}/oauth2/authorization/google`;
+      // const isDev = import.meta.env.DEV;
+      // const baseUrl = isDev ? 'http://localhost:8080' : 'https://api.moyastudy.com';
+      const oauthUrl = `https://api.moyastudy.com/oauth2/authorization/google`;
 
       window.location.href = oauthUrl;
     } catch (error) {

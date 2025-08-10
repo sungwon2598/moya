@@ -8,7 +8,7 @@ import path from 'path';
 export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  const devMode = mode === 'development';
+  // const devMode = mode === 'development';
 
   return {
     plugins: [react(), tailwindcss(), svgr()],
@@ -28,7 +28,7 @@ export default defineConfig(({ mode }): UserConfig => {
     },
     define: {
       'process.env': JSON.stringify(env),
-      'import.meta.env.VITE_API_URL': JSON.stringify(devMode ? 'http://localhost:8080' : 'https://api.moyastudy.com'),
+      // 'import.meta.env.VITE_API_URL': JSON.stringify(devMode ? 'http://localhost:8080' : 'https://api.moyastudy.com'),
     },
     build: {
       outDir: 'dist',

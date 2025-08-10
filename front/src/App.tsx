@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { ModalProvider } from './core/providers/context/ModalContext';
 import RootLayout from './components/layouts/RootLayout.tsx';
 import Main from './pages/main/MainPage.tsx';
@@ -76,6 +76,9 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<RootLayout />}>
               <Route index element={<Main />} />
+
+              <Route path="oauth/callback" element={<Navigate to="/" replace />} />
+
               <Route path="notifications" element={<Notifications />} />
               <Route path="signin" element={<SignInPage />} />
               <Route path="signup" element={<SignUpPage />} />
