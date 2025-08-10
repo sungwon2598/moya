@@ -39,7 +39,7 @@ public class AdminCategoryController {
 
     @GetMapping("/easteregg3")
     public String easterEgg3() {
-        return "앙 기모닥!!";
+        return "앙 기모닥!!!!";
     }
 
     // ==================== 조회 API ====================
