@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -72,25 +73,26 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             memberRepository.save(member);
             log.info("회원 정보 업데이트 완료 - 회원 ID: {}", member.getId());
 
-            // JWT 토큰을 HttpOnly 쿠키에 저장 (yml 설정값 사용)
-            Cookie accessTokenCookie = new Cookie("accessToken", tokenInfo.getAccessToken());
-            accessTokenCookie.setHttpOnly(true);
-            accessTokenCookie.setSecure(true);
-            accessTokenCookie.setPath("/");
-            accessTokenCookie.setDomain(".moyastudy.com");
-            accessTokenCookie.setMaxAge((int) (accessTokenExpiration / 1000)); // ms를 초로 변환
-            accessTokenCookie.setAttribute("SameSite", "Lax");
+            ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokenInfo.getAccessToken())
+                    .domain(".moyastudy.com")  // ResponseCookie는 점 도메인 허용
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(accessTokenExpiration / 1000)
+                    .sameSite("Lax")
+                    .build();
 
-            Cookie refreshTokenCookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
-            refreshTokenCookie.setHttpOnly(true);
-            refreshTokenCookie.setSecure(true);
-            refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setDomain(".moyastudy.com");
-            refreshTokenCookie.setMaxAge((int) (refreshTokenExpiration / 1000)); // ms를 초로 변환
-            refreshTokenCookie.setAttribute("SameSite", "Lax");
-            
-            response.addCookie(accessTokenCookie);
-            response.addCookie(refreshTokenCookie);
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenInfo.getRefreshToken())
+                    .domain(".moyastudy.com")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(refreshTokenExpiration / 1000)
+                    .sameSite("Lax")
+                    .build();
+
+            response.addHeader("Set-Cookie", accessTokenCookie.toString());
+            response.addHeader("Set-Cookie", refreshTokenCookie.toString());
             
             log.info("JWT 토큰을 쿠키에 저장 완료 - 회원 ID: {}, accessToken만료: {}초, refreshToken만료: {}초", 
                     member.getId(), accessTokenExpiration / 1000, refreshTokenExpiration / 1000);
