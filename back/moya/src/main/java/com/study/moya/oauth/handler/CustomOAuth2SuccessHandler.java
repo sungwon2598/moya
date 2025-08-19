@@ -77,6 +77,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             accessTokenCookie.setHttpOnly(true);
             accessTokenCookie.setSecure(true);
             accessTokenCookie.setPath("/");
+            accessTokenCookie.setDomain(".moyastudy.com"); // 서브도메인 포함 모든 도메인에서 접근 가능
             accessTokenCookie.setMaxAge((int) (accessTokenExpiration / 1000)); // ms를 초로 변환
             accessTokenCookie.setAttribute("SameSite", "Lax");
             
@@ -84,6 +85,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true);
             refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setDomain(".moyastudy.com"); // 서브도메인 포함 모든 도메인에서 접근 가능
             refreshTokenCookie.setMaxAge((int) (refreshTokenExpiration / 1000)); // ms를 초로 변환
             refreshTokenCookie.setAttribute("SameSite", "Lax");
             
