@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -17,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -29,9 +29,11 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     private final MemberRepository memberRepository;
     private final ObjectMapper objectMapper;
 
-    // 프론트엔드 URL 설정 (환경에 따라 변경)
-    //private static final String FRONTEND_URL = "http://localhost:3000"; // 개발환경
-    private static final String FRONTEND_URL = "https://moyastudy.com"; // 운영환경
+    @Value("${jwt.access.expiration}")
+    private long accessTokenExpiration;
+    
+    @Value("${jwt.refresh.expiration}")
+    private long refreshTokenExpiration;
 
     @Override
     @Transactional
@@ -70,19 +72,31 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             memberRepository.save(member);
             log.info("회원 정보 업데이트 완료 - 회원 ID: {}", member.getId());
 
-            // 토큰 정보를 URL 파라미터로 전달하여 프론트엔드로 리다이렉트
-            String redirectUrl = UriComponentsBuilder.fromUriString(FRONTEND_URL + "/oauth/callback")
-                    .queryParam("accessToken", tokenInfo.getAccessToken())
-                    .queryParam("refreshToken", tokenInfo.getRefreshToken())
-                    .queryParam("email", URLEncoder.encode(member.getEmail(), StandardCharsets.UTF_8))
-                    .queryParam("nickname", URLEncoder.encode(member.getNickname(), StandardCharsets.UTF_8))
-                    .queryParam("profileImage", URLEncoder.encode(member.getProfileImageUrl() != null ? member.getProfileImageUrl() : "", StandardCharsets.UTF_8))
-                    .build()
-                    .toUriString();
+            // JWT 토큰을 HttpOnly 쿠키에 저장 (yml 설정값 사용)
+            Cookie accessTokenCookie = new Cookie("accessToken", tokenInfo.getAccessToken());
+            accessTokenCookie.setHttpOnly(true);
+            accessTokenCookie.setSecure(true);
+            accessTokenCookie.setPath("/");
+            accessTokenCookie.setMaxAge((int) (accessTokenExpiration / 1000)); // ms를 초로 변환
+            accessTokenCookie.setAttribute("SameSite", "Lax");
+            
+            Cookie refreshTokenCookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            refreshTokenCookie.setHttpOnly(true);
+            refreshTokenCookie.setSecure(true);
+            refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setMaxAge((int) (refreshTokenExpiration / 1000)); // ms를 초로 변환
+            refreshTokenCookie.setAttribute("SameSite", "Lax");
+            
+            response.addCookie(accessTokenCookie);
+            response.addCookie(refreshTokenCookie);
+            
+            log.info("JWT 토큰을 쿠키에 저장 완료 - 회원 ID: {}, accessToken만료: {}초, refreshToken만료: {}초", 
+                    member.getId(), accessTokenExpiration / 1000, refreshTokenExpiration / 1000);
 
+            // 프론트엔드로 리다이렉트 (토큰 정보 없이)
+            String redirectUrl = "https://moyastudy.com/";
             log.info("OAuth 로그인 성공 - 리다이렉트 URL: {}", redirectUrl);
 
-            // 프론트엔드로 리다이렉트
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 
             log.info("OAuth 로그인 성공 응답 전송 완료 - 회원: {}", email);
@@ -91,10 +105,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             log.error("OAuth 인증 성공 처리 중 오류 발생", e);
 
             // 에러 발생 시 에러 페이지로 리다이렉트
-            String errorUrl = UriComponentsBuilder.fromUriString(FRONTEND_URL + "/oauth/error")
-                    .queryParam("message", "로그인 처리 중 오류가 발생했습니다.")
-                    .build()
-                    .toUriString();
+            String errorUrl = "https://moyastudy.com/?auth=error";
             getRedirectStrategy().sendRedirect(request, response, errorUrl);
         }
     }
