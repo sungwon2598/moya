@@ -98,7 +98,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                     member.getId(), accessTokenExpiration / 1000, refreshTokenExpiration / 1000);
 
             // 프론트엔드로 리다이렉트 (토큰 정보 없이)
-            String redirectUrl = "https://moyastudy.com/";
+            String redirectUrl = "/";
             log.info("OAuth 로그인 성공 - 리다이렉트 URL: {}", redirectUrl);
 
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
@@ -109,7 +109,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             log.error("OAuth 인증 성공 처리 중 오류 발생", e);
 
             // 에러 발생 시 에러 페이지로 리다이렉트
-            String errorUrl = "https://moyastudy.com/?auth=error";
+            String errorUrl = "/?auth=error";
             getRedirectStrategy().sendRedirect(request, response, errorUrl);
         }
     }
