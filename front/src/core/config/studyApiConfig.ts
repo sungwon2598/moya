@@ -210,7 +210,7 @@ export const studyApiService = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        // withCredentials: true,
+        withCredentials: true,
       });
       console.log('게시글 생성완료');
       console.log(response);

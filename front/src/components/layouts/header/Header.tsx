@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
 import { useAuthStore } from '@/store/auth.ts';
 import { toast } from 'sonner';
+import { userApiService } from '@/core/config/userApiConfig.ts';
 
 const navigationItems = [
   {
@@ -26,16 +27,17 @@ const navigationItems = [
 export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const { isLogin, user, handleOAuthCallback, checkLoginStatus } = useAuthStore();
+  // handleOAuthCallback, checkLoginStatus
+  const { isLogin, user } = useAuthStore();
   const navigate = useNavigate();
   const [showBorder, setShowBorder] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  useEffect(() => {
-    checkLoginStatus();
-  }, [checkLoginStatus]);
+  // useEffect(() => {
+  //   checkLoginStatus();
+  // }, [checkLoginStatus]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,61 +98,70 @@ export const Header: React.FC = () => {
     navigate('/study/create');
   };
 
+  const checkLoginStatus = async () => {
+    try {
+      const response = await userApiService.getUser();
+      console.log('user', response);
+
+      setIsLoggingIn(true);
+    } catch (error) {
+      console.error('유저 정보 조회 실패:', error);
+      setIsLoggingIn(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 로그인 상태 확인 (페이지 로드/새로고침 시)
   useEffect(() => {
-    const processOAuthCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const accessToken = urlParams.get('accessToken');
-      const refreshToken = urlParams.get('refreshToken');
-      const email = urlParams.get('email');
-      const nickname = urlParams.get('nickname');
-      const profileImage = urlParams.get('profileImage');
-      const error = urlParams.get('error');
+    checkLoginStatus();
+  }, []);
 
-      // 에러
-      if (error) {
-        console.error('OAuth 로그인 실패:', error);
-        toast.error('로그인에 실패했습니다.');
-        // URL 파라미터 제거
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setIsLoggingIn(false);
-        return;
-      }
+  // useEffect(() => {
+  //   const processOAuthCallback = async () => {
+  //     const urlParams = new URLSearchParams(window.location.search);
+  //     const error = urlParams.get('error');
 
-      // 토큰ㅇ
-      if (accessToken && refreshToken) {
-        try {
-          setIsLoggingIn(true);
-          console.log('OAuth 콜백 정보:', { email, nickname, profileImage });
+  //     // 에러
+  //     if (error) {
+  //       console.error('OAuth 로그인 실패:', error);
+  //       toast.error('로그인에 실패했습니다.');
+  //       return;
+  //     }
 
-          await handleOAuthCallback({
-            accessToken,
-            refreshToken,
-            email: email ? decodeURIComponent(email) : undefined,
-            nickname: nickname ? decodeURIComponent(nickname) : undefined,
-            profileImage: profileImage ? decodeURIComponent(profileImage) : undefined,
-          });
+  //     // 토큰ㅇ
+  //     if (accessToken && refreshToken) {
+  //       try {
+  //         setIsLoggingIn(true);
+  //         console.log('OAuth 콜백 정보:', { email, nickname, profileImage });
 
-          // URL 파라미터 제거
-          window.history.replaceState({}, document.title, window.location.pathname);
+  //         await handleOAuthCallback({
+  //           accessToken,
+  //           refreshToken,
+  //           email: email ? decodeURIComponent(email) : undefined,
+  //           nickname: nickname ? decodeURIComponent(nickname) : undefined,
+  //           profileImage: profileImage ? decodeURIComponent(profileImage) : undefined,
+  //         });
 
-          toast.success('로그인이 완료되었습니다!');
+  //         // URL 파라미터 제거
+  //         window.history.replaceState({}, document.title, window.location.pathname);
 
-          if (window.location.pathname !== '/') {
-            navigate('/');
-          }
-        } catch (error) {
-          console.error('OAuth 콜백 처리 중 오류:', error);
-          toast.error('로그인 처리 중 오류가 발생했습니다.');
+  //         toast.success('로그인이 완료되었습니다!');
 
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } finally {
-          setIsLoggingIn(false);
-        }
-      }
-    };
+  //         if (window.location.pathname !== '/') {
+  //           navigate('/');
+  //         }
+  //       } catch (error) {
+  //         console.error('OAuth 콜백 처리 중 오류:', error);
+  //         toast.error('로그인 처리 중 오류가 발생했습니다.');
 
-    processOAuthCallback();
-  }, [handleOAuthCallback, navigate]);
+  //         window.history.replaceState({}, document.title, window.location.pathname);
+  //       } finally {
+  //         setIsLoggingIn(false);
+  //       }
+  //     }
+  //   };
+
+  //   processOAuthCallback();
+  // }, [handleOAuthCallback, navigate]);
 
   const handleGoogleLogin = () => {
     if (isLoggingIn) return;
