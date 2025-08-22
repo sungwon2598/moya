@@ -24,6 +24,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseCookie;
+import org.springframework.beans.factory.annotation.Value;
 
 @Controller
 @Slf4j
@@ -33,10 +35,18 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+    
     private final AuthService authService;
     private final MemberService memberService;
     private final MemberRepository memberRepository;
     private final SecurityHeadersConfig securityHeadersConfig;
+    
+    @Value("${jwt.access.expiration}")
+    private long accessTokenExpiration;
+    
+    @Value("${jwt.refresh.expiration}")
+    private long refreshTokenExpiration;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
@@ -62,15 +72,13 @@ public class AuthController {
             TokenInfo tokenInfo = authService.authenticateUser(loginRequest);
             log.info("토큰 생성 완료");
 
-            Map<String, String> tokenResponse = new HashMap<>();
-            tokenResponse.put("accessToken", tokenInfo.getAccessToken());
-
-            addRefreshTokenCookie(response, tokenInfo.getRefreshToken());
-            log.info("토큰 쿠키 설정 완료");
+            // OAuth와 동일한 방식으로 두 토큰 모두 쿠키에 설정
+            setTokenCookies(response, tokenInfo);
+            log.info("토큰 쿠키 설정 완료 (ResponseCookie 방식)");
 
             return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .ok()
-                    .body(tokenResponse));
+                    .body("로그인 성공"));
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생: {}", e.getMessage(), e);
             throw e;
@@ -181,28 +189,59 @@ public class AuthController {
 
     }
 
+    private void setTokenCookies(HttpServletResponse response, TokenInfo tokenInfo) {
+        // OAuth 핸들러와 완전 동일한 ResponseCookie 방식
+        ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE_NAME, tokenInfo.getAccessToken())
+                .domain(".moyastudy.com")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(accessTokenExpiration / 1000)
+                .sameSite("Lax")
+                .build();
+        
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, tokenInfo.getRefreshToken())
+                .domain(".moyastudy.com")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(refreshTokenExpiration / 1000)
+                .sameSite("Lax")
+                .build();
+        
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        
+        log.debug("토큰을 ResponseCookie 방식으로 쿠키에 설정했습니다.");
+    }
+
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setSecure(true);
-        cookie.setMaxAge(604800); // 7일
-        cookie.setAttribute("SameSite", "Strict");
-        response.addCookie(cookie);
-        log.debug("리프레시 토큰 쿠키 설정 완료 - 경로: {}, Secure: {}, HttpOnly: {}",
-                cookie.getPath(),
-                cookie.getSecure(),
-                cookie.isHttpOnly());
+        // /refresh 엔드포인트를 위한 기존 메서드 (호환성 유지)
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+                .domain(".moyastudy.com")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(refreshTokenExpiration / 1000)
+                .sameSite("Lax")
+                .build();
+        
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        log.debug("리프레시 토큰을 ResponseCookie 방식으로 쿠키에 설정했습니다.");
     }
 
     private void deleteRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, null);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setMaxAge(0);
-        cookie.setAttribute("SameSite", "Strict");
-        response.addCookie(cookie);
+        ResponseCookie expiredCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .domain(".moyastudy.com")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        
+        response.addHeader("Set-Cookie", expiredCookie.toString());
+        log.debug("만료된 리프레시 토큰 쿠키를 삭제했습니다.");
     }
 
 }

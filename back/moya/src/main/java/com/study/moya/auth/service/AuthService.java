@@ -5,13 +5,13 @@ import com.study.moya.auth.dto.LogoutRequest;
 import com.study.moya.auth.dto.UserInfoResponse;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import com.study.moya.auth.jwt.JwtTokenProvider.TokenInfo;
+import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.constants.MemberErrorCode;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.exception.MemberException;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.oauth.exception.OAuthErrorCode;
 import com.study.moya.oauth.exception.OAuthException;
-import com.study.moya.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,9 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final RedisService redisService;
     private final AuthenticationManager authenticationManager;
     private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider tokenProvider;
 
 
@@ -95,16 +95,21 @@ public class AuthService {
     public void logout(LogoutRequest request) {
         log.info("모든 토큰 무효화 프로세스 시작 - email: {}", request.getEmail());
         try {
-            String savedAccessToken = redisService.getAccessToken(request.getEmail());
+            // 사용자 정보로 저장된 refresh token 삭제
+            Member member = memberRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+            
+            String memberId = String.valueOf(member.getId());
+            
+            // Refresh Token 삭제 (실제 토큰 무효화)
+            refreshTokenRepository.deleteByMemberId(member.getId());
+            log.info("Refresh Token이 삭제되었습니다 - email: {}", request.getEmail());
 
-            if (!isValidTokenPair(request.getAccessToken(), savedAccessToken)) {
-                log.warn("Access Token 불일치 - email: {}", request.getEmail());
-                throw OAuthException.of(OAuthErrorCode.INVALID_ACCESS_TOKEN);
-            }
-            redisService.deleteAllTokens(request.getAccessToken());
-            log.info("모든 토큰이 삭제되었습니다 - email: {}", request.getAccessToken());
+        } catch (MemberException e) {
+            log.error("로그아웃 처리 중 회원 검증 오류 - email: {}", request.getEmail(), e);
+            throw e;
         } catch (Exception e) {
-            log.error("로그아웃 처리 중 요류 발생 - email: {}", request.getAccessToken(), e);
+            log.error("로그아웃 처리 중 예상치 못한 오류 발생 - email: {}", request.getEmail(), e);
             throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
         }
     }

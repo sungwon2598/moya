@@ -2,6 +2,8 @@ package com.study.moya.oauth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.moya.auth.jwt.JwtTokenProvider;
+import com.study.moya.auth.domain.RefreshToken;
+import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
 import jakarta.servlet.http.Cookie;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Component
@@ -28,6 +31,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${jwt.access.expiration}")
@@ -64,16 +68,15 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             UsernamePasswordAuthenticationToken memberAuth =
                     new UsernamePasswordAuthenticationToken(member, null, member.getAuthorities());
 
-            // JWT 토큰 생성
+            // JWT 토큰 생성 (이미 DB에 refresh token 저장됨)
             JwtTokenProvider.TokenInfo tokenInfo = jwtTokenProvider.createToken(memberAuth);
-            log.info("JWT 토큰 생성 완료 - 회원 ID: {}", member.getId());
+            log.info("JWT 토큰 생성 및 DB 저장 완료 - 회원 ID: {}", member.getId());
 
-            // JWT refresh token 업데이트 및 모든 변경사항을 한 번에 저장
-            member.updateJwtRefreshToken(tokenInfo.getRefreshToken());
+            // 회원 정보 저장 (로그인 정보 업데이트만)
             memberRepository.save(member);
             log.info("회원 정보 업데이트 완료 - 회원 ID: {}", member.getId());
 
-            ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokenInfo.getAccessToken())
+            ResponseCookie accessTokenCookie = ResponseCookie.from("access_token", tokenInfo.getAccessToken())
                     .domain(".moyastudy.com")  // ResponseCookie는 점 도메인 허용
                     .httpOnly(true)
                     .secure(true)
@@ -82,7 +85,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                     .sameSite("Lax")
                     .build();
 
-            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenInfo.getRefreshToken())
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", tokenInfo.getRefreshToken())
                     .domain(".moyastudy.com")
                     .httpOnly(true)
                     .secure(true)

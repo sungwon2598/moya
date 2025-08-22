@@ -36,7 +36,7 @@ public class LoginController {
     })
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
-            @AuthenticationPrincipal String memberId,
+            @AuthenticationPrincipal Long memberId,
             @CookieValue(name = "REFRESH-TOKEN", required = false) String refreshToken,
             HttpServletResponse response) {
 
