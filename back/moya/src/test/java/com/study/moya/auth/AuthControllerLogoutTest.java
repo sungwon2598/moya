@@ -2,9 +2,8 @@ package com.study.moya.auth;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.study.moya.oauth.exception.InvalidTokenException;
+import com.study.moya.auth.exception.InvalidRefreshTokenException;
 import com.study.moya.auth.service.AuthService;
-import com.study.moya.redis.RedisService;
 import com.study.moya.auth.dto.LogoutRequest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
@@ -45,8 +44,6 @@ public class AuthControllerLogoutTest {
     @MockBean
     private AuthService authService;
 
-    @MockBean
-    private RedisService redisService;
 
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
@@ -95,7 +92,7 @@ public class AuthControllerLogoutTest {
     @DisplayName("유효하지 않은 토큰으로 로그아웃 시도")
     void logout_WithInvalidToken() throws Exception {
         // Given
-        doThrow(new InvalidTokenException("유효하지 않은 Access Token입니다."))
+        doThrow(new InvalidRefreshTokenException("유효하지 않은 Access Token입니다."))
                 .when(authService).logout(any(LogoutRequest.class));
 
         // When & Then
@@ -136,26 +133,4 @@ public class AuthControllerLogoutTest {
                 });
     }
 
-    @Test
-    @DisplayName("Redis에서 토큰 삭제 확인")
-    void logout_CheckRedisTokenDeletion() throws Exception {
-        // Given
-        String email = TEST_EMAIL;
-        String accessToken = TEST_ACCESS_TOKEN;
-
-        // RedisService의 동작 모킹
-        when(redisService.getAccessToken(email)).thenReturn(accessToken);
-
-        // When & Then
-        mockMvc.perform(post("/api/auth/logout")
-                        .header("Authorization", "Bearer " + accessToken)
-                        .param("email", email)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("success"));
-
-        // 메서드 호출 검증
-        verify(authService, times(1)).logout(any(LogoutRequest.class));
-    }
 }

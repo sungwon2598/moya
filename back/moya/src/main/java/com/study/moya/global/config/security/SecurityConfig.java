@@ -6,6 +6,7 @@ import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
 import java.util.List;
 
+import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.oauth.handler.CustomOAuth2SuccessHandler;
 import com.study.moya.oauth.service.CustomOAuth2UserService;
@@ -43,6 +44,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
 //    @Value("${cors.allowed-origins}")
 //    private List<String> allowedOrigins;
@@ -133,6 +135,6 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationSuccessHandler oauth2SuccessHandler() {
-        return new CustomOAuth2SuccessHandler(jwtTokenProvider, memberRepository, objectMapper);
+        return new CustomOAuth2SuccessHandler(jwtTokenProvider, memberRepository, refreshTokenRepository, objectMapper);
     }
 }

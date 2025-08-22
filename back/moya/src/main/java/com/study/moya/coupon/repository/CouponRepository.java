@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.QueryHints;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface CouponRepository extends JpaRepository<Coupon, Long> {
+public interface CouponRepository extends JpaRepository<Coupon, String> {
     boolean existsByMemberIdAndCouponType(Long memberId, CouponType couponType);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
