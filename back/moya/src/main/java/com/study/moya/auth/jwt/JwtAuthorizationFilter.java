@@ -110,11 +110,16 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         // 쿠키에서 access token 확인
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
+            log.debug("요청에서 받은 쿠키 개수: {}", cookies.length);
             for (Cookie cookie : cookies) {
+                log.debug("쿠키: {} = {}", cookie.getName(), cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) + "...");
                 if (ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                    log.debug("access_token 쿠키 발견!");
                     return cookie.getValue();
                 }
             }
+        } else {
+            log.debug("요청에 쿠키가 없습니다.");
         }
 
         return null;
