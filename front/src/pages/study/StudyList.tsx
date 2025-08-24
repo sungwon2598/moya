@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { StudyPost, studyApiService } from '@/core/config/studyApiConfig';
+// import { StudyPost, studyApiService } from '@/core/config/studyApiConfig';
 import { Eye, MessageSquare } from 'lucide-react';
+import type { StudyPost } from '@/types/study';
+import { studyService } from '@/services/study';
 
 const StudyList = () => {
   const [posts, setPosts] = useState<StudyPost[]>([]);
@@ -14,7 +16,7 @@ const StudyList = () => {
       setLoading(true);
       setError(null);
 
-      const response = await studyApiService.getStudyList(0);
+      const response = await studyService.getStudyList(0);
 
       setPosts(response.data);
 

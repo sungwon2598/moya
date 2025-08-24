@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { StudyPost, studyApiService } from '@/core/config/studyApiConfig';
+// import { StudyPost, studyApiService } from '@/core/config/studyApiConfig';
 import { StudyCard } from '@/components/features/study/list/card';
 import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
@@ -10,6 +10,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/shared/ui/pagination';
+import type { StudyPost } from '@/types/study';
+import { studyService } from '@/services/study';
 
 const StudyList = () => {
   const [posts, setPosts] = useState<StudyPost[]>([]);
@@ -31,7 +33,7 @@ const StudyList = () => {
       setLoading(true);
       setError(null);
 
-      const response = await studyApiService.getStudyList(page);
+      const response = await studyService.getStudyList(page);
 
       setPosts(response.data);
       if (response.pagination) {

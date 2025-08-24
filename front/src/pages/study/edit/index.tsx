@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Category, StudyPost, studyApiService, UpdateStudyDTO } from '@/core/config/studyApiConfig';
+import type { Category, StudyPost, UpdateStudyDTO } from '@/types/study';
+import { studyService } from '@/services/study';
 import 'react-quill/dist/quill.snow.css';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -71,7 +72,7 @@ const StudyEdit = () => {
       if (!postId) return;
       try {
         setLoading(true);
-        const response = await studyApiService.getStudyDetail(parseInt(postId));
+        const response = await studyService.getStudyDetail(parseInt(postId));
         setPost(response.data);
 
         // 본인이 작성한 글이 아니면 리디렉션
@@ -107,7 +108,7 @@ const StudyEdit = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await studyApiService.getCategoriesHierarchy();
+        const response = await studyService.getCategoriesHierarchy();
         setCategories(response);
       } catch (error) {
         console.error('카테고리 데이터를 불러오는데 실패했습니다:', error);
@@ -179,7 +180,7 @@ const StudyEdit = () => {
         endDate: values.endDate.toISOString(),
       };
 
-      await studyApiService.updatePost(parseInt(postId), updateData);
+      await studyService.updatePost(parseInt(postId), updateData);
 
       navigate(`/study/${postId}`);
       toast('스터디 수정이 완료되었습니다', {

@@ -14,8 +14,9 @@ import {
   Trash2,
   MoreHorizontal,
 } from 'lucide-react';
-import { StudyPost } from '@/core/config/studyApiConfig';
-import { studyApiService, type Comment, type Replies } from '@/core/config/studyApiConfig';
+import type { StudyPost } from '@/types/study';
+
+import type { Comment, Replies } from '@/types/study';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 
@@ -24,6 +25,7 @@ import { toast } from 'sonner';
 
 import { useModal } from '@/shared/hooks/useModal.ts';
 import { ApplyModal } from '../applyModal/index.tsx';
+import { studyService } from '@/services/study/index.ts';
 
 // Quill 에디터 스타일 설정
 const quillStyles = `
@@ -168,7 +170,7 @@ const StudyPostDetail = () => {
     if (!postId) return;
     try {
       setLoading(true);
-      const response = await studyApiService.getStudyDetail(parseInt(postId));
+      const response = await studyService.getStudyDetail(parseInt(postId));
       console.log('게시글 상세 데이터:', response.data);
       setPost(response.data);
 
@@ -203,7 +205,7 @@ const StudyPostDetail = () => {
     setIsSubmittingComment(true);
 
     try {
-      await studyApiService.createComments(parseInt(postId), {
+      await studyService.createComments(parseInt(postId), {
         content: newComment.trim(),
       });
 
@@ -230,7 +232,7 @@ const StudyPostDetail = () => {
     try {
       console.log('대댓글 작성 시도:', { content: replyContent.trim(), parentCommentId });
 
-      await studyApiService.createComment(parseInt(postId), {
+      await studyService.createComment(parseInt(postId), {
         content: replyContent.trim(),
         parentCommentId: parentCommentId,
       });
@@ -254,7 +256,7 @@ const StudyPostDetail = () => {
     if (!isLoggedIn || !postId) return;
 
     try {
-      await studyApiService.deleteComments(parseInt(postId), commentId);
+      await studyService.deleteComments(parseInt(postId), commentId);
       toast('댓글이 삭제되었습니다.');
 
       // 댓글 삭제 후 게시글 데이터 다시 가져오기
@@ -283,9 +285,9 @@ const StudyPostDetail = () => {
     if (!post) return;
     try {
       if (isLiked) {
-        await studyApiService.removeLike(post.postId);
+        await studyService.removeLike(post.postId);
       } else {
-        await studyApiService.addLike(post.postId);
+        await studyService.addLike(post.postId);
       }
       setIsLiked(!isLiked);
     } catch (error) {
@@ -309,7 +311,7 @@ const StudyPostDetail = () => {
         label: '삭제',
         onClick: async () => {
           try {
-            await studyApiService.deletePost(post.postId);
+            await studyService.deletePost(post.postId);
             toast('스터디가 삭제되었습니다.');
             navigate('/study');
           } catch (error) {

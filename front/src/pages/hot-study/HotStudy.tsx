@@ -2,7 +2,9 @@ import { useSlideControl } from '@shared/hooks/useSlideControl.ts';
 import HotStudyCard from './HotStudyCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { studyApiService, HotPost } from '@/core/config/studyApiConfig.ts';
+// import { studyApiService, HotPost } from '@/core/config/studyApiConfig.ts';
+import { studyService } from '@/services/study';
+import type { HotPost } from '@/types/study';
 
 const HotStudy: React.FC = () => {
   const [posts, setPosts] = useState<HotPost[]>([]);
@@ -12,7 +14,7 @@ const HotStudy: React.FC = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await studyApiService.getHotStudyList();
+      const response = await studyService.getHotStudyList();
       console.log(response);
       setPosts(response.data.slice(0, 10));
     } catch (error) {
@@ -28,7 +30,6 @@ const HotStudy: React.FC = () => {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
-
         <h2 className="text-2xl font-bold">🔥 Hot 스터디</h2>
 
         <div className="flex gap-2">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Category, CreateStudyDTO, studyApiService } from '@/core/config/studyApiConfig';
+// import { Category, CreateStudyDTO, studyApiService } from '@/core/config/studyApiConfig';
 import 'react-quill/dist/quill.snow.css';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +20,8 @@ import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
 import { postSchema } from '@/schema';
 import { toast } from 'sonner';
 // import { axiosInstance } from '../../../core/config/apiConfig';
+import type { Category, CreateStudyDTO } from '@/types/study';
+import { studyService } from '@/services/study';
 
 type FormValues = z.infer<typeof postSchema>;
 
@@ -66,7 +68,7 @@ const StudyCreate = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await studyApiService.getCategoriesHierarchy();
+        const response = await studyService.getCategoriesHierarchy();
         setCategories(response);
       } catch (error) {
         console.error('카테고리 데이터를 불러오는데 실패했습니다:', error);
@@ -119,7 +121,7 @@ const StudyCreate = () => {
         content: values.content,
         recruits: parseInt(values.recruits),
         expectedPeriod: values.expectedPeriod,
-        studies: [values.studies],
+        studies: [],
         studyDetails: values.studyDetails || [],
         startDate: values.startDate.toISOString(),
         endDate: values.endDate.toISOString(),
@@ -127,7 +129,7 @@ const StudyCreate = () => {
 
       // await postRoadmapFormData(postData);
 
-      await studyApiService.createPost(postData);
+      await studyService.createPost(postData);
       navigate('/study');
       toast('스터디 등록이 완료되었습니다', {
         description: '',
@@ -220,7 +222,7 @@ const StudyCreate = () => {
                             </span>
                           )}
                         </Form.FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={'test'}>
                           <Form.FormControl>
                             <SelectTrigger className="rounded-lg border-gray-200 focus:border-gray-200 focus:ring-0">
                               <SelectValue placeholder="모집 구분을 선택하세요" />

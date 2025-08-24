@@ -5,6 +5,7 @@ const auth = axios.create({
   withCredentials: true,
 });
 
-const BASE_URL = 'https://api.moyastudy.com';
+const BASE_URL = 'http://localhost:8080';
+// const BASE_URL = 'https://api.moyastudy.com';
 
 export { auth, BASE_URL };

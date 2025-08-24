@@ -1,7 +1,7 @@
-import { axiosInstance } from '@/api/authApi';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { auth } from '@/services/config';
 
 export interface CreateFormDataType {
   mainCategory: string;
@@ -12,17 +12,17 @@ export interface CreateFormDataType {
 }
 
 const getRoadmapFormData = async () => {
-  const { data } = await axiosInstance.get('/api/categories/roadmap-form-data');
+  const { data } = await auth.get('/api/categories/roadmap-form-data');
   return data;
 };
 
 const postWorksheetsFormData = async (id: number) => {
-  const { data } = await axiosInstance.post(`/api/${id}/worksheets`);
+  const { data } = await auth.post(`/api/${id}/worksheets`);
   console.log(data);
   return data;
 };
 const postRoadmapFormData = async (createFormData: CreateFormDataType) => {
-  const { data } = await axiosInstance.post('/api/roadmap/generate', createFormData);
+  const { data } = await auth.post('/api/roadmap/generate', createFormData);
   console.log(data);
   return data;
 };
