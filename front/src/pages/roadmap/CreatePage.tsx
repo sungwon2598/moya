@@ -3,8 +3,9 @@ import Title from '../../components/features/roadmap/Title.tsx';
 import Select from '../../components/features/roadmap/Select/Select.tsx';
 import { useRoadmapQuestions } from '@/features/roadmap/hooks/useRoadmapQuestions';
 import Progress from '@/components/features/roadmap/Select/Progress.tsx';
-import { useAuth } from '@/components/features/auth/hooks/useAuth.ts';
+// import { useAuth } from '@/components/features/auth/hooks/useAuth.ts';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth.ts';
 export interface RoadmapQuestionStageType {
   currentStatusNumber: number;
 }
@@ -18,7 +19,8 @@ export type AnswerItem = {
 
 export default function CreatePage() {
   const navigate = useNavigate();
-  const { isAuthenticated: isLoggedIn } = useAuth();
+  // const { isAuthenticated: isLoggedIn } = useAuth();
+  const { isLogin } = useAuthStore();
 
   //api요청
   const { questions, isLoading, error, setSelectedCategoryId } = useRoadmapQuestions();
@@ -31,7 +33,7 @@ export default function CreatePage() {
 
   const categoryQuestion = questions.find((q) => q.name === 'mainCategory');
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLogin) {
       navigate('/');
       return alert('로그인이 필요한 서비스입니다.');
     }

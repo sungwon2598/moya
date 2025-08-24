@@ -21,7 +21,7 @@ export default defineConfig(({ mode }): UserConfig => {
         '@pages': path.resolve(__dirname, './src/pages'),
         '@shared': path.resolve(__dirname, './src/shared'),
         '@styles': path.resolve(__dirname, './src/styles'),
-        '@types': path.resolve(__dirname, './src/core/types'),
+        '@types': path.resolve(__dirname, './src/types/'),
         '@store': path.resolve(__dirname, './src/core/store'),
         '@config': path.resolve(__dirname, './src/core/config'),
       },
@@ -74,16 +74,14 @@ export default defineConfig(({ mode }): UserConfig => {
       proxy: {
         '/api': {
           target: 'https://api.moyastudy.com',
-
-          // http://localhost:8080
           changeOrigin: true,
           secure: false,
         },
-        '/oauth2': {
-          target: 'http://localhost:8080',
-          changeOrigin: true,
-          secure: false,
-        },
+        // '/oauth2': {
+        //   target: 'http://localhost:8080',
+        //   changeOrigin: true,
+        //   secure: false,
+        // },
       },
       hmr: {
         overlay: true,
