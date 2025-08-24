@@ -1,11 +1,12 @@
 import { Card, Avatar, Tabs } from '@/components/shared/ui';
-import { useAuth } from '@/components/features/auth/hooks/useAuth';
+import { useAuthStore } from '@/store/auth';
 import { useEffect } from 'react';
-import { Ticket, Settings, Map, Users, Shield } from 'lucide-react';
+import { Ticket, Settings, Map, Users } from 'lucide-react';
+// Shield
 import { Link } from 'react-router-dom';
 
 const MyPage = () => {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     console.log(user);
@@ -27,12 +28,12 @@ const MyPage = () => {
               <Tabs.TabsTrigger value="study" className="flex items-center gap-2 whitespace-nowrap">
                 <Users className="h-4 w-4" />내 스터디
               </Tabs.TabsTrigger>
-              {user?.data?.roles?.includes('USER') && (
+              {/* {user?.data?.roles?.includes('USER') && (
                 <Tabs.TabsTrigger value="admin" className="flex items-center gap-2 whitespace-nowrap">
-                  <Shield className="h-4 w-4" />
+                  <Shield className="w-4 h-4" />
                   관리자
                 </Tabs.TabsTrigger>
-              )}
+              )} */}
             </Tabs.TabsList>
           </div>
 
@@ -41,17 +42,17 @@ const MyPage = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <Avatar.Avatar className="h-16 w-16">
-                    {user?.data?.profileImageUrl ? (
-                      <Avatar.AvatarImage src={user?.data.profileImageUrl} alt={user.data.nickname} />
+                    {user?.profileImageUrl ? (
+                      <Avatar.AvatarImage src={user?.profileImageUrl} alt={user?.nickname} />
                     ) : (
                       <Avatar.AvatarFallback className="text-lg">
-                        {user?.data?.nickname?.charAt(0).toUpperCase()}
+                        {user?.nickname?.charAt(0).toUpperCase()}
                       </Avatar.AvatarFallback>
                     )}
                   </Avatar.Avatar>
                   <div className="flex-1">
-                    <p className="text-2xl font-semibold">{user?.data?.nickname}</p>
-                    <p className="text-sm text-gray-500">{user?.data?.email}</p>
+                    <p className="text-2xl font-semibold">{user?.nickname}</p>
+                    {/* <p className="text-sm text-gray-500">{user?.data?.email}</p> */}
                   </div>
                 </div>
 
@@ -89,16 +90,16 @@ const MyPage = () => {
             </Card.Card>
           </Tabs.TabsContent>
 
-          {user?.data?.roles?.includes('USER') && (
+          {/* {user?.data?.roles?.includes('USER') && (
             <Tabs.TabsContent value="admin" className="mt-6">
-              <Card.Card className="w-full rounded-2xl border-0 bg-white p-6 shadow-sm">
+              <Card.Card className="w-full p-6 bg-white border-0 shadow-sm rounded-2xl">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="rounded-lg bg-gray-50 p-4">
+                    <div className="p-4 rounded-lg bg-gray-50">
                       <h4 className="mb-2 font-medium">모든 게시글</h4>
                       <p className="text-sm text-gray-600">게시글 관리</p>
                     </div>
-                    <div className="rounded-lg bg-gray-50 p-4">
+                    <div className="p-4 rounded-lg bg-gray-50">
                       <h4 className="mb-2 font-medium">모든 스터디</h4>
                       <p className="text-sm text-gray-600">스터디 관리</p>
                     </div>
@@ -106,7 +107,7 @@ const MyPage = () => {
                 </div>
               </Card.Card>
             </Tabs.TabsContent>
-          )}
+          )} */}
         </Tabs.Tabs>
       </div>
     </div>

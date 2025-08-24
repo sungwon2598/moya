@@ -7,7 +7,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
 import { useAuthStore } from '@/store/auth.ts';
 import { toast } from 'sonner';
-import { userApiService } from '@/core/config/userApiConfig.ts';
 
 const navigationItems = [
   {
@@ -27,17 +26,14 @@ const navigationItems = [
 export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  // handleOAuthCallback, checkLoginStatus
-  const { isLogin, user } = useAuthStore();
+
+  const { isLogin, user, loading, checkLoginStatus } = useAuthStore();
   const navigate = useNavigate();
   const [showBorder, setShowBorder] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // useEffect(() => {
-  //   checkLoginStatus();
-  // }, [checkLoginStatus]);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,70 +94,9 @@ export const Header: React.FC = () => {
     navigate('/study/create');
   };
 
-  const checkLoginStatus = async () => {
-    try {
-      const response = await userApiService.getUser();
-      console.log('user', response);
-
-      setIsLoggingIn(true);
-    } catch (error) {
-      console.error('유저 정보 조회 실패:', error);
-      setIsLoggingIn(false);
-    }
-  };
-
-  // 컴포넌트 마운트 시 로그인 상태 확인 (페이지 로드/새로고침 시)
   useEffect(() => {
     checkLoginStatus();
-  }, []);
-
-  // useEffect(() => {
-  //   const processOAuthCallback = async () => {
-  //     const urlParams = new URLSearchParams(window.location.search);
-  //     const error = urlParams.get('error');
-
-  //     // 에러
-  //     if (error) {
-  //       console.error('OAuth 로그인 실패:', error);
-  //       toast.error('로그인에 실패했습니다.');
-  //       return;
-  //     }
-
-  //     // 토큰ㅇ
-  //     if (accessToken && refreshToken) {
-  //       try {
-  //         setIsLoggingIn(true);
-  //         console.log('OAuth 콜백 정보:', { email, nickname, profileImage });
-
-  //         await handleOAuthCallback({
-  //           accessToken,
-  //           refreshToken,
-  //           email: email ? decodeURIComponent(email) : undefined,
-  //           nickname: nickname ? decodeURIComponent(nickname) : undefined,
-  //           profileImage: profileImage ? decodeURIComponent(profileImage) : undefined,
-  //         });
-
-  //         // URL 파라미터 제거
-  //         window.history.replaceState({}, document.title, window.location.pathname);
-
-  //         toast.success('로그인이 완료되었습니다!');
-
-  //         if (window.location.pathname !== '/') {
-  //           navigate('/');
-  //         }
-  //       } catch (error) {
-  //         console.error('OAuth 콜백 처리 중 오류:', error);
-  //         toast.error('로그인 처리 중 오류가 발생했습니다.');
-
-  //         window.history.replaceState({}, document.title, window.location.pathname);
-  //       } finally {
-  //         setIsLoggingIn(false);
-  //       }
-  //     }
-  //   };
-
-  //   processOAuthCallback();
-  // }, [handleOAuthCallback, navigate]);
+  }, [checkLoginStatus]);
 
   const handleGoogleLogin = () => {
     if (isLoggingIn) return;
@@ -171,9 +106,11 @@ export const Header: React.FC = () => {
     try {
       // const isDev = import.meta.env.DEV;
       // const baseUrl = isDev ? 'http://localhost:8080' : 'https://api.moyastudy.com';
-      const oauthUrl = `https://api.moyastudy.com/oauth2/authorization/google`;
+      const oauthUrl = `http://localhost:8080/oauth2/authorization/google`;
 
       window.location.href = oauthUrl;
+
+      setIsLoggingIn(true);
     } catch (error) {
       console.error('로그인 요청 중 오류:', error);
       toast.error('로그인 요청 중 오류가 발생했습니다.');
@@ -209,7 +146,10 @@ export const Header: React.FC = () => {
             </div>
 
             <div className="relative flex items-center space-x-4">
-              {isLogin ? (
+              {loading ? (
+                // 로딩 상태
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+              ) : isLogin && user ? (
                 <>
                   <button
                     onClick={handleCreateStudy}
@@ -219,10 +159,10 @@ export const Header: React.FC = () => {
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger className="flex items-center space-x-2 outline-none">
                       <Avatar className="h-8 w-8">
-                        {user?.data?.profileImageUrl ? (
-                          <AvatarImage src={user.data.profileImageUrl} alt={user.data.nickname} />
+                        {user.profileImageUrl ? (
+                          <AvatarImage src={user.profileImageUrl} alt={user.nickname} />
                         ) : (
-                          <AvatarFallback>{user?.data?.nickname?.charAt(0).toUpperCase()}</AvatarFallback>
+                          <AvatarFallback>{user.nickname}</AvatarFallback>
                         )}
                       </Avatar>
                       <ChevronDown className="h-4 w-4" />
