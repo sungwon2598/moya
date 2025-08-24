@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useModal } from '@shared/hooks/useModal';
 import { studyService } from '@/services/study';
-import { RoadmapRequest } from '@core/config/roadmapApiConfig';
+import type { RoadmapRequest } from '@/types/roadmap';
 import { getChoseong } from 'es-hangul';
 import SearchBox from '@pages/create-sample/SerchBox.tsx';
 

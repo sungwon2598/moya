@@ -74,16 +74,14 @@ export default defineConfig(({ mode }): UserConfig => {
       proxy: {
         '/api': {
           target: 'https://api.moyastudy.com',
-
-          // http://localhost:8080
           changeOrigin: true,
           secure: false,
         },
-        '/oauth2': {
-          target: 'http://localhost:8080',
-          changeOrigin: true,
-          secure: false,
-        },
+        // '/oauth2': {
+        //   target: 'http://localhost:8080',
+        //   changeOrigin: true,
+        //   secure: false,
+        // },
       },
       hmr: {
         overlay: true,
