@@ -2,12 +2,9 @@ import React, { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { useModal } from '@shared/hooks/useModal';
 import CreateRoadmapModal from '@pages/create-sample/CreateRoadmapModal';
-import {
-  RoadmapRequest,
-  WeeklyRoadmapResponse,
-  RoadMapSimpleDto,
-  roadmapApiService,
-} from '@core/config/roadmapApiConfig';
+import type { RoadMapSimpleDto } from '@/types/roadmap';
+import { roadmapService } from '@/services/roadmap';
+import type { RoadmapRequest, WeeklyRoadmapResponse } from '@/types/roadmap';
 import ViewRoadmapModal from '@pages/create-sample/ViewRoadmapModal.tsx';
 
 const CreateSample: React.FC = () => {
@@ -30,7 +27,7 @@ const CreateSample: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await roadmapApiService.generateWeeklyRoadmap(request);
+      const response = await roadmapService.generateWeeklyRoadmap(request);
       setRoadmapResponse(response);
       setHasNewResponse(true); // 새로운 응답이 도착하면 true로 설정
     } catch (err) {
@@ -55,9 +52,9 @@ const CreateSample: React.FC = () => {
   // };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">로드맵 샘플 관리</h1>
         </div>
 
@@ -81,24 +78,24 @@ const CreateSample: React.FC = () => {
           )}
 
           {/* 추가 버튼들 영역 */}
-          <div className="absolute flex gap-4 bottom-6 right-6">
+          <div className="absolute bottom-6 right-6 flex gap-4">
             {roadmapResponse && (
               <button
-                className="flex items-center gap-2 p-4 text-gray-800 transition-colors bg-white border border-gray-200 rounded-full shadow-lg hover:bg-gray-50"
+                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white p-4 text-gray-800 shadow-lg transition-colors hover:bg-gray-50"
                 onClick={() => {
                   setHasNewResponse(false); // 확인 시 false로 설정
                   showModal(<ViewRoadmapModal roadmapResponse={roadmapResponse} />);
                 }}>
                 <span className="font-medium">샘플 확인</span>
                 {hasNewResponse && (
-                  <div className="flex items-center justify-center w-6 h-6 text-sm text-white bg-red-500 rounded-full">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-sm text-white">
                     1
                   </div>
                 )}
               </button>
             )}
             <button
-              className="flex items-center gap-2 p-4 text-white transition-colors bg-blue-500 rounded-full shadow-lg hover:bg-blue-600"
+              className="flex items-center gap-2 rounded-full bg-blue-500 p-4 text-white shadow-lg transition-colors hover:bg-blue-600"
               onClick={() => showModal(<CreateRoadmapModal onSubmit={handleGenerateRoadmap} />)}
               disabled={isLoading}>
               <PlusCircle size={24} />
