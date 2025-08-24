@@ -1,6 +1,6 @@
 import { calculateDaysLeft } from '@shared/utils/dateUtils.ts';
 import React from 'react';
-import { HotPost } from '@/core/config/studyApiConfig.ts';
+import type { HotPost } from '@/types/study';
 import { useNavigate } from 'react-router-dom';
 
 interface HotStudyCardProps {
@@ -16,7 +16,7 @@ const HotStudyCard: React.FC<HotStudyCardProps> = ({ card }) => {
 
   return (
     <div
-      className="relative transition-all duration-300 bg-white border-2 border-gray-200 rounded-lg hover:border-moya-primary group h-44 hover:-translate-y-1 hover:shadow-lg"
+      className="hover:border-moya-primary group relative h-44 rounded-lg border-2 border-gray-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
       onClick={() => navigate(`/study/${card.postId}`)}>
       <div className="relative h-full p-3">
         <div className="absolute left-3 top-3">
@@ -27,21 +27,21 @@ const HotStudyCard: React.FC<HotStudyCardProps> = ({ card }) => {
                     ))} */}
         </div>
         {isExpired ? (
-          <span className="absolute inline-flex px-2 py-1 text-xs font-bold leading-none text-gray-500 border border-gray-500 rounded-full right-3 top-3">
+          <span className="absolute right-3 top-3 inline-flex rounded-full border border-gray-500 px-2 py-1 text-xs font-bold leading-none text-gray-500">
             ⌛ 마감됨 ({Math.abs(daysLeft)}일 전)
           </span>
         ) : (
-          <span className="absolute inline-flex px-2 py-1 text-xs font-bold leading-none text-red-500 border border-red-500 rounded-full right-3 top-3">
+          <span className="absolute right-3 top-3 inline-flex rounded-full border border-red-500 px-2 py-1 text-xs font-bold leading-none text-red-500">
             🔥 마감 {daysLeft}일 남음
           </span>
         )}
 
         <div className="pt-10">
           <div className="mb-1 text-sm text-gray-500">마감일 | {end.toLocaleDateString()}</div>
-          <h3 className="text-lg font-semibold line-clamp-1">{card.title}</h3>
+          <h3 className="line-clamp-1 text-lg font-semibold">{card.title}</h3>
         </div>
 
-        <div className="absolute flex items-center text-sm text-gray-500 bottom-3 right-3">
+        <div className="absolute bottom-3 right-3 flex items-center text-sm text-gray-500">
           <span className="flex items-center">👀 조회수 {card.views}회</span>
         </div>
       </div>
