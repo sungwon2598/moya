@@ -32,10 +32,10 @@ export default function CreatePage() {
 
   const categoryQuestion = questions.find((q) => q.name === 'mainCategory');
   useEffect(() => {
-    if (!isLogin) {
-      navigate('/');
-      return alert('로그인이 필요한 서비스입니다.');
-    }
+    // if (!isLogin) {
+    //   navigate('/');
+    //   return alert('로그인이 필요한 서비스입니다.');
+    // }
     if (categoryQuestion) {
       const categoryAnswer = answers?.find((answer) => answer.questionNumber === categoryQuestion.id);
       if (categoryAnswer) {
