@@ -19,7 +19,6 @@ export type AnswerItem = {
 
 export default function CreatePage() {
   const navigate = useNavigate();
-  // const { isAuthenticated: isLoggedIn } = useAuth();
   const { isLogin } = useAuthStore();
 
   //api요청

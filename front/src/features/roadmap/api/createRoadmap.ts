@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { auth } from '@/services/config';
+import { auth } from '../../../services/config';
+import { axiosInstance } from '@/services/authApi';
 
 export interface CreateFormDataType {
   mainCategory: string;
@@ -12,8 +13,9 @@ export interface CreateFormDataType {
 }
 
 const getRoadmapFormData = async () => {
-  const { data } = await auth.get('/api/categories/roadmap-form-data');
+  const { data } = await axiosInstance.get('/api/categories/roadmap-form-data');
   console.log('hi');
+  console.log(data);
   return data;
 };
 
