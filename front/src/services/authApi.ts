@@ -3,7 +3,7 @@ import { createBrowserHistory } from 'history';
 import { TokenStorage } from '@/utils/tokenUtils';
 import type { User, GoogleAuthResponse } from '@/types/auth.types';
 
-export const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.moyastudy.com';
+const BASE_URL = 'https://api.moyastudy.com';
 
 const history = createBrowserHistory();
 
