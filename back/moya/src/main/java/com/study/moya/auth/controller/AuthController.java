@@ -8,6 +8,7 @@ import com.study.moya.global.config.security.SecurityHeadersConfig;
 import com.study.moya.member.repository.MemberRepository;
 import com.study.moya.member.service.MemberService;
 import com.study.moya.oauth.exception.OAuthException;
+import com.study.moya.oauth.utils.CookieUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +42,7 @@ public class AuthController {
     private final MemberService memberService;
     private final MemberRepository memberRepository;
     private final SecurityHeadersConfig securityHeadersConfig;
+    private final CookieUtils cookieUtils;
     
     @Value("${jwt.access.expiration}")
     private long accessTokenExpiration;
@@ -66,15 +68,25 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest,
+                                              HttpServletRequest request,
                                               HttpServletResponse response) {
         log.info("로그인 요청 시작 - 이메일: {}", loginRequest.email());
         try {
             TokenInfo tokenInfo = authService.authenticateUser(loginRequest);
             log.info("토큰 생성 완료");
 
-            // OAuth와 동일한 방식으로 두 토큰 모두 쿠키에 설정
-            setTokenCookies(response, tokenInfo);
-            log.info("토큰 쿠키 설정 완료 (ResponseCookie 방식)");
+            String origin = request.getHeader("Origin");
+            String referer = request.getHeader("Referer");
+            
+            log.info("기본 로그인 요청 출처 - Origin: {}, Referer: {}", origin, referer);
+
+            if (cookieUtils.isLocalRequest(origin, referer)) {
+                cookieUtils.setLocalCookies(response, tokenInfo);
+                log.info("로컬 요청 감지 - 로컬용 쿠키 설정");
+            } else {
+                cookieUtils.setProductionCookies(response, tokenInfo);
+                log.info("운영 요청 감지 - 운영용 쿠키 설정");
+            }
 
             return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .ok()
@@ -187,32 +199,6 @@ public class AuthController {
                     ));
         }
 
-    }
-
-    private void setTokenCookies(HttpServletResponse response, TokenInfo tokenInfo) {
-        // OAuth 핸들러와 완전 동일한 ResponseCookie 방식
-        ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE_NAME, tokenInfo.getAccessToken())
-                .domain(".moyastudy.com")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(accessTokenExpiration / 1000)
-                .sameSite("Lax")
-                .build();
-        
-        ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, tokenInfo.getRefreshToken())
-                .domain(".moyastudy.com")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(refreshTokenExpiration / 1000)
-                .sameSite("Lax")
-                .build();
-        
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-        
-        log.debug("토큰을 ResponseCookie 방식으로 쿠키에 설정했습니다.");
     }
 
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {

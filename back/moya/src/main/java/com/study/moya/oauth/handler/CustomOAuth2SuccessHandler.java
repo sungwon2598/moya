@@ -2,27 +2,23 @@ package com.study.moya.oauth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.moya.auth.jwt.JwtTokenProvider;
-import com.study.moya.auth.domain.RefreshToken;
 import com.study.moya.auth.repository.RefreshTokenRepository;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.repository.MemberRepository;
-import jakarta.servlet.http.Cookie;
+import com.study.moya.oauth.utils.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 @Slf4j
 @Component
@@ -31,8 +27,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final ObjectMapper objectMapper;
+    private final CookieUtils cookieUtils;
 
     @Value("${jwt.access.expiration}")
     private long accessTokenExpiration;
@@ -76,42 +71,24 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             memberRepository.save(member);
             log.info("회원 정보 업데이트 완료 - 회원 ID: {}", member.getId());
 
-            ResponseCookie accessTokenCookie = ResponseCookie.from("access_token", tokenInfo.getAccessToken())
-                    .domain(".moyastudy.com")  // ResponseCookie는 점 도메인 허용
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/")
-                    .maxAge(accessTokenExpiration / 1000)
-                    .sameSite("Lax")
-                    .build();
+            // OAuth2는 운영환경에서만 사용 (로컬 테스트는 기본 로그인 사용)
+            cookieUtils.setProductionCookies(response, tokenInfo);
+            log.info("OAuth 운영용 쿠키 설정 완료");
 
-            ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", tokenInfo.getRefreshToken())
-                    .domain(".moyastudy.com")
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/")
-                    .maxAge(refreshTokenExpiration / 1000)
-                    .sameSite("Lax")
-                    .build();
-
-            response.addHeader("Set-Cookie", accessTokenCookie.toString());
-            response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+            // 운영 사이트로 리다이렉트
+            String redirectUrl = "https://moyastudy.com/";
+            log.info("리다이렉트 URL: {}", redirectUrl);
+            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             
             log.info("JWT 토큰을 쿠키에 저장 완료 - 회원 ID: {}, accessToken만료: {}초, refreshToken만료: {}초", 
                     member.getId(), accessTokenExpiration / 1000, refreshTokenExpiration / 1000);
-
-            // 프론트엔드로 리다이렉트 (토큰 정보 없이)
-            String redirectUrl = "https://moyastudy.com/";
-            log.info("OAuth 로그인 성공 - 리다이렉트 URL: {}", redirectUrl);
-
-            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 
             log.info("OAuth 로그인 성공 응답 전송 완료 - 회원: {}", email);
 
         } catch (Exception e) {
             log.error("OAuth 인증 성공 처리 중 오류 발생", e);
 
-            // 에러 발생 시 에러 페이지로 리다이렉트
+            // 에러 발생 시 운영 사이트 에러 페이지로 리다이렉트
             String errorUrl = "https://moyastudy.com/?auth=error";
             getRedirectStrategy().sendRedirect(request, response, errorUrl);
         }
