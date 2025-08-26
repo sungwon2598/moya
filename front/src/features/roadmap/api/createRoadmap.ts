@@ -13,6 +13,7 @@ export interface CreateFormDataType {
 
 const getRoadmapFormData = async () => {
   const { data } = await auth.get('/api/categories/roadmap-form-data');
+  console.log('hi');
   return data;
 };
 
