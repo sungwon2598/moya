@@ -18,8 +18,8 @@ export type AnswerItem = {
 };
 
 export default function CreatePage() {
-  const navigate = useNavigate();
-  const { isLogin } = useAuthStore();
+  // const navigate = useNavigate();
+  // const { isLogin } = useAuthStore();
 
   //api요청
   const { questions, isLoading, error, setSelectedCategoryId } = useRoadmapQuestions();
