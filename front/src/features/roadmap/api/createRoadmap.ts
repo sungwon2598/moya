@@ -17,7 +17,7 @@ const getRoadmapFormData = async () => {
 };
 
 const postWorksheetsFormData = async (id: number) => {
-  const { data } = await auth.post(`/api/${id}/worksheets`);
+  const { data } = await auth.post(`/api/roadmap/${id}/worksheets`);
   console.log(data);
   return data;
 };
