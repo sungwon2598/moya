@@ -19,14 +19,26 @@ export default function RoadmapDetail() {
   const { mutate } = usePostWorksheetsCreate();
 
   const handleCreateAllWorksheets = async () => {
-    mutate(Number(roadmapId), {
-      onError: (error) => {
-        toast('워크시트 생성 실패', {
-          description: '',
-        });
-        console.error('API 요청 중 오류 발생:', error);
+    if (!mainCategory || !subCategory) {
+      toast.error('카테고리가 올바르지 않습니다.');
+      return;
+    }
+
+    mutate(
+      {
+        id: Number(roadmapId),
+        mainCategory,
+        subCategory,
       },
-    });
+      {
+        onError: (error) => {
+          toast('워크시트 생성 실패', {
+            description: '',
+          });
+          console.error('API 요청 중 오류 발생:', error);
+        },
+      }
+    );
   };
 
   const handleShowApplicants = (dailyPlans: Day, week: number) => {
