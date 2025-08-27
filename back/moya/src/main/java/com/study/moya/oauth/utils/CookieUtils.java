@@ -18,18 +18,32 @@ public class CookieUtils {
     private long refreshTokenExpiration;
 
     public boolean isLocalRequest(String origin, String referer) {
-        return (origin != null && origin.contains("localhost")) ||
-               (referer != null && referer.contains("localhost"));
+        // Origin이나 Referer에 localhost가 포함된 경우
+        if ((origin != null && origin.contains("localhost")) ||
+            (referer != null && referer.contains("localhost"))) {
+            return true;
+        }
+        
+        // Origin과 Referer가 모두 null인 경우 (Swagger, Postman 등 직접 API 호출)
+        // 운영 환경에서는 일반적으로 Origin이나 Referer가 있으므로, 둘 다 null이면 로컬 환경으로 판단
+        if (origin == null && referer == null) {
+            return true;
+        }
+        
+        return false;
     }
 
     public void setLocalCookies(HttpServletResponse response, JwtTokenProvider.TokenInfo tokenInfo) {
-        log.info("로컬용 쿠키 설정 (도메인 없음, HTTP 허용)");
+        log.info("로컬용 쿠키 설정 (도메인 없음, HTTP 허용, 3시간)");
+        
+        // 로컬 테스트용으로 3시간(10800초) 설정
+        long localTestDuration = 3 * 60 * 60;
         
         ResponseCookie accessTokenCookie = ResponseCookie.from("access_token", tokenInfo.getAccessToken())
                 .httpOnly(true)
                 .secure(false) // HTTP도 허용
                 .path("/")
-                .maxAge(accessTokenExpiration / 1000)
+                .maxAge(localTestDuration)
                 .sameSite("Lax")
                 .build();
 
@@ -37,7 +51,7 @@ public class CookieUtils {
                 .httpOnly(true)
                 .secure(false) // HTTP도 허용
                 .path("/")
-                .maxAge(refreshTokenExpiration / 1000)
+                .maxAge(localTestDuration)
                 .sameSite("Lax")
                 .build();
 
