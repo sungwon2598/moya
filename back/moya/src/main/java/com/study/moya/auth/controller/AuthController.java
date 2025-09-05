@@ -73,24 +73,15 @@ public class AuthController {
         log.info("로그인 요청 시작 - 이메일: {}", loginRequest.email());
         try {
             TokenInfo tokenInfo = authService.authenticateUser(loginRequest);
-            log.info("토큰 생성 완료");
-
-            String origin = request.getHeader("Origin");
-            String referer = request.getHeader("Referer");
-            
-            log.info("기본 로그인 요청 출처 - Origin: {}, Referer: {}", origin, referer);
-
-            if (cookieUtils.isLocalRequest(origin, referer)) {
-                cookieUtils.setLocalCookies(response, tokenInfo);
-                log.info("로컬 요청 감지 - 로컬용 쿠키 설정");
-            } else {
-                cookieUtils.setProductionCookies(response, tokenInfo);
-                log.info("운영 요청 감지 - 운영용 쿠키 설정");
-            }
+            // 액세스 토큰을 응답에 포함 (개발/테스트용)
+            LoginResponseDto loginResponse = new LoginResponseDto(
+                tokenInfo.getAccessToken(),
+                "로그인 성공"
+            );
 
             return securityHeadersConfig.addSecurityHeaders(ResponseEntity
                     .ok()
-                    .body("로그인 성공"));
+                    .body(loginResponse));
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생: {}", e.getMessage(), e);
             throw e;

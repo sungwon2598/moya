@@ -43,6 +43,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService oAuth2UserService;
     private final ObjectMapper objectMapper;
     private final CookieUtils cookieUtils;
+    private final TestApiKeyAuthFilter testApiKeyAuthFilter;
 
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -88,6 +89,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                .addFilterBefore(testApiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration),
                                 jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
