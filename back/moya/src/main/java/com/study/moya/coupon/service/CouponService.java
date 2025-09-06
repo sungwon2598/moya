@@ -110,6 +110,31 @@ public class CouponService {
     }
 
     /**
+     * 쿠폰을 즉시 생성해서 사용자에게 바로 할당
+     * 생일 쿠폰, 웰컴 쿠폰 등 자동 발급용
+     */
+    @Transactional
+    public void createAndIssueCoupon(Long memberId, CouponType couponType, LocalDateTime expirationDate, Long balance) {
+        Member member = getMember(memberId);
+
+        // 중복 발급 체크
+        if (couponRepository.existsByMemberIdAndCouponType(memberId, couponType)) {
+            throw CouponException.of(CouponErrorCode.ALREADY_USED_COUPON);
+        }
+
+        // 즉시 생성하고 바로 할당
+        Coupon coupon = Coupon.builder()
+                .member(member)          // 바로 할당!
+                .couponType(couponType)
+                .expirationDate(expirationDate)
+                .balance(balance)
+                .build();
+
+        couponRepository.save(coupon);
+        log.info("쿠폰 즉시 생성 및 할당 완료 - 멤버ID: {}, 쿠폰타입: {}", memberId, couponType);
+    }
+
+    /**
      * 쿠폰 사용 중 발생하는 예외를 처리하는 내부 메서드
      */
     private void handleCouponUsageException(IllegalStateException e) {

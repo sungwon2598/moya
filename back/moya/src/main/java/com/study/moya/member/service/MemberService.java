@@ -6,10 +6,13 @@ import com.study.moya.auth.exception.UserNotFoundException;
 import com.study.moya.member.domain.Member;
 import com.study.moya.member.domain.MemberStatus;
 import com.study.moya.member.domain.Role;
+import com.study.moya.member.event.MemberRegisteredEvent;
 import com.study.moya.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +32,7 @@ public class MemberService implements UserDetailsService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void registerNewUser(SignupRequest signUpRequest) {
@@ -42,6 +46,8 @@ public class MemberService implements UserDetailsService {
 
             Member savedMember = memberRepository.save(member);
             log.info("회원 저장 완료 - 이메일: {}, ID: {}", savedMember.getEmail(), savedMember.getId());
+
+            publishMemberRegisteredEvent(savedMember);
         } catch (Exception e) {
             log.error("회원 가입 처리 중 오류 발생 - 이메일: {}, 오류: {}", signUpRequest.email(), e.getMessage(), e);
             throw e;
@@ -81,6 +87,16 @@ public class MemberService implements UserDetailsService {
 
         log.debug("회원 엔티티 생성 완료 - 이메일: {}, 닉네임: {}", member.getEmail(), member.getNickname());
         return member;
+    }
+
+    private void publishMemberRegisteredEvent(Member member) {
+        log.info("회원가입 이벤트 발행 - 회원ID: {}", member.getId());
+        MemberRegisteredEvent event = new MemberRegisteredEvent(
+                member.getId(),
+                member.getEmail(),
+                member.getNickname()
+        );
+        eventPublisher.publishEvent(event);
     }
 
     @Transactional(readOnly = true)

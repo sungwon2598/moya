@@ -82,9 +82,10 @@ public class RoadmapController {
     }
 
     @PostMapping("/{roadmapId}/worksheets")
-    public ResponseEntity<Void> generateWorksheets(@PathVariable Long roadmapId, @Valid @RequestBody WorkSheetRequest request) {
+    public ResponseEntity<Void> generateWorksheets(@PathVariable Long roadmapId, @Valid @RequestBody WorkSheetRequest request,
+                                                   @AuthenticationPrincipal Long memberId) {
         log.info("로드맵 ID: {}의 학습지 생성 시작", roadmapId);
-        worksheetService.generateAllWorksheets(roadmapId, request)
+        worksheetService.generateAllWorksheets(roadmapId, request, memberId)
                 .thenRun(() -> log.info("로드맵 ID: {}의 학습지 생성 완료", roadmapId))
                 .exceptionally(ex -> {
                     log.error("학습지 생성 중 오류 발생: {}", ex.getMessage());
