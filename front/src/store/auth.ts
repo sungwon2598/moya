@@ -27,10 +27,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkLoginStatus: async () => {
     try {
       set({ loading: true, error: null });
-      // console.log('로그인 상태 확인 시작');
 
       const response = await userService.getUser();
-      // console.log('유저 정보 조회 성공:', response.data);
 
       set({
         loading: false,

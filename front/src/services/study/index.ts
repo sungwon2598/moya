@@ -65,7 +65,7 @@ export const studyService = {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || '스터디 목록을 불러오는데 실패했습니다.');
+        throw new Error(error.response?.data?.message || `스터디 목록을 불러오는데 실패했습니다. ${error}`);
       }
       throw error;
     }
@@ -88,9 +88,10 @@ export const studyService = {
     try {
       const response = await auth.post<StudyApiResponse<StudyPost>>(STUDY_ENDPOINTS.CREATE, postData);
       //   console.log('게시글 생성완료');
-      //   console.log(response);
+      console.log(response);
       return response.data;
     } catch (error) {
+      console.error('게시글 생성 에러', error);
       if (axios.isAxiosError(error)) {
         console.log(postData);
         throw new Error(error.response?.data?.message || '스터디 생성에 실패했습니다.');

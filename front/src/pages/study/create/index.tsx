@@ -20,16 +20,18 @@ import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
 import { postSchema } from '@/schema';
 import { toast } from 'sonner';
 import type { Category, CreateStudyDTO } from '@/types/study';
-import { studyService } from '@/services/study';
+import { useCreateStudy, useCategoriesHierarchy } from '@/lib/study/hooks';
 
 type FormValues = z.infer<typeof postSchema>;
 
 const StudyCreate = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isOpenStartDate, setIsOpenStartDate] = useState(false);
   const [isOpenEndDate, setIsOpenEndDate] = useState(false);
+  
+  // React Query 훅 사용
+  const createStudyMutation = useCreateStudy();
+  const { data: categories = [] } = useCategoriesHierarchy();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(postSchema),
@@ -64,18 +66,7 @@ const StudyCreate = () => {
     { value: '6개월 이상', label: '6개월 이상' },
   ];
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await studyService.getCategoriesHierarchy();
-        setCategories(response);
-      } catch (error) {
-        console.error('카테고리 데이터를 불러오는데 실패했습니다:', error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  // 카테고리는 React Query로 자동 관리되므로 useEffect 제거
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -112,35 +103,34 @@ const StudyCreate = () => {
   };
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      setLoading(true);
+    const postData: CreateStudyDTO = {
+      title: values.title,
+      content: values.content,
+      recruits: parseInt(values.recruits),
+      expectedPeriod: values.expectedPeriod,
+      studies: [],
+      studyDetails: values.studyDetails || [],
+      startDate: values.startDate.toISOString(),
+      endDate: values.endDate.toISOString(),
+    };
 
-      const postData: CreateStudyDTO = {
-        title: values.title,
-        content: values.content,
-        recruits: parseInt(values.recruits),
-        expectedPeriod: values.expectedPeriod,
-        studies: [],
-        studyDetails: values.studyDetails || [],
-        startDate: values.startDate.toISOString(),
-        endDate: values.endDate.toISOString(),
-      };
-
-      // await postRoadmapFormData(postData);
-
-      await studyService.createPost(postData);
-      navigate('/study');
-      toast('스터디 등록이 완료되었습니다', {
-        description: '',
-      });
-    } catch (error) {
-      console.error('스터디 생성에 실패했습니다:', error);
-      toast('스터디 등록에 실패했습니다.', {
-        description: '',
-      });
-    } finally {
-      setLoading(false);
-    }
+    createStudyMutation.mutate(
+      { postData },
+      {
+        onSuccess: () => {
+          navigate('/study');
+          toast('스터디 등록이 완료되었습니다', {
+            description: '',
+          });
+        },
+        onError: (error) => {
+          console.error('스터디 생성에 실패했습니다:', error);
+          toast('스터디 등록에 실패했습니다.', {
+            description: '',
+          });
+        },
+      }
+    );
   };
 
   const getCategoryOptions = () => {
@@ -468,14 +458,14 @@ const StudyCreate = () => {
                     });
                   }}
                   className="rounded-lg border-gray-300"
-                  disabled={loading}>
+                  disabled={createStudyMutation.isPending}>
                   취소
                 </Button>
                 <Button
                   type="submit"
                   className="rounded-lg bg-blue-600 text-white transition-colors duration-300 hover:bg-blue-700"
-                  disabled={loading}>
-                  {loading ? (
+                  disabled={createStudyMutation.isPending}>
+                  {createStudyMutation.isPending ? (
                     <div className="flex items-center">
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                       <span>등록 중...</span>
