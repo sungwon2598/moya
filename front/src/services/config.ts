@@ -1,4 +1,6 @@
 import axios from 'axios';
+// const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://api.moyastudy.com';
 
 export const API_KEYS = {
   ADMIN: 'test-admin-key-moya',
@@ -6,16 +8,17 @@ export const API_KEYS = {
 };
 
 const auth = axios.create({
+
   headers: {
     'Content-Type': 'application/json',
     ...(import.meta.env.DEV && {
       'X-Test-API-Key': API_KEYS.ADMIN,
     }),
-  },
+
+  baseURL: BASE_URL,
+
+
   withCredentials: true,
 });
-
-// const BASE_URL = 'http://localhost:8080';
-const BASE_URL = 'https://api.moyastudy.com';
 
 export { auth, BASE_URL };

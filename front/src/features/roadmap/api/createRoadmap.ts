@@ -16,8 +16,8 @@ const getRoadmapFormData = async () => {
   return data;
 };
 
-const postWorksheetsFormData = async (id: number) => {
-  const { data } = await auth.post(`/api/${id}/worksheets`);
+const postWorksheetsFormData = async (id: number, mainCategory: string, subCategory: string) => {
+  const { data } = await auth.post(`/api/roadmap/${id}/worksheets`, { mainCategory, subCategory });
   console.log(data);
   return data;
 };
@@ -68,7 +68,8 @@ export const usePostWorksheetsCreate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: postWorksheetsFormData,
+    mutationFn: ({ id, mainCategory, subCategory }: { id: number; mainCategory: string; subCategory: string }) =>
+      postWorksheetsFormData(id, mainCategory, subCategory),
     onMutate: () => {
       console.log('워크시트 생성 시도');
       queryClient.removeQueries({ queryKey: ['worksheetStatus'] });

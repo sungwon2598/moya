@@ -77,8 +77,6 @@ public class Member extends BaseEntity implements UserDetails {
     @Column(length = 500)
     private String introduction;
 
-
-
     @Embedded
     private PrivacyConsent privacyConsent;
 
@@ -114,11 +112,14 @@ public class Member extends BaseEntity implements UserDetails {
                 .privacyPolicyAgreed(privacyPolicyAgreed)
                 .marketingAgreed(marketingAgreed)
                 .build();
-        this.memberOAuthToken = MemberOAuthToken.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenExpirationTime(tokenExpirationTime)
-                .build();
+        // OAuth 토큰이 제공된 경우에만 설정
+        if (accessToken != null || refreshToken != null) {
+            this.memberOAuthToken = MemberOAuthToken.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .tokenExpirationTime(tokenExpirationTime)
+                    .build();
+        }
     }
 
     public void updateOAuthTokens(String accessToken, String refreshToken, Instant tokenExpirationTime) {

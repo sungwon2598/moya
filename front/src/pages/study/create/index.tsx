@@ -19,7 +19,6 @@ import 'react-day-picker/dist/style.css'; // 기본 스타일 가져오기
 
 import { postSchema } from '@/schema';
 import { toast } from 'sonner';
-// import { axiosInstance } from '../../../core/config/apiConfig';
 import type { Category, CreateStudyDTO } from '@/types/study';
 import { useCreateStudy, useCategoriesHierarchy } from '@/lib/study/hooks';
 

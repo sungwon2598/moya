@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.moya.auth.jwt.JwtAuthenticationFilter;
 import com.study.moya.auth.jwt.JwtAuthorizationFilter;
 import com.study.moya.auth.jwt.JwtTokenProvider;
+import com.study.moya.oauth.utils.CookieUtils;
 import java.util.List;
 
 import com.study.moya.auth.repository.RefreshTokenRepository;
@@ -12,7 +13,6 @@ import com.study.moya.oauth.handler.CustomOAuth2SuccessHandler;
 import com.study.moya.oauth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.conn.util.PublicSuffixList;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,6 +42,8 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final CustomOAuth2UserService oAuth2UserService;
     private final ObjectMapper objectMapper;
+    private final CookieUtils cookieUtils;
+    private final TestApiKeyAuthFilter testApiKeyAuthFilter;
 
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -87,6 +89,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                .addFilterBefore(testApiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration),
                                 jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
@@ -102,11 +105,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(
                 List.of(
-                        "https://www.moyastudy.com",
                         "https://moyastudy.com",
                         "http://localhost:5173",
                         "http://localhost:4173",
-                        "https://api.moyastudy.com",
                         "http://localhost:3000",
                         "http://localhost:8000",
                         "http://localhost:8080"
@@ -135,6 +136,6 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationSuccessHandler oauth2SuccessHandler() {
-        return new CustomOAuth2SuccessHandler(jwtTokenProvider, memberRepository, refreshTokenRepository, objectMapper);
+        return new CustomOAuth2SuccessHandler(jwtTokenProvider, memberRepository, cookieUtils);
     }
 }

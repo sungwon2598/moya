@@ -103,20 +103,33 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private String resolveAccessToken(HttpServletRequest request) {
         // Authorization 헤더에서 토큰 확인
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        log.debug("Authorization 헤더: {}", bearerToken != null ? "존재함" : "없음");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+            log.debug("Bearer 토큰을 Authorization 헤더에서 발견");
             return bearerToken.substring(BEARER_PREFIX.length());
         }
 
         // 쿠키에서 access token 확인
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
+            log.debug("요청에서 받은 쿠키 개수: {}", cookies.length);
             for (Cookie cookie : cookies) {
+                log.debug("쿠키 검사 중: '{}' = '{}'", cookie.getName(), 
+                    cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) + "...");
+                log.debug("ACCESS_TOKEN_COOKIE_NAME: '{}', cookie.getName(): '{}'", ACCESS_TOKEN_COOKIE_NAME, cookie.getName());
+                log.debug("쿠키 이름 비교 결과: {}", ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName()));
+                
                 if (ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                    log.debug("access_token 쿠키 발견! 값: {}", cookie.getValue().substring(0, Math.min(50, cookie.getValue().length())) + "...");
                     return cookie.getValue();
                 }
             }
+            log.debug("모든 쿠키를 검사했지만 access_token을 찾지 못했습니다.");
+        } else {
+            log.debug("요청에 쿠키가 없습니다.");
         }
 
+        log.debug("최종적으로 토큰을 찾지 못했습니다.");
         return null;
     }
 
