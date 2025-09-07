@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
 import { useAuthStore } from '@/store/auth.ts';
 import { toast } from 'sonner';
+import { BASE_URL } from '@/services/config.ts';
 
 const navigationItems = [
   {
@@ -106,10 +107,11 @@ export const Header: React.FC = () => {
     try {
       const isDev = import.meta.env.DEV;
       console.log(isDev);
-      const baseUrl = isDev ? 'http://localhost:8080' : 'https://api.moyastudy.com';
-      const oauthUrl = `${baseUrl}/oauth2/authorization/google`;
+      //const baseUrl = isDev ? 'http://localhost:8080' : 'https://api.moyastudy.com';
+      // const baseUrl = 'https://api.moyastudy.com';
+      const oauthUrl = `${BASE_URL}/oauth2/authorization/google`;
 
-      console.log(oauthUrl);
+      // console.log(oauthUrl);
 
       window.location.href = oauthUrl;
 

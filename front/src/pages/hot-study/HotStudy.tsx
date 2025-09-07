@@ -34,20 +34,20 @@ const HotStudy: React.FC = () => {
 
         <div className="flex gap-2">
           <button
-            className={`rounded-full p-2 transition-all ${
+            className={`aspect-square rounded-full border-2 p-2 transition-all ${
               currentPage === 0 ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'
             }`}
             onClick={handlePrevClick}
             disabled={currentPage === 0}>
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft size={20} strokeWidth={3} />
           </button>
           <button
-            className={`rounded-full p-2 transition-all ${
+            className={`rounded-full border-2 p-2 transition-all ${
               currentPage === maxPages ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'
             }`}
             onClick={handleNextClick}
             disabled={currentPage === maxPages}>
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight size={20} strokeWidth={3} />
           </button>
         </div>
       </div>
