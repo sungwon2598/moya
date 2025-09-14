@@ -94,8 +94,8 @@ public class TicketAccountService {
 
         TicketAccount ticketAccount = TicketAccount.builder()
                 .member(member)
-                .roadmapTicketBalance(0L)
-                .worksheetTicketBalance(0L)
+                .roadmapTicketBalance(10L)
+                .worksheetTicketBalance(10L)
                 .build();
 
         return ticketAccountRepository.save(ticketAccount);

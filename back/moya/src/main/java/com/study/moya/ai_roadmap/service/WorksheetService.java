@@ -4,6 +4,9 @@ import com.study.moya.ai_roadmap.domain.DailyPlan;
 import com.study.moya.ai_roadmap.dto.request.WorkSheetRequest;
 import com.study.moya.ai_roadmap.repository.DailyPlanRepository;
 import com.study.moya.ai_roadmap.util.WorksheetResponseParser;
+import com.study.moya.token.domain.enums.TicketType;
+import com.study.moya.token.dto.ticket.reponse.TicketUsageResponse;
+import com.study.moya.token.service.ticket.TicketFacadeService;
 import com.theokanning.openai.Usage;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
@@ -40,15 +43,34 @@ public class WorksheetService {
     private final WorksheetPromptService promptService;
     private final WorksheetResponseParser worksheetResponseParser;
     private final DailyPlanRepository dailyPlanRepository;
+    private final TicketFacadeService ticketFacadeService;
     @Qualifier("taskExecutor")
     private final ThreadPoolTaskExecutor taskExecutor;
 
     @Async("taskExecutor")
     @Transactional
-    public CompletableFuture<Void> generateAllWorksheets(Long roadmapId, WorkSheetRequest request) {
-        log.info("로드맵 ID: {}의 전체 학습지 생성 시작", roadmapId);
+    public CompletableFuture<Void> generateAllWorksheets(Long roadmapId, WorkSheetRequest request, Long memberId) {
+        log.info("로드맵 ID: {}의 전체 학습지 생성 시작, 회원 ID: {}", roadmapId, memberId);
         log.info("현재 스레드: {}, 활성 스레드 수: {}, 풀 크기: {}",
                 Thread.currentThread().getName(), taskExecutor.getActiveCount(), taskExecutor.getPoolSize());
+
+        // 학습지 티켓 확인 및 사용
+        Long usageId = null;
+        try {
+            if (!ticketFacadeService.hasTicket(memberId, TicketType.WORKSHEET_TICKET)) {
+                throw new RuntimeException("워크시트 티켓이 부족합니다");
+            }
+
+            TicketUsageResponse ticketResponse = ticketFacadeService.useTicket(memberId, TicketType.WORKSHEET_TICKET);
+            usageId = ticketResponse.getId();
+            log.info("워크시트 티켓 사용 완료. 사용 ID: {}", usageId);
+
+        } catch (Exception e) {
+            log.error("티켓 확인/사용 실패: {}", e.getMessage());
+            CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+            failedFuture.completeExceptionally(new RuntimeException("워크시트 티켓이 부족합니다", e));
+            return failedFuture;
+        }
 
         try {
             List<DailyPlan> allDailyPlans = dailyPlanRepository.findAllByWeeklyPlan_RoadMap_IdOrderByDayNumber(roadmapId);
