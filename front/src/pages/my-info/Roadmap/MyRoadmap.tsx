@@ -11,10 +11,35 @@ type RoadmapData = {
   subCategory: string;
 };
 
+// 스켈레톤 카드 컴포넌트
+const RoadmapSkeleton = () => (
+  <div className="group block w-full">
+    <div className="relative h-full overflow-hidden rounded-3xl border border-white/20 bg-white/40 shadow-xl backdrop-blur-md">
+      <div className="animate-pulse border-b border-white/20 bg-gradient-to-r from-gray-200/50 via-gray-300/50 to-gray-200/50 p-6 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gray-300/60"></div>
+            <div className="h-6 w-32 rounded-lg bg-gray-300/60"></div>
+          </div>
+          <div className="h-6 w-12 rounded-full bg-gray-300/60"></div>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="mb-4">
+          <div className="h-16 w-full rounded-lg bg-gray-300/40"></div>
+        </div>
+      </div>
+
+      <div className="absolute right-4 top-4 h-2 w-2 rounded-full bg-gray-300/60"></div>
+    </div>
+  </div>
+);
+
 export default function MyRoadmap() {
   const navigate = useNavigate();
   const { isAuthenticated: isLoggedIn } = useAuth();
-  const { data: roadmapList } = useMyRoadmapList();
+  const { data: roadmapList, isLoading } = useMyRoadmapList();
 
   const emojiList = ['💻', '🎮', '🎨', '📚', '🧠', '📈', '🧩', '🌱', '🪄', '💡'];
   const gradientList = [
@@ -45,6 +70,36 @@ export default function MyRoadmap() {
       navigate('/roadmap/create');
     }
   };
+
+  // 로딩 중일 때 스켈레톤 표시
+  if (isLoading) {
+    return (
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-6">
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-purple-500" />
+            <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-300/60"></div>
+          </div>
+          <div className="mt-2 h-5 w-80 animate-pulse rounded-lg bg-gray-300/40"></div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <RoadmapSkeleton key={index} />
+          ))}
+        </div>
+
+        {/* 새 로드맵 추가 버튼도 스켈레톤으로 */}
+        <div className="mt-6">
+          <div className="group flex w-full items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-white/40 bg-white/30 p-6 backdrop-blur-md sm:w-auto">
+            <div className="h-6 w-6 animate-pulse rounded-full bg-gray-300/60"></div>
+            <div className="h-5 w-32 animate-pulse rounded-lg bg-gray-300/60"></div>
+            <div className="h-4 w-4 animate-pulse rounded-sm bg-gray-300/60"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 로드맵 없을때
   if (roadmapList?.length === 0)

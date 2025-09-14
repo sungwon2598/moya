@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { Button } from '@/components';
 import DayStudyPlan from '@/components/features/roadmap/DayStudyPlan';
 import RotatingMessage from '@/components/features/roadmap/RotatingMessage';
@@ -16,13 +17,17 @@ export default function RoadmapDetail() {
   const subCategory = searchParams.get('subCategory');
   const { showModal } = useModal();
   const { data: roadmapDetailData, isLoading, isError } = useRoadmapDetail(Number(roadmapId));
-  const { mutate } = usePostWorksheetsCreate();
+  const { mutate, isPending } = usePostWorksheetsCreate();
+  const [isCreatingWorksheets, setIsCreatingWorksheets] = useState(false);
+  const createButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleCreateAllWorksheets = async () => {
     if (!mainCategory || !subCategory) {
       toast.error('카테고리가 올바르지 않습니다.');
       return;
     }
+
+    setIsCreatingWorksheets(true);
 
     mutate(
       {
@@ -31,7 +36,12 @@ export default function RoadmapDetail() {
         subCategory,
       },
       {
+        onSuccess: () => {
+          setIsCreatingWorksheets(false);
+          toast.success('워크시트가 성공적으로 생성되었습니다.');
+        },
         onError: (error) => {
+          setIsCreatingWorksheets(false);
           toast('워크시트 생성 실패', {
             description: '',
           });
@@ -39,6 +49,13 @@ export default function RoadmapDetail() {
         },
       }
     );
+  };
+
+  const handleScrollToCreateButton = () => {
+    createButtonRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
   };
 
   const handleShowApplicants = (dailyPlans: Day, week: number) => {
@@ -96,9 +113,20 @@ export default function RoadmapDetail() {
 
         <div className="mt-4 flex justify-center">
           <Button
+            ref={createButtonRef}
             onClick={handleCreateAllWorksheets}
-            className="flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:rounded-xl sm:px-8 sm:py-4 sm:text-base dark:bg-blue-500 dark:hover:bg-blue-600">
-            <span>📝</span> 전체 워크시트 생성
+            disabled={isCreatingWorksheets || isPending}
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400 sm:rounded-xl sm:px-8 sm:py-4 sm:text-base dark:bg-blue-500 dark:hover:bg-blue-600 dark:disabled:bg-gray-600">
+            {isCreatingWorksheets || isPending ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                전체 워크시트 생성중...
+              </>
+            ) : (
+              <>
+                <span>📝</span> 전체 워크시트 생성
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -133,6 +161,11 @@ export default function RoadmapDetail() {
                   <div className="grid gap-3 p-3 sm:gap-4 sm:p-6">
                     {weeklyPlan.dailyPlans.map((dailyPlans: Day, dailyIndex: number) => {
                       const isWorksheetEmpty = !dailyPlans.worksheet || dailyPlans.worksheet.trim() === '';
+                      const isWorksheetCreating = isCreatingWorksheets || isPending;
+                      const hasAnyWorksheet = roadmapDetailData?.weeklyPlans?.some((week: Week) =>
+                        week.dailyPlans.some((day: Day) => day.worksheet && day.worksheet.trim() !== '')
+                      );
+
                       return (
                         <div
                           key={dailyIndex}
@@ -152,7 +185,13 @@ export default function RoadmapDetail() {
                               </div>
                             </div>
 
-                            {isWorksheetEmpty ? (
+                            {isWorksheetEmpty && !hasAnyWorksheet && !isWorksheetCreating ? (
+                              <Button
+                                onClick={handleScrollToCreateButton}
+                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-600 sm:w-auto sm:rounded-xl sm:px-4 sm:text-sm dark:bg-blue-400 dark:hover:bg-blue-500">
+                                <span>✏️</span> 워크시트를 생성해주세요
+                              </Button>
+                            ) : isWorksheetEmpty || isWorksheetCreating ? (
                               <Button
                                 disabled
                                 className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-gray-400 px-3 py-2 text-xs font-medium text-white sm:w-auto sm:rounded-xl sm:px-4 sm:text-sm">
