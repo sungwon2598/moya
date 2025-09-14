@@ -8,17 +8,14 @@ export const API_KEYS = {
 };
 
 const auth = axios.create({
-
+  baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     ...(import.meta.env.DEV && {
       'X-Test-API-Key': API_KEYS.ADMIN,
     }),
-
-  baseURL: BASE_URL,
-
-
-  withCredentials: true,
+  },
 });
 
 export { auth, BASE_URL };
