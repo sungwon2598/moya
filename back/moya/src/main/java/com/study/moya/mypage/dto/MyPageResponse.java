@@ -18,12 +18,28 @@ public class MyPageResponse {
 
     @Schema(description = "자기소개", example = "안녕하세요, 백엔드 개발자입니다.")
     private String introduction;
+    
+    @Schema(description = "로드맵 티켓 잔액", example = "10")
+    private Long roadmapTicketBalance;
+    
+    @Schema(description = "워크시트 티켓 잔액", example = "5")
+    private Long worksheetTicketBalance;
 
     public static MyPageResponse from(Member member) {
         MyPageResponse response = new MyPageResponse();
         response.nickname = member.getNickname();
         response.profileImageUrl = member.getProfileImageUrl();
         response.introduction = member.getIntroduction();
+        return response;
+    }
+    
+    public static MyPageResponse from(Member member, Long roadmapTicketBalance, Long worksheetTicketBalance) {
+        MyPageResponse response = new MyPageResponse();
+        response.nickname = member.getNickname();
+        response.profileImageUrl = member.getProfileImageUrl();
+        response.introduction = member.getIntroduction();
+        response.roadmapTicketBalance = roadmapTicketBalance;
+        response.worksheetTicketBalance = worksheetTicketBalance;
         return response;
     }
 }
